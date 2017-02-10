@@ -5,7 +5,6 @@
 " Modify: 2017-02-10
 
 " BASIC:
-unlet s:class
 let s:class = class#old()
 let s:class._name_ = 'tempclass'
 let s:class._version_ = 1
