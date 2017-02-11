@@ -45,13 +45,7 @@ function! class#old(...) abort "{{{
         let l:super = eval(a:1 . '#class()')
         let l:class = copy(l:super)
     endif
-
-    if a:0 > 1
-        call l:class._old_(a:2)
-    else
-        call l:class._old_()
-    endif
-
+    call l:class._old_()
     return l:class
 endfunction "}}}
 
@@ -117,39 +111,39 @@ function! s:class._new_(argv) dict abort "{{{
     let l:liSuper = self._supers_()
     while !empty(l:liSuper)
         let l:super = remove(l:liSuper, -1)
-        try
-            let l:Ctor = function(l:super . '#ctor')
+        let l:Ctor = function(l:super . '#ctor')
+        if exists('*l:Ctor')
             call l:Ctor(self, l:argc, l:argv)
-        endtry
+        endif
     endwhile
 
     let l:Ctor = function(self._name_ . '#ctor')
-    call l:Ctor(self, l:argc, l:argv)
+    if exists('*l:Ctor')
+        call l:Ctor(self, l:argc, l:argv)
+    endif
 endfunction "}}}
 
 " class._old_: 
 " set the right name of super and self relation
-function! s:class._old_(...) dict abort "{{{
+function! s:class._old_() dict abort "{{{
     let self._super_ = self._name_
-    if a:0 > 0
-        let self._name_ = '' . a:1
-    else
-        let self._name_ = ''
-    endif
+    let self._name_ = ''
 endfunction "}}}
 
 " class._del_: 
 " call echa dector from bottom upwise
 function! s:class._del_() dict abort "{{{
     let l:Dector = function(self._name_ . '#dector')
-    call l:Dector()
+    if exists('*l:Dector')
+        call l:Dector()
+    endif
 
     let l:liSuper = self._supers_()
     for l:super in l:liSuper
-        try
-            let l:Dector = function(l:super . '#dector')
+        let l:Dector = function(l:super . '#dector')
+        if exists('*l:Dector')
             call l:Dector()
-        endtry
+        endif
     endfor
 endfunction "}}}
 
@@ -157,7 +151,7 @@ endfunction "}}}
 let s:instance = {}
 function! class#instance() abort "{{{
     if empty(s:instance)
-        let s:instance = class#new()
+        let s:instance = class#new(0)
     endif
     return s:instance
 endfunction "}}}

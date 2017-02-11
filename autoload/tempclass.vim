@@ -1,3 +1,4 @@
+" HEADER: -H
 " File: tempclass.vim
 " Author: lymslive
 " Description: template sample class frame
@@ -29,7 +30,7 @@ function! tempclass#new(...) abort "{{{
 endfunction "}}}
 
 " OLD: -O
-function! tempclass#old(...) abort "{{{
+function! tempclass#old() abort "{{{
     let l:class = copy(s:class)
     call l:class._old_()
     return l:class
