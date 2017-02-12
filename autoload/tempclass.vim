@@ -1,9 +1,9 @@
-" HEADER: -H
-" File: tempclass.vim
+" HEADER: -h
+" Class: tempclass
 " Author: lymslive
-" Description: template sample class frame
+" Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-02-10
+" Modify: 2017-02-11
 
 " BASIC:
 let s:class = class#old()
@@ -15,14 +15,16 @@ function! tempclass#class() abort "{{{
 endfunction "}}}
 
 " CTOR: -c
-function! tempclass#ctor(this, argc, argv) abort "{{{
+function! tempclass#ctor(this, argv) abort "{{{
+    let l:Suctor = a:this._suctor_()
+    call l:Suctor(a:this, [])
 endfunction "}}}
 
 " DECTOR: -D
 function! tempclass#dector() abort "{{{
 endfunction "}}}
 
-" NEW: -N
+" NEW: -n
 function! tempclass#new(...) abort "{{{
     let l:obj = copy(s:class)
     call l:obj._new_(a:000)
@@ -36,7 +38,7 @@ function! tempclass#old() abort "{{{
     return l:class
 endfunction "}}}
 
-" INSTANCE: -i
+" INSTANCE: -I
 let s:instance = {}
 function! tempclass#instance() abort "{{{
     if empty(s:instance)

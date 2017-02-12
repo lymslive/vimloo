@@ -15,7 +15,7 @@ function! class#class() abort "{{{
 endfunction "}}}
 
 " ctor: 
-function! class#ctor(this, argc, argv) abort "{{{
+function! class#ctor(this, argv) abort "{{{
 endfunction "}}}
 
 " dector: 
@@ -24,20 +24,26 @@ endfunction "}}}
 
 " new: create a instance object of named class
 " if name is empty or 0, use this base class
-function! class#new(name, ...) abort "{{{
-    if empty(a:name)
-        let l:obj = copy(s:class)
-    else
-        let l:class = eval(a:name . '#class()')
+function! class#new(...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        let l:class = eval(a:1 . '#class()')
         let l:obj = copy(l:class)
+    else
+        let l:obj = copy(s:class)
     endif
-    call l:obj._new_(a:000)
+
+    if a:0 > 1
+        let l:argv = a:000[1:]
+    else
+        let l:argv = []
+    endif
+
+    call l:obj._new_(l:argv)
     return l:obj
 endfunction "}}}
 
 " old: create a new class from super class
 " if super(a:1) is empty or 0, the super is this base class
-" another optional(a:2) is the sub-class name
 function! class#old(...) abort "{{{
     if a:0 == 0 || empty(a:1)
         let l:class = copy(s:class)
@@ -71,7 +77,7 @@ endfunction "}}}
 
 " unit test for this vimL file
 function! class#test() abort "{{{
-    let l:obj = class#new(0)
+    let l:obj = class#new()
     call l:obj.hello()
     call l:obj.hello('vim')
     return 1
@@ -99,27 +105,47 @@ function! s:class._supers_() dict abort "{{{
     return l:liSuper
 endfunction "}}}
 
-" class._new_: 
-" construct a object from any argument
-" call each ctor from top downwise
-function! s:class._new_(argv) dict abort "{{{
-    let l:argc = len(a:argv)
-    let l:argv = [self._name_]
-    call extend(l:argv, a:argv)
-
-    " call ctor of super class, from the most base level
-    let l:liSuper = self._supers_()
-    while !empty(l:liSuper)
-        let l:super = remove(l:liSuper, -1)
-        let l:Ctor = function(l:super . '#ctor')
-        if exists('*l:Ctor')
-            call l:Ctor(self, l:argc, l:argv)
-        endif
-    endwhile
-
+" _ctor_: 
+function! s:class._ctor_() dict abort "{{{
     let l:Ctor = function(self._name_ . '#ctor')
+    if !exists('*l:Ctor')
+        let l:Ctor = function('class#ctor')
+    endif
+    return l:Ctor
+endfunction "}}}
+
+" _suctor_: 
+function! s:class._suctor_() dict abort "{{{
+    let l:Ctor = function(self._super_ . '#ctor')
+    if !exists('*l:Ctor')
+        let l:Ctor = function('class#ctor')
+    endif
+    return l:Ctor
+endfunction "}}}
+
+" _dector_: 
+function! s:class._dector_() dict abort "{{{
+    let l:Dector = function(self._name_ . '#dector')
+    if !exists('*l:Dector')
+        let l:Dector = function('class#dector')
+    endif
+    return l:Dector
+endfunction "}}}
+
+" _sudector_: 
+function! s:class._sudector_() dict abort "{{{
+    let l:Dector = function(self._super_ . '#dector')
+    if !exists('*l:Dector')
+        let l:Dector = function('class#dector')
+    endif
+    return l:Dector
+endfunction "}}}
+
+" _new_: 
+function! s:class._new_(argv) dict abort "{{{
+    let l:Ctor = self._ctor_()
     if exists('*l:Ctor')
-        call l:Ctor(self, l:argc, l:argv)
+        call l:Ctor(self, a:argv)
     endif
 endfunction "}}}
 
