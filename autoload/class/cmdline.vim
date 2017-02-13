@@ -35,12 +35,18 @@ endfunction "}}}
 
 " CTOR:
 function! class#cmdline#ctor(this, argv) abort "{{{
-    a:this.Argv = a:argv
-    a:this.Argc = leng(a:argv)
-    a:this.Option = {}
-    a:this.CharName = {}
-    a:this.SwitchOn = []
-    a:this.SwitchOff = []
+    if len(a:argv) == 1 && type(a:argv[0]) == type([])
+        let a:this.Argv = a:argv[0]
+        let a:this.Argc = len(a:argv[0])
+    else
+        let a:this.Argv = a:argv
+        let a:this.Argc = len(a:argv)
+    endif
+
+    let a:this.Option = {}
+    let a:this.CharName = {}
+    let a:this.SwitchOn = []
+    let a:this.SwitchOff = []
 endfunction "}}}
 
 " NEW:
@@ -56,9 +62,9 @@ function! s:class.AddSingle(sChar, sName, sDesc) dict abort "{{{
     let self.Option[a:sName] = l:jOption
 
     if has_key(self.CharName)
-        echoerr 'repeat option char: ' .  sChar
+        echoerr 'repeat option char: ' .  a:sChar
     else
-        let self.CharName[a:sChar] = sName
+        let self.CharName[a:sChar] = a:sName
     endif
 endfunction "}}}
 
@@ -72,9 +78,9 @@ function! s:class.AddPairs(sChar, sName, sDesc, ...) dict abort "{{{
     let self.Option[a:sName] = l:jOption
 
     if has_key(self.CharName)
-        echoerr 'repeat option char: ' .  sChar
+        echoerr 'repeat option char: ' .  a:sChar
     else
-        let self.CharName[a:sChar] = sName
+        let self.CharName[a:sChar] = a:sName
     endif
 endfunction "}}}
 
@@ -83,8 +89,8 @@ endfunction "}}}
 " if a:1 is ture, 
 " sNameOn option is default set, otherwise sNameOff is default set
 function! s:class.AddSwitch(sNameOn, sNameOff, ...) dict abort "{{{
-    call add(self.SwitchOn, sNameOn)
-    call add(self.SwitchOn, sNameOff)
+    call add(self.SwitchOn, a:sNameOn)
+    call add(self.SwitchOn, a:sNameOff)
     if a:0 > 0
         if a:1
             let self.Option[a:sNameOn].Set = v:ture
@@ -100,7 +106,7 @@ endfunction "}}}
 " return some error number, 0 as success
 function! s:class.Check() dict abort "{{{
     for l:arg in self.Argv
-        if !empty(slef.LastParsed)
+        if !empty(self.LastParsed)
             let self.Option[self.LastParsed].Argument = l:arg
             let self.LastParsed = ''
         else
@@ -111,7 +117,7 @@ function! s:class.Check() dict abort "{{{
         endif
     endfor
 
-    if !empty(slef.LastParsed)
+    if !empty(self.LastParsed)
         echoerr 'the last option has not argument: --' . self.LastParsed
         return 3
     endif
@@ -208,12 +214,12 @@ endfunction "}}}
 
 " Has: 
 function! s:class.Has(sName) dict abort "{{{
-    return self.Option[sName].Has()
+    return self.Option[a:sName].Has()
 endfunction "}}}
 
 " Get: 
 function! s:class.Get(sName) dict abort "{{{
-    return self.Option[sName].Value()
+    return self.Option[a:sName].Value()
 endfunction "}}}
 
 " GetPost: 
@@ -241,7 +247,11 @@ function! class#cmdline#load() abort "{{{
 endfunction "}}}
 
 " TEST:
-function! class#cmdline#test() abort "{{{
+function! class#cmdline#test(...) abort "{{{
+    let l:jCmdLine = class#cmdline#new(a:000)
+    echo l:jCmdLine.Argv
+    echo l:jCmdLine.Argc
+    call l:jCmdLine.Check()
     return 1
 endfunction "}}}
 
