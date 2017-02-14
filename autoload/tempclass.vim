@@ -5,6 +5,11 @@
 " Create: 2017-02-10
 " Modify: 2017-02-11
 
+"LOAD: -l
+if exists('s:load') && !exists('g:DEBUG')
+    finish
+endif
+
 " BASIC:
 let s:class = class#old()
 let s:class._name_ = 'tempclass'
@@ -56,11 +61,16 @@ function! s:class.number() dict abort "{{{
 endfunction "}}}
 
 " LOAD: -l
-function! tempclass#load() abort "{{{
-    return 1
+let s:load = 1
+function! tempclass#load(...) abort "{{{
+    if a:0 > 0 && !empty(a:1) && exists('s:load')
+        unlet s:load
+        return 0
+    endif
+    return s:load
 endfunction "}}}
 
 " TEST: -t
-function! tempclass#test() abort "{{{
+function! tempclass#test(...) abort "{{{
     return 1
 endfunction "}}}
