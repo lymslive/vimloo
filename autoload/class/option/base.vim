@@ -43,6 +43,27 @@ function! class#option#base#old() abort "{{{
     return l:class
 endfunction "}}}
 
+" STRING: -c, --Name    Desc
+" a:1, padding Name to this length, to make Desc align right 
+function! s:class.string(...) dict abort "{{{
+    let l:sRet = '-' . self.Char . ', --' . self.Name
+
+    if a:0 > 0 && a:1 > 0
+        let l:iPadding = a:1 - len(self.Name)
+        if l:iPadding > 0
+            let l:sRet .= repeat(' ', l:iPadding)
+        endif
+    endif
+
+    let l:sRet .= self.Desc
+
+    return l:sRet
+endfunction "}}}
+
+function! s:class.number() dict abort "{{{
+    return self._version_
+endfunction "}}}
+
 " LOAD:
 function! class#option#base#load() abort "{{{
     return 1

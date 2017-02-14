@@ -106,6 +106,69 @@ function! s:class.ExtractLine(sFilter) dict abort "{{{
     return l:lsOutPut
 endfunction "}}}
 
+" SelectLine: select content of template with filter option, no default
+" return a list of content lines
+function! s:class.SelectLine(sFilter) dict abort "{{{
+    let l:lsTemp = readfile(s:FullTempFile())
+    if empty(l:lsTemp)
+        return []
+    endif
+
+    if empty(a:sFilter)
+        return []
+    endif
+
+    let l:lsOutPut = []
+    let l:bOn = 0
+    let l:bHeader = 1
+    for l:sLine in l:lsTemp
+        " empty line as paragraph ending
+        if empty(l:sLine)
+            if !empty(l:lsOutPut) && !empty(l:lsOutPut[-1])
+                call add(l:lsOutPut, l:sLine)
+            endif
+            let l:bOn = 0
+            let l:bHeader = 0
+            continue
+        endif
+
+        let l:lsMatch = matchlist(l:sLine, '^\("\s*[A-Z]\+:\)\s*-\([A-Za-a]\)')
+        if !empty(l:lsMatch)
+            let l:sComment = l:lsMatch[1]
+
+            " only when input filter contains lower option, whill output
+            let l:cOption = l:lsMatch[2]
+            if stridx(a:sFilter, tolower(l:cOption)) != -1
+                let l:bOn = 1
+            endif
+
+            if l:bOn == 1 && l:bHeader == 0
+                call add(l:lsOutPut, l:sComment)
+            endif
+
+        else
+            " replace class name
+            if !empty(self.ClassName) && match(l:sLine, s:tempclass) != -1
+                let l:sLine = substitute(l:sLine, s:tempclass, self.ClassName, 'g')
+            endif
+
+            " comment header
+            if l:bHeader
+                if match(l:sLine, '\d\+-\d\+-\d\+') != -1
+                    let l:sLine = substitute(l:sLine, '\d\+-\d\+-\d\+', s:today, 'g')
+                endif
+            endif
+
+            if l:bOn == 1
+                call add(l:lsOutPut, l:sLine)
+            endif
+        endif
+
+    endfor
+
+    return l:lsOutPut
+endfunction "}}}
+
 " Script Local Function: {{{1
 let s:template = '../tempclass.vim'
 let s:tempclass = 'tempclass'
@@ -119,93 +182,6 @@ endif
 let s:pScript = fnamemodify(expand('<sfile>'), ':p:h')
 function! s:FullTempFile() abort "{{{
     return s:pScript . '/' . s:template
-endfunction "}}}
-
-" CheckClassName: check if a file name can be used as class file
-" a:pFileName should be as <leading-dir>/autoload/<subpath>/name
-" return subpath#name
-" return empty string if pFileName not under some autoload directory
-function! s:CheckClassName(pFileName) abort "{{{
-    let l:lsPath = split(a:pFileName, '/')
-
-    let l:iEnd = len(l:lsPath) - 1 
-    let l:idx = l:iEnd
-    while l:idx >= 0
-        if l:lsPath[l:idx] ==# 'autoload'
-            break
-        endif
-        let l:idx = l:idx - 1
-    endwhile
-
-    if l:idx < 0 || l:idx == l:iEnd
-        return ''
-    endif
-
-    let l:pSubpath = join(l:lsPath[l:idx+1:], '#')
-    return l:pSubpath
-endfunction "}}}
-
-" Command Hander Interface: {{{1
-" ClassNew: open a new file name.vim and fill class frame
-function! class#builder#hClassNew(name, ...) abort "{{{
-    if empty(a:name)
-        echom ':ClassNew command need a name as argument'
-        return 0
-    endif
-
-    if a:name[0] ==# '/'
-        let l:pFileName = a:name
-    else
-        let l:pFileName = getcwd() . '/' . a:name
-    endif
-
-    let l:pFullName = s:CheckClassName(l:pFileName)
-    if empty(l:pFullName)
-        echom ':ClassNew only execute under autoload director'
-        return 0
-    endif
-
-    let l:jBuilder = class#builder#new(l:pFullName)
-    if a:0 == 0
-        let l:lsContent = jBuilder.ExtractLine('')
-    else
-        let l:lsContent = jBuilder.ExtractLine(a:1)
-    endif
-
-    execute 'edit ' . a:name . '.vim'
-    call setline(1, l:lsContent)
-endfunction "}}}
-
-" ClassAdd: add class frame to current opened buffer
-function! class#builder#hClassAdd(...) abort "{{{
-    let l:pFileName = expand('%:p:r')
-    let l:pFullName = s:CheckClassName(l:pFileName)
-    if empty(l:pFullName)
-        echom ':ClassNew only execute under autoload director'
-        return 0
-    endif
-
-    let l:jBuilder = class#builder#new(l:pFullName)
-    if a:0 == 0
-        let l:lsContent = jBuilder.ExtractLine('')
-    else
-        let l:lsContent = jBuilder.ExtractLine(a:1)
-    endif
-
-    call append(line('$'), l:lsContent)
-endfunction "}}}
-
-" ClassTemp: same as ClassAdd but don't care the filename
-function! class#builder#hClassTemp(...) abort "{{{
-    let l:jBuilder = class#builder#new('')
-
-    if a:0 == 0
-        let l:lsContent = jBuilder.ExtractLine('')
-    else
-        let l:lsContent = jBuilder.ExtractLine(a:1)
-    endif
-
-    call append(line('$'), l:lsContent)
 endfunction "}}}
 
 " TEST: 

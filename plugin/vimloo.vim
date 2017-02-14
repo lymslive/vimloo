@@ -4,16 +4,25 @@
 " Create: 2017-02-11
 " Modify: 2017-02-11
 
+let g:DEBUG = 1
+
 " Generate class frame code from template class file.
 " :ClassNew will create a new file;
 " :ClassAdd append code to current buffer;
 " will check the current filename or directory required under autoload/
 " :ClassTemp load frame code to current buffer without check filename
 "
-" They all accpet option to filter the template, and
+" They all accpet option to filt the template, and
 " :ClassNew must provide a name before option.
 " :ClassTemp -a option read in full template file, 
 "  and the file itself list default option for each paragraph
-command! -nargs=+ ClassNew call class#builder#hClassNew(<f-args>)
-command! -nargs=* ClassAdd call class#builder#hClassAdd(<f-args>)
-command! -nargs=* ClassTemp call class#builder#hClassTemp(<f-args>)
+command! -nargs=+ ClassNew call cmass#builder#hClassNew(<f-args>)
+command! -nargs=* ClassAdd call cmass#builder#hClassAdd(<f-args>)
+command! -nargs=* ClassTemp call cmass#builder#hClassTemp(<f-args>)
+
+" :ClassPart only add the sepecific paragraph subject it's option
+" ignore the default option in the tempcall file
+command! -nargs=1 ClassPart call cmass#builder#hClassPart(<f-args>)
+
+command! -nargs=* ClassLoad call cmass#director#hClassLoad(<f-args>)
+command! -nargs=* ClassTest call cmass#director#hClassTest(<f-args>)
