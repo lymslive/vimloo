@@ -1,7 +1,7 @@
 " File: cmass#builder
 " Author: lymslive
 " Description: command use class#builder
-" Create: 
+" Create: 2017-02-14
 " Modify: 2017-02-14
 
 " Command Hander Interface: {{{1
@@ -88,7 +88,7 @@ endfunction "}}}
 " return subpath#name
 " return empty string if pFileName not under some autoload directory
 function! cmass#builder#CheckAutoName(pFileName) abort "{{{
-    let l:lsPath = split(a:pFileName, '/')
+    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '/')
 
     let l:iEnd = len(l:lsPath) - 1 
     let l:idx = l:iEnd

@@ -4,6 +4,11 @@
 " Create: 2017-02-11
 " Modify: 2017-02-11
 
+"LOAD:
+if exists('s:load') && !exists('g:DEBUG')
+    finish
+endif
+
 " BASIC:
 let s:class = class#old()
 let s:class._name_ = 'class#cmdline'
@@ -47,6 +52,8 @@ function! class#cmdline#ctor(this, argv) abort "{{{
     let a:this.CharName = {}
     let a:this.SwitchOn = []
     let a:this.SwitchOff = []
+
+    call a:this.AddSingle('?', 'help', 'display this usage')
 endfunction "}}}
 
 " NEW:
@@ -61,11 +68,13 @@ function! s:class.AddSingle(sChar, sName, sDesc) dict abort "{{{
     let l:jOption = class#option#single#new(a:sChar, a:sName, a:sDesc)
     let self.Option[a:sName] = l:jOption
 
-    if has_key(self.CharName)
+    if has_key(self.CharName, a:sChar)
         echoerr 'repeat option char: ' .  a:sChar
+        return -1
     else
         let self.CharName[a:sChar] = a:sName
     endif
+    return 0
 endfunction "}}}
 
 " AddPairs: 
@@ -77,11 +86,14 @@ function! s:class.AddPairs(sChar, sName, sDesc, ...) dict abort "{{{
     endif
     let self.Option[a:sName] = l:jOption
 
-    if has_key(self.CharName)
+    if has_key(self.CharName, a:sChar)
         echoerr 'repeat option char: ' .  a:sChar
+        return -1
     else
         let self.CharName[a:sChar] = a:sName
     endif
+
+    return 0
 endfunction "}}}
 
 " AddSwitch: make two option switch off each other
@@ -100,6 +112,7 @@ function! s:class.AddSwitch(sNameOn, sNameOff, ...) dict abort "{{{
             let self.Option[a:sNameOff].Set = v:ture
         endif
     endif
+    return 0
 endfunction "}}}
 
 " Check: parse and check the input argv
@@ -125,6 +138,7 @@ function! s:class.Check() dict abort "{{{
     let l:iCount = self.GetLackNum()
     if l:iCount > 0
         echoerr 'have ' . l:iCount . ' option not provid argument'
+        echo self.ShowUsage()
         return 4
     endif
 
@@ -172,10 +186,15 @@ function! s:class.ParseShortOption(arg) dict abort "{{{
 
         let l:idx = l:idx + 1
         if l:jOption._name_ ==# 'class#option#single'
-            l:jOption.Set = v:ture
+            let l:jOption.Set = v:true
         else
             let self.LastParsed = l:sName
             break
+        endif
+
+        if l:sName ==# 'help'
+            echo self.ShowUsage()
+            return -1
         endif
     endwhile
 
@@ -207,6 +226,11 @@ function! s:class.ParseLongOption(arg) dict abort "{{{
         let l:jOption.Set = v:ture
     else
         let self.LastParsed = l:sName
+    endif
+
+    if l:sName ==# 'help'
+        echo self.ShowUsage()
+        return -1
     endif
 
     return 0
@@ -241,17 +265,53 @@ function! s:class.GetLackNum() dict abort "{{{
     return l:iCount
 endfunction "}}}
 
-" LOAD:
-function! class#cmdline#load() abort "{{{
-    return 1
+" ShowUsage: 
+function! s:class.ShowUsage() abort "{{{
+    let l:lsKeyName = keys(self.Option)
+    call sort(l:lsKeyName)
+
+    let l:iMaxName = 0
+    for l:sName in l:lsKeyName
+        let l:iNameLen = len(l:sName)
+        if l:iNameLen > l:iMaxName
+            let l:iMaxName = l:iNameLen
+        endif
+    endfor
+
+    let l:sRet = ''
+    for l:sName in l:lsKeyName
+        if l:sName ==# 'help'
+            continue
+        endif
+        let l:sRet .= self.Option[l:sName].string(l:iMaxName) . "\n"
+    endfor
+
+    let l:sRet .= self.Option['help'].string(l:iMaxName) . "\n"
+
+    return l:sRet
 endfunction "}}}
+
+" LOAD:
+let s:load = 1
+function! class#cmdline#load(...) abort "{{{
+    if a:0 > 0 && !empty(a:1) && exists('s:load')
+        unlet s:load
+        return 0
+    endif
+    return s:load
+endfunction "}}}
+echo 'class#cmdline loading ...'
 
 " TEST:
 function! class#cmdline#test(...) abort "{{{
     let l:jCmdLine = class#cmdline#new(a:000)
-    echo l:jCmdLine.Argv
-    echo l:jCmdLine.Argc
+    " let l:jCmdLine = class#cmdline#new(['-abcdef', 'xyz', 123])
+    call l:jCmdLine.AddSingle('a', 'aaa', 'some thing a')
+    call l:jCmdLine.AddSingle('b', 'bbb', 'some thing b')
+    call l:jCmdLine.AddPairs('c', 'ccc', 'some thing c')
+    call l:jCmdLine.AddPairs('d', 'ddd', 'some thing d', 'default')
     call l:jCmdLine.Check()
+    echo l:jCmdLine.GetPost()
     return 1
 endfunction "}}}
 

@@ -4,7 +4,7 @@
 " Create: 2017-02-11
 " Modify: 2017-02-11
 
-let g:DEBUG = 1
+" let g:DEBUG = 1
 
 " Generate class frame code from template class file.
 " :ClassNew will create a new file;
@@ -24,5 +24,10 @@ command! -nargs=* ClassTemp call cmass#builder#hClassTemp(<f-args>)
 " ignore the default option in the tempcall file
 command! -nargs=1 ClassPart call cmass#builder#hClassPart(<f-args>)
 
-command! -nargs=* ClassLoad call cmass#director#hClassLoad(<f-args>)
-command! -nargs=* ClassTest call cmass#director#hClassTest(<f-args>)
+" :ClassLoad [-r] [filename]
+" load a script(default current file), with -r option force to reload
+command! -nargs=* -complete=file ClassLoad call cmass#director#hClassLoad(<f-args>)
+
+" :ClassTest [-f filename] argument-list-pass-to-#test
+" call the #test function of some script, default currnet file
+command! -nargs=* -complete=file ClassTest call cmass#director#hClassTest(<f-args>)

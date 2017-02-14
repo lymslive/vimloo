@@ -10,7 +10,7 @@ let s:class._name_ = 'class#option#pairs'
 let s:class._version_ = 1
 
 " the argument for this option
-let s:Argument = ''
+let s:class.Argument = ''
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
@@ -21,8 +21,10 @@ endfunction "}}}
 " CTOR: 4 arguments
 function! class#option#pairs#ctor(this, argv) abort "{{{
     let l:Suctor = a:this._suctor_()
-    call l:Suctor(a:this, [0:2])
-    let l:class.Default = argv[3]
+    call l:Suctor(a:this, a:argv[0:2])
+    if len(a:argv) > 3
+        let a:this.Default = a:argv[3]
+    endif
 endfunction "}}}
 
 " NEW:
@@ -56,7 +58,30 @@ endfunction "}}}
 
 " Has: does provid this option?
 function! s:class.Has() dict abort "{{{
-    return !empty(slef.Argument)
+    return !empty(self.Argument)
+endfunction "}}}
+
+" STRING: -c, --Name    [+|-]Desc
+" a:1, padding Name to this length, to make Desc align right 
+" the [+|-] before Desc show if this option has default
+" [+] requires user must provided a argument
+function! s:class.string(...) dict abort "{{{
+    let l:sRet = '-' . self.Char . ', --' . self.Name
+
+    if a:0 > 0 && a:1 > 0
+        let l:iPadding = a:1 - len(self.Name)
+        if l:iPadding > 0
+            let l:sRet .= repeat(' ', l:iPadding)
+        endif
+    endif
+
+    if self.Must()
+        let l:sRet .= '  [+]' . self.Desc
+    else
+        let l:sRet .= '  [-]' . self.Desc . '('. self.Default. ')'
+    endif
+
+    return l:sRet
 endfunction "}}}
 
 " LOAD:

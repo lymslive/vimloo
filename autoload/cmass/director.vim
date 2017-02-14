@@ -11,28 +11,54 @@ endif
 
 " ClassLoad: 
 function! cmass#director#hClassLoad(...) abort "{{{
-    let l:lsPostArgv = a:000
+    let l:jOption = class#cmdline#new(a:000)
+    call l:jOption.AddSingle('r', 'reload', 'force reload script')
+    let l:iRet = l:jOption.Check()
+    if l:iRet != 0
+        return -1
+    endif
+
+    let l:lsPostArgv = l:jOption.GetPost()
     if empty(l:lsPostArgv)
-        let l:pFileName = expand('%:p:r')
+        let l:pFileName = expand('%:p')
     else
         let l:pFileName = l:lsPostArgv[0]
     endif
 
-    let l:pAutoName =cmass#builder#CheckAutoName(l:pFileName)
+    let l:pAutoName = cmass#builder#CheckAutoName(l:pFileName)
     if empty(l:pAutoName)
         echom ':ClassLoad only execute under autoload director'
-        return 0
+        return -1
     endif
 
     let l:FuncLoad = function(l:pAutoName . '#load')
-    call l:FuncLoad()
+    if l:jOption.Has('reload')
+        call l:FuncLoad(1)
+        execute 'source '. l:pFileName
+    else
+        call l:FuncLoad()
+    endif
+
+    return 0
 endfunction "}}}
 
 " ClassTest: 
 function! cmass#director#hClassTest(...) abort "{{{
-    let l:lsPostArgv = a:000
+    let l:jOption = class#cmdline#new(a:000)
+    call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
+    let l:iRet = l:jOption.Check()
+    if l:iRet != 0
+        return -1
+    endif
 
-    let l:pFileName = expand('%:p:r')
+    let l:lsPostArgv = l:jOption.GetPost()
+
+    if l:jOption.Has('file')
+        let l:pFileName = l:jOption.Get('file')
+    else
+        let l:pFileName = expand('%:p:r')
+    endif
+
     let l:pAutoName =cmass#builder#CheckAutoName(l:pFileName)
     if empty(l:pAutoName)
         echom ':ClassTest only execute under autoload director'
@@ -47,9 +73,10 @@ endfunction "}}}
 function! cmass#director#UpcakArgv(lsArgv) abort "{{{
     let l:sArgv = string(a:lsArgv)
     if type(a:lsArgv) == type([])
-        let l:sArgv = l:sArgv[1:-2]
+        return l:sArgv[1:-2]
+    else
+        return l:sArgv
     endif
-    return l:sArgv
 endfunction "}}}
 
 " UnpackCall: 

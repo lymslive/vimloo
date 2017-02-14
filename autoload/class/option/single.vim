@@ -30,7 +30,7 @@ function! class#option#single#new(...) abort "{{{
 endfunction "}}}
 
 " OLD:
-function! class#option#string#old() abort "{{{
+function! class#option#single#old() abort "{{{
     let l:class = copy(s:class)
     call l:class._old_()
     return l:class
@@ -44,6 +44,24 @@ endfunction "}}}
 " Value: this type option is just boolean, set or unset
 function! s:class.Value() dict abort "{{{
     return self.Has()
+endfunction "}}}
+
+" STRING: -c, --Name    [0]Desc
+" a:1, padding Name to this length, to make Desc align right 
+" the [0] before Desc show this option need no more argument
+function! s:class.string(...) dict abort "{{{
+    let l:sRet = '-' . self.Char . ', --' . self.Name
+
+    if a:0 > 0 && a:1 > 0
+        let l:iPadding = a:1 - len(self.Name)
+        if l:iPadding > 0
+            let l:sRet .= repeat(' ', l:iPadding)
+        endif
+    endif
+
+    let l:sRet .= '  [0]' . self.Desc
+
+    return l:sRet
 endfunction "}}}
 
 " LOAD:

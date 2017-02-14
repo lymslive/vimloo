@@ -20,7 +20,7 @@ endfunction "}}}
 " CTOR:
 function! class#option#base#ctor(this, argv) abort "{{{
     if len(a:argv) < 3
-        echoerr a:this._name_ . 'expcet 3 arguments: (Char, Name, Desc)'
+        echoerr 'class#option#base expcet 3 arguments: (Char, Name, Desc)'
         return
     endif
 
