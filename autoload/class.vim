@@ -156,6 +156,26 @@ function! s:class._old_() dict abort "{{{
     let self._name_ = ''
 endfunction "}}}
 
+" _copy_: 
+function! s:class._copy_(that) dict abort "{{{
+    for l:sKey in keys(self)
+        let l:iType = type(self[l:sKey])
+        " Funcref = 2
+        if l:iType == 2
+            continue
+        endif
+
+        " List = 3, Dict = 4
+        if l:iType == 3 || l:iType == 4
+            if has_key(a:that, l:sKey)
+                let self[l:sKey] = copy(a:that[l:sKey])
+            endif
+        else
+            let self[l:sKey] = a:that[l:sKey]
+        endif
+    endfor
+endfunction "}}}
+
 " class._del_: 
 " call echa dector from bottom upwise
 function! s:class._del_() dict abort "{{{

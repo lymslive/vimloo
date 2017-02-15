@@ -36,6 +36,13 @@ function! tempclass#new(...) abort "{{{
     return l:obj
 endfunction "}}}
 
+" COPY: -P
+function! tempclass#copy(that, ...) abort "{{{
+    let l:obj = copy(s:class)
+    call l:obj._copy_(a:that)
+    return l:obj
+endfunction "}}}
+
 " OLD: -O
 function! tempclass#old() abort "{{{
     let l:class = copy(s:class)
