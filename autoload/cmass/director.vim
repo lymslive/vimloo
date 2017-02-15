@@ -11,9 +11,11 @@ endif
 
 " ClassLoad: 
 function! cmass#director#hClassLoad(...) abort "{{{
-    let l:jOption = class#cmdline#new(a:000)
+    let l:jOption = class#cmdline#new('ClassLoad')
     call l:jOption.AddSingle('r', 'reload', 'force reload script')
-    let l:iRet = l:jOption.Check()
+    call l:jOption.AddSingle('d', 'debug', 'set g:DEBUG to allow directlly reload')
+    call l:jOption.AddSingle('D', 'nodebug', 'unset g:DEBUG variable')
+    let l:iRet = l:jOption.Check(a:000)
     if l:iRet != 0
         return -1
     endif
@@ -34,19 +36,31 @@ function! cmass#director#hClassLoad(...) abort "{{{
     let l:FuncLoad = function(l:pAutoName . '#load')
     if l:jOption.Has('reload')
         call l:FuncLoad(1)
-        execute 'source '. l:pFileName
-    else
-        call l:FuncLoad()
     endif
 
+    if l:jOption.Has('debug')
+        let g:DEBUG = 1
+        echo 'let g:DEBUG = 1'
+    endif
+
+    if l:jOption.Has('nodebug') && exists('g:DEBUG')
+        unlet g:DEBUG
+        echo 'unlet g:DEBUG'
+    endif
+
+    if l:jOption.Has('reload') || l:jOption.Has('debug')
+        execute 'source '. l:pFileName
+    endif
+
+    call l:FuncLoad()
     return 0
 endfunction "}}}
 
 " ClassTest: 
 function! cmass#director#hClassTest(...) abort "{{{
-    let l:jOption = class#cmdline#new(a:000)
+    let l:jOption = class#cmdline#new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
-    let l:iRet = l:jOption.Check()
+    let l:iRet = l:jOption.Check(a:000)
     if l:iRet != 0
         return -1
     endif
@@ -102,7 +116,7 @@ function! cmass#director#load(...) abort "{{{
     endif
     return s:load
 endfunction "}}}
-echo 'cmass#director load ...'
+echo 'cmass#director loading ...'
 
 " TEST: -t
 function! cmass#director#test(...) abort "{{{

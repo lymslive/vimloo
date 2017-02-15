@@ -24,10 +24,23 @@ command! -nargs=* ClassTemp call cmass#builder#hClassTemp(<f-args>)
 " ignore the default option in the tempcall file
 command! -nargs=1 ClassPart call cmass#builder#hClassPart(<f-args>)
 
-" :ClassLoad [-r] [filename]
-" load a script(default current file), with -r option force to reload
+" :ClassLoad [-r] [-d|D] [filename]
+" load a script(default current file), with option
+" -r force to reload
+" -d set g:DEBUG, and then directlly source will work
+" -D unset g:DEBUG
 command! -nargs=* -complete=file ClassLoad call cmass#director#hClassLoad(<f-args>)
 
 " :ClassTest [-f filename] argument-list-pass-to-#test
 " call the #test function of some script, default currnet file
 command! -nargs=* -complete=file ClassTest call cmass#director#hClassTest(<f-args>)
+
+" Log message to some file make use of :redir
+command! -nargs=1 -complete=file LogOn call class#loger#SetLogFile(<f-args>)
+command! -nargs=0 LogOff call class#loger#SetLogFile('')
+command! -nargs=1 LogLevel call class#loger#SetLogLevel(<f-args>)
+
+" :LOG mainly used in script as used :echo, but only support one expr, eg:
+" :LOG 'string' . l:variable
+" :LOG '-2 -WarningMsg ' . l:variable
+command! -nargs=+ LOG call class#loger#hLog(eval(<q-args>))

@@ -62,6 +62,7 @@ endfunction "}}}
 
 " LOAD: -l
 let s:load = 1
+echo 'tempclass is loading ...'
 function! tempclass#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
@@ -72,5 +73,5 @@ endfunction "}}}
 
 " TEST: -t
 function! tempclass#test(...) abort "{{{
-    return 1
+    return 0
 endfunction "}}}

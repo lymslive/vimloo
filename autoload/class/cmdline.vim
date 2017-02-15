@@ -14,9 +14,8 @@ let s:class = class#old()
 let s:class._name_ = 'class#cmdline'
 let s:class._version_ = 1
 
-" Input argument list 
-let s:class.Argc = 0
-let s:class.Argv = []
+" command name
+let s:class.Command = ''
 
 " Support what options
 let s:class.Option = {}
@@ -40,18 +39,16 @@ endfunction "}}}
 
 " CTOR:
 function! class#cmdline#ctor(this, argv) abort "{{{
-    if len(a:argv) == 1 && type(a:argv[0]) == type([])
-        let a:this.Argv = a:argv[0]
-        let a:this.Argc = len(a:argv[0])
-    else
-        let a:this.Argv = a:argv
-        let a:this.Argc = len(a:argv)
+    if len(a:argv) > 0
+        let a:this.Command = a:argv[0]
     endif
 
+    " list or dict member must be re-init
     let a:this.Option = {}
     let a:this.CharName = {}
     let a:this.SwitchOn = []
     let a:this.SwitchOff = []
+    let a:this.PostArgv = []
 
     call a:this.AddSingle('?', 'help', 'display this usage')
 endfunction "}}}
@@ -69,7 +66,7 @@ function! s:class.AddSingle(sChar, sName, sDesc) dict abort "{{{
     let self.Option[a:sName] = l:jOption
 
     if has_key(self.CharName, a:sChar)
-        echoerr 'repeat option char: ' .  a:sChar
+        echom 'repeat option char: ' .  a:sChar
         return -1
     else
         let self.CharName[a:sChar] = a:sName
@@ -87,7 +84,7 @@ function! s:class.AddPairs(sChar, sName, sDesc, ...) dict abort "{{{
     let self.Option[a:sName] = l:jOption
 
     if has_key(self.CharName, a:sChar)
-        echoerr 'repeat option char: ' .  a:sChar
+        echom 'repeat option char: ' .  a:sChar
         return -1
     else
         let self.CharName[a:sChar] = a:sName
@@ -105,11 +102,11 @@ function! s:class.AddSwitch(sNameOn, sNameOff, ...) dict abort "{{{
     call add(self.SwitchOn, a:sNameOff)
     if a:0 > 0
         if a:1
-            let self.Option[a:sNameOn].Set = v:ture
+            let self.Option[a:sNameOn].Set = v:true
             let self.Option[a:sNameOff].Set = v:false
         else
             let self.Option[a:sNameOn].Set = v:false
-            let self.Option[a:sNameOff].Set = v:ture
+            let self.Option[a:sNameOff].Set = v:true
         endif
     endif
     return 0
@@ -117,11 +114,20 @@ endfunction "}}}
 
 " Check: parse and check the input argv
 " return some error number, 0 as success
-function! s:class.Check() dict abort "{{{
-    for l:arg in self.Argv
+function! s:class.Check(argv) dict abort "{{{
+    for l:arg in a:argv
+        if l:arg ==# '?' || l:arg ==# '-?'
+            echo self.ShowUsage()
+            return -1
+        endif
+
         if !empty(self.LastParsed)
-            let self.Option[self.LastParsed].Argument = l:arg
-            let self.LastParsed = ''
+            if self.LastParsed !=# '--'
+                let self.Option[self.LastParsed].Argument = l:arg
+                let self.LastParsed = ''
+            else
+                call add(self.PostArgv, l:arg)
+            endif
         else
             let l:iErr = self.ParseArg(l:arg)
             if l:iErr != 0
@@ -130,14 +136,14 @@ function! s:class.Check() dict abort "{{{
         endif
     endfor
 
-    if !empty(self.LastParsed)
-        echoerr 'the last option has not argument: --' . self.LastParsed
+    if !empty(self.LastParsed) && self.LastParsed !=# '--'
+        echom 'the last option has not argument: --' . self.LastParsed
         return 3
     endif
 
     let l:iCount = self.GetLackNum()
     if l:iCount > 0
-        echoerr 'have ' . l:iCount . ' option not provid argument'
+        echom 'have ' . l:iCount . ' option not provid argument'
         echo self.ShowUsage()
         return 4
     endif
@@ -148,8 +154,25 @@ endfunction "}}}
 " ParseArg: parse each input argument
 " return some error number, 0 as success
 function! s:class.ParseArg(arg) dict abort "{{{
+    let l:iArgLen = len(a:arg)
+
+    if l:iArgLen == 0
+        return 0
+    endif
+
     if a:arg[0] != '-'
         call add(self.PostArgv, a:arg)
+        return 0
+    endif
+
+    " special argument - or -- stop parser remain options
+    if l:iArgLen == 1
+        let self.LastParsed = '--'
+        return 0
+    endif
+
+    if l:iArgLen == 2 && a:arg ==# '--'
+        let self.LastParsed = '--'
         return 0
     endif
 
@@ -173,14 +196,14 @@ function! s:class.ParseShortOption(arg) dict abort "{{{
             let l:sName = self.CharName[l:sChar]
         else
             let l:sName = ''
-            echoerr 'option char not supported: -' . l:sChar
+            echom 'option char not supported: -' . l:sChar
             return 1
         endif
 
         if has_key(self.Option, l:sName)
             let l:jOption = self.Option[l:sName]
         else
-            echoerr 'unkown option: ' . a:arg
+            echom 'unkown option: ' . a:arg
             return 2
         endif
 
@@ -218,12 +241,12 @@ function! s:class.ParseLongOption(arg) dict abort "{{{
     if has_key(self.Option, l:sName)
         let l:jOption = self.Option[l:sName]
     else
-        echoerr 'unkown option: ' . a:arg
+        echom 'unkown option: ' . a:arg
         return 2
     endif
 
     if l:jOption._name_ ==# 'class#option#single'
-        let l:jOption.Set = v:ture
+        let l:jOption.Set = v:true
     else
         let self.LastParsed = l:sName
     endif
@@ -257,7 +280,7 @@ function! s:class.GetLackNum() dict abort "{{{
     for [l:sName, l:jOption] in items(self.Option)
         if l:jOption._name_ ==# 'class#option#pairs' && l:jOption.Must() && empty(l:jOption.Argument)
             let l:iCount = l:iCount + 1
-            echoerr 'option requires argument: --' . l:sName
+            echom 'option requires argument: --' . l:sName
         endif
         unlet l:sName 
     endfor
@@ -278,7 +301,7 @@ function! s:class.ShowUsage() abort "{{{
         endif
     endfor
 
-    let l:sRet = ''
+    let l:sRet = 'usage: ' . self.Command . " [options] ...\n"
     for l:sName in l:lsKeyName
         if l:sName ==# 'help'
             continue
@@ -304,13 +327,16 @@ echo 'class#cmdline loading ...'
 
 " TEST:
 function! class#cmdline#test(...) abort "{{{
-    let l:jCmdLine = class#cmdline#new(a:000)
-    " let l:jCmdLine = class#cmdline#new(['-abcdef', 'xyz', 123])
+    let l:jCmdLine = class#cmdline#new('CmdLineTest')
     call l:jCmdLine.AddSingle('a', 'aaa', 'some thing a')
     call l:jCmdLine.AddSingle('b', 'bbb', 'some thing b')
     call l:jCmdLine.AddPairs('c', 'ccc', 'some thing c')
     call l:jCmdLine.AddPairs('d', 'ddd', 'some thing d', 'default')
-    call l:jCmdLine.Check()
+    call l:jCmdLine.Check(a:000)
+    echo 'option[a] = ' . l:jCmdLine.Get('aaa')
+    echo 'option[b] = ' . l:jCmdLine.Get('bbb')
+    echo 'option[c] = ' . l:jCmdLine.Get('ccc')
+    echo 'option[d] = ' . l:jCmdLine.Get('ddd')
     echo l:jCmdLine.GetPost()
     return 1
 endfunction "}}}

@@ -57,7 +57,7 @@ function! s:class.ExtractLine(sFilter) dict abort "{{{
             continue
         endif
 
-        let l:lsMatch = matchlist(l:sLine, '^\("\s*[A-Z]\+:\)\s*-\([A-Za-a]\)')
+        let l:lsMatch = matchlist(l:sLine, '^\("\s*[A-Z]\+:\)\s*-\([A-Za-z]\)')
         if !empty(l:lsMatch)
             let l:sComment = l:lsMatch[1]
 
