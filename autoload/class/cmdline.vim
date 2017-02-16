@@ -123,7 +123,7 @@ function! s:class.Check(argv) dict abort "{{{
 
         if !empty(self.LastParsed)
             if self.LastParsed !=# '--'
-                let self.Option[self.LastParsed].Argument = l:arg
+                call self.Option[self.LastParsed].SetValue(l:arg)
                 let self.LastParsed = ''
             else
                 call add(self.PostArgv, l:arg)
@@ -208,8 +208,8 @@ function! s:class.ParseShortOption(arg) dict abort "{{{
         endif
 
         let l:idx = l:idx + 1
-        if l:jOption._name_ ==# 'class#option#single'
-            let l:jOption.Set = v:true
+        if class#option#single#isobject(l:jOption)
+            call l:jOption.SetValue()
         else
             let self.LastParsed = l:sName
             break
@@ -224,7 +224,7 @@ function! s:class.ParseShortOption(arg) dict abort "{{{
     if l:idx < l:iend
         if !empty(self.LastParsed)
             let l:sRest = a:arg[l:idx:]
-            let self.Option[self.LastParsed].Argument = l:sRest
+            call self.Option[self.LastParsed].SetValue(l:sRest)
             let self.LastParsed = ''
         endif
     endif
@@ -245,8 +245,8 @@ function! s:class.ParseLongOption(arg) dict abort "{{{
         return 2
     endif
 
-    if l:jOption._name_ ==# 'class#option#single'
-        let l:jOption.Set = v:true
+    if class#option#single#isobject(l:jOption)
+        call l:jOption.SetValue()
     else
         let self.LastParsed = l:sName
     endif
@@ -278,7 +278,8 @@ endfunction "}}}
 function! s:class.GetLackNum() dict abort "{{{
     let l:iCount = 0
     for [l:sName, l:jOption] in items(self.Option)
-        if l:jOption._name_ ==# 'class#option#pairs' && l:jOption.Must() && empty(l:jOption.Argument)
+        if class#option#pairs#isobject(l:jOption)
+                    \ && l:jOption.Must() && !l:jOption.Has()
             let l:iCount = l:iCount + 1
             echom 'option requires argument: --' . l:sName
         endif

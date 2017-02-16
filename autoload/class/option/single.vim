@@ -18,7 +18,7 @@ endfunction "}}}
 
 " CTOR:
 function! class#option#single#ctor(this, argv) abort "{{{
-    let l:Suctor = a:this._suctor_()
+    let l:Suctor = s:class._suctor_()
     call l:Suctor(a:this, a:argv)
 endfunction "}}}
 
@@ -36,6 +36,11 @@ function! class#option#single#old() abort "{{{
     return l:class
 endfunction "}}}
 
+" ISOBJECT:
+function! class#option#single#isobject(that) abort "{{{
+    return class#SameClass(s:class, a:that)
+endfunction "}}}
+
 " Has: 
 function! s:class.Has() dict abort "{{{
     return self.Set
@@ -43,7 +48,16 @@ endfunction "}}}
 
 " Value: this type option is just boolean, set or unset
 function! s:class.Value() dict abort "{{{
-    return self.Has()
+    if self.Has()
+        return 1
+    else
+        return 0
+    endif
+endfunction "}}}
+
+" SetValue: 
+function! s:class.SetValue() dict abort "{{{
+    let self.Set = v:true
 endfunction "}}}
 
 " STRING: -c, --Name    [0]Desc

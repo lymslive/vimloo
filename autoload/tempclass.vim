@@ -21,7 +21,7 @@ endfunction "}}}
 
 " CTOR: -c
 function! tempclass#ctor(this, argv) abort "{{{
-    let l:Suctor = a:this._suctor_()
+    let l:Suctor = s:class._suctor_()
     call l:Suctor(a:this, [])
 endfunction "}}}
 
@@ -48,6 +48,11 @@ function! tempclass#old() abort "{{{
     let l:class = copy(s:class)
     call l:class._old_()
     return l:class
+endfunction "}}}
+
+" ISOBJECT: -s
+function! tempclass#isobject(that) abort "{{{
+    return class#SameClass(s:class, a:that)
 endfunction "}}}
 
 " INSTANCE: -I

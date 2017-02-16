@@ -60,6 +60,30 @@ function! class#delete(this) abort "{{{
     call a:this._del_()
 endfunction "}}}
 
+" isobject: 
+function! class#isobject(...) abort "{{{
+    if a:0 == 0
+        return v:false
+    elseif a:0 == 1
+        return class#SameClass(s:class, a:1)
+    else
+        let l:class = eval(a:1 . '#class()')
+        return class#SameClass(l:class, a:2)
+    endif
+endfunction "}}}
+
+" SameClass: 
+function! class#SameClass(first, second) abort "{{{
+    if type(a:first) == 4 && type(a:second)
+       if has_key(a:first, '_name_') && has_key(a:second, '_name_')
+           if a:first._name_ ==# a:second._name_
+               return v:true
+           endif
+       endif 
+    endif
+    return v:false
+endfunction "}}}
+
 " convert object to string
 function! s:class.string() dict abort "{{{
     return self._name_

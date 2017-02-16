@@ -5,12 +5,14 @@
 " Modify: 2017-02-13
 
 " BASIC:
-let s:class = class#option#base#old()
+let s:class = class#option#single#old()
 let s:class._name_ = 'class#option#pairs'
 let s:class._version_ = 1
 
 " the argument for this option
 let s:class.Argument = ''
+" user must provide argument for this option?
+let s:class.HasDefault = v:false
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
@@ -20,9 +22,10 @@ endfunction "}}}
 
 " CTOR: 4 arguments
 function! class#option#pairs#ctor(this, argv) abort "{{{
-    let l:Suctor = a:this._suctor_()
+    let l:Suctor = s:class._suctor_()
     call l:Suctor(a:this, a:argv[0:2])
     if len(a:argv) > 3
+        let a:this.HasDefault = v:true
         let a:this.Default = a:argv[3]
     endif
 endfunction "}}}
@@ -41,24 +44,30 @@ function! class#option#pairs#old() abort "{{{
     return l:class
 endfunction "}}}
 
+" ISOBJECT:
+function! class#option#pairs#isobject(that) abort "{{{
+    return class#SameClass(s:class, a:that)
+endfunction "}}}
+
 " Must: 
 function! s:class.Must() dict abort "{{{
-    return empty(self.Default)
+    return !self.HasDefault
 endfunction "}}}
 
 " Value: 
 " the value of argument for this option
 function! s:class.Value() dict abort "{{{
-    if !empty(self.Argument)
+    if self.Has()
         return self.Argument
     else
         return self.Default
     endif
 endfunction "}}}
 
-" Has: does provid this option?
-function! s:class.Has() dict abort "{{{
-    return !empty(self.Argument)
+" SetValue: 
+function! s:class.SetValue(arg) dict abort "{{{
+    let self.Set = v:true
+    let self.Argument = a:arg
 endfunction "}}}
 
 " STRING: -c, --Name    [+|-]Desc
