@@ -122,7 +122,7 @@ let subclass = copy(class)
 
 " 添加新的属性，或覆盖原来的键值定义
 
-let subobj = copy(suclass)
+let subobj = copy(subclass)
 ```
 
 由于 VimL 是弱类型语言，那也就容易实现多态了。比如把许多不同类的实例对象，保存
