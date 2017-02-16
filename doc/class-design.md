@@ -256,9 +256,9 @@ endfunction
 
 ## 附注：
 
-本文截取的代码片断就是 [tempclass.vim](tempclass.vim) 的内容。
+本文截取的代码片断就是 [tempclass.vim](../autoload/tempclass.vim) 的内容。
 用 `:ClassNew` 或 `:ClassAdd` 生成自定义类时，会自动将 `tempclass#`
 替换为正确的类名路径。命令所支持的选项可用 `:ClassTemp -a` 载入
 源文件全文件后直接查看。
 
-一些较有实际用途的类定义可参考 [class/](../class) 子目录下的实现代码。
+一些较有实际用途的类定义可参考 [class/](../autoload/class) 子目录下的实现代码。
