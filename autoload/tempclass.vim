@@ -52,7 +52,7 @@ endfunction "}}}
 
 " ISOBJECT: -s
 function! tempclass#isobject(that) abort "{{{
-    return class#SameClass(s:class, a:that)
+    return s:class._isobject_(a:that)
 endfunction "}}}
 
 " INSTANCE: -I

@@ -328,6 +328,7 @@ echo 'class#cmdline loading ...'
 
 " TEST:
 function! class#cmdline#test(...) abort "{{{
+    " :ClassTest -- -ac xyz -d efg
     let l:jCmdLine = class#cmdline#new('CmdLineTest')
     call l:jCmdLine.AddSingle('a', 'aaa', 'some thing a')
     call l:jCmdLine.AddSingle('b', 'bbb', 'some thing b')

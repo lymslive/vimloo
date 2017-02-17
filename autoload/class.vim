@@ -65,23 +65,11 @@ function! class#isobject(...) abort "{{{
     if a:0 == 0
         return v:false
     elseif a:0 == 1
-        return class#SameClass(s:class, a:1)
+        return s:class._isobject_(a:1)
     else
         let l:class = eval(a:1 . '#class()')
-        return class#SameClass(l:class, a:2)
+        return l:class._isobject_(a:2)
     endif
-endfunction "}}}
-
-" SameClass: 
-function! class#SameClass(first, second) abort "{{{
-    if type(a:first) == 4 && type(a:second)
-       if has_key(a:first, '_name_') && has_key(a:second, '_name_')
-           if a:first._name_ ==# a:second._name_
-               return v:true
-           endif
-       endif 
-    endif
-    return v:false
 endfunction "}}}
 
 " convert object to string
@@ -92,19 +80,6 @@ endfunction "}}}
 " convert object to number
 function! s:class.number() dict abort "{{{
     return self._version_
-endfunction "}}}
-
-" triggle to load this vimL file
-function! class#load() abort "{{{
-    return 1
-endfunction "}}}
-
-" unit test for this vimL file
-function! class#test() abort "{{{
-    let l:obj = class#new()
-    call l:obj.hello()
-    call l:obj.hello('vim')
-    return 1
 endfunction "}}}
 
 " return a list of super classes in derived path
@@ -217,6 +192,15 @@ function! s:class._del_() dict abort "{{{
     endfor
 endfunction "}}}
 
+" _isobject_: 
+function! s:class._isobject_(that) dict abort "{{{
+    if type(a:that) == 4 && has_key(a:that, '_name_') && a:that._name_ ==# self._name_
+        return v:true
+    else
+        return v:false
+    endif
+endfunction "}}}
+
 " the shared instance: 
 let s:instance = {}
 function! class#instance() abort "{{{
@@ -235,3 +219,17 @@ function! s:class.hello(...) dict abort "{{{
     endif
     echo self.string() . '[' . self.number() . ']: hello ' . l:word . '!'
 endfunction "}}}
+
+" triggle to load this vimL file
+function! class#load() abort "{{{
+    return 1
+endfunction "}}}
+
+" unit test for this vimL file
+function! class#test() abort "{{{
+    let l:obj = class#new()
+    call l:obj.hello()
+    call l:obj.hello('vim')
+    return 1
+endfunction "}}}
+

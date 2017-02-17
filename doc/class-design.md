@@ -82,7 +82,7 @@ let obj = class#new('tempclass', arg-list)
 
 ```
 function! tempclass#ctor(this, argv) abort
-  let l:Suctor = a:this._suctor_()
+  let l:Suctor = s:class._suctor_()
   call l:Suctor(a:this, [])
 endfunction
 ```

@@ -38,7 +38,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#option#single#isobject(that) abort "{{{
-    return class#SameClass(s:class, a:that)
+    return s:class._isobject_(a:that)
 endfunction "}}}
 
 " Has: 
