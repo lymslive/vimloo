@@ -10,13 +10,20 @@ if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
 
-" BASIC:
+" CLASS:
 let s:class = class#old()
 let s:class._name_ = 'tempclass'
 let s:class._version_ = 1
 
 function! tempclass#class() abort "{{{
     return s:class
+endfunction "}}}
+
+" NEW: -n
+function! tempclass#new(...) abort "{{{
+    let l:obj = copy(s:class)
+    call l:obj._new_(a:000)
+    return l:obj
 endfunction "}}}
 
 " CTOR: -c
@@ -27,13 +34,6 @@ endfunction "}}}
 
 " DECTOR: -D
 function! tempclass#dector() abort "{{{
-endfunction "}}}
-
-" NEW: -n
-function! tempclass#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
-    return l:obj
 endfunction "}}}
 
 " COPY: -P

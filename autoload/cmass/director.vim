@@ -10,6 +10,7 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " ClassLoad: 
+" :ClassLoad [-r] [-d|D] [filename]
 function! cmass#director#hClassLoad(...) abort "{{{
     let l:jOption = class#cmdline#new('ClassLoad')
     call l:jOption.AddSingle('r', 'reload', 'force reload script')
@@ -57,6 +58,7 @@ function! cmass#director#hClassLoad(...) abort "{{{
 endfunction "}}}
 
 " ClassTest: 
+" :ClassTest [-f filename] -- [argument-list-pass-to-#test]
 function! cmass#director#hClassTest(...) abort "{{{
     let l:jOption = class#cmdline#new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')

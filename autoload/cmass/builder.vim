@@ -88,18 +88,23 @@ endfunction "}}}
 " return subpath#name
 " return empty string if pFileName not under some autoload directory
 function! cmass#builder#CheckAutoName(pFileName) abort "{{{
-    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '/')
+    if empty(a:pFileName)
+        return ''
+    endif
+
+    " split path by / or #, last file extention is removed
+    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '/\|#')
 
     let l:iEnd = len(l:lsPath) - 1 
-    let l:idx = l:iEnd
-    while l:idx >= 0
-        if l:lsPath[l:idx] ==# 'autoload'
-            break
-        endif
-        let l:idx = l:idx - 1
-    endwhile
+    let l:idx = index(l:lsPath, 'autoload')
 
-    if l:idx < 0 || l:idx == l:iEnd
+    " last part is 'autoload/' ? no subdirctory
+    if l:idx == l:iEnd
+        return ''
+    endif
+
+    " full path and no 'autoload/' in path
+    if l:idx == -1 && a:pFileName[0] == '/'
         return ''
     endif
 
