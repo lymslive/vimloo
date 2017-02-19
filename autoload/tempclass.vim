@@ -50,9 +50,17 @@ function! tempclass#old() abort "{{{
     return l:class
 endfunction "}}}
 
+" MERGE: -M
+function! tempclass#merge(that) abort "{{{
+    call a:that._merge_(s:class)
+endfunction "}}}
+
 " ISOBJECT: -s
 function! tempclass#isobject(that) abort "{{{
     return s:class._isobject_(a:that)
+endfunction "}}}
+function! tempclass#isa(that) abort "{{{
+    return s:class._isa_(a:that)
 endfunction "}}}
 
 " INSTANCE: -I

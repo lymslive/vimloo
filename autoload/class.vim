@@ -9,12 +9,32 @@ let s:class._name_ = 'class'
 let s:class._version_ = 1
 let s:class._super_ = 'class'
 
-" class: 
-function! class#class() abort "{{{
-    return s:class
+" class: with no arg, return the class dict of this base class
+" with one arg, get the class dict by class name, or empty dict
+function! class#class(...) abort "{{{
+    if a:0 == 0
+        return s:class
+    endif
+
+    let l:name = a:1
+    if type(l:name) != type('') || empty(a:1)
+        return {}
+    endif
+
+    " function() to get FuncRef won't autoload
+    " use eval
+    let l:class = eval(l:name . '#class()')
+    return l:class
+
+"   let l:Class = function(l:name . '#class')
+"   if !exists('*l:Class')
+"       return {}
+"   else
+"       return l:Class()
+"   endif
 endfunction "}}}
 
-" ctor: 
+" ctor: dummy function
 function! class#ctor(this, argv) abort "{{{
 endfunction "}}}
 
@@ -26,7 +46,11 @@ endfunction "}}}
 " if name is empty or 0, use this base class
 function! class#new(...) abort "{{{
     if a:0 > 0 && !empty(a:1)
-        let l:class = eval(a:1 . '#class()')
+        let l:class = class#class(a:1)
+        if empty(l:class)
+            echoerr 'may not class: ' . a:1
+            return {}
+        endif
         let l:obj = copy(l:class)
     else
         let l:obj = copy(s:class)
@@ -44,14 +68,30 @@ endfunction "}}}
 
 " old: create a new class from super class
 " if super(a:1) is empty or 0, the super is this base class
+" more argument as interface names
 function! class#old(...) abort "{{{
     if a:0 == 0 || empty(a:1)
         let l:class = copy(s:class)
     else
-        let l:super = eval(a:1 . '#class()')
+        let l:super = class#class(a:1)
+        if empty(l:super)
+            echoerr 'may not class: ' . a:1
+            return {}
+        endif
         let l:class = copy(l:super)
     endif
+
     call l:class._old_()
+
+    if a:0 > 1
+        for l:sInterface in a:000[1:]
+            let l:interface = class#class(l:sInterface)
+            if !empty(l:interface)
+                call l:class._merge_(l:interface)
+            endif
+        endfor
+    endif
+
     return l:class
 endfunction "}}}
 
@@ -61,14 +101,35 @@ function! class#delete(this) abort "{{{
 endfunction "}}}
 
 " isobject: 
+" isobect(class_name, objcet_variable)
 function! class#isobject(...) abort "{{{
     if a:0 == 0
         return v:false
     elseif a:0 == 1
         return s:class._isobject_(a:1)
     else
-        let l:class = eval(a:1 . '#class()')
+        let l:class = class#class(a:1)
+        if empty(l:class)
+            return v:false
+        endif
         return l:class._isobject_(a:2)
+    endif
+endfunction "}}}
+
+" isa: 
+" isa(class_name, objcet_variable)
+function! class#isa(...) abort "{{{
+    if a:0 == 0
+        return v:false
+    elseif a:0 == 1
+        return s:class._isa_(a:1)
+    else
+        let l:class = class#class(a:1)
+        if empty(l:class)
+            return v:false
+        else
+            return l:class._isa_(a:2)
+        endif
     endif
 endfunction "}}}
 
@@ -84,27 +145,24 @@ endfunction "}}}
 
 " return a list of super classes in derived path
 function! s:class._supers_() dict abort "{{{
-    if !has_key(self, '_super_')
-        return []
-    endif
-    if self._super_ == self._name_
-        return []
-    endif
-
     let l:liSuper = []
-    call add(l:liSuper, self._super_)
-    let l:super_name = self._super_
-    let l:super_class = eval(l:super_name . '#class()')
-    while has_key(l:super_class, '_super_') && l:super_class._super_ != l:super_name
-        call add(l:liSuper, l:super_class._super_)
+    let l:super_class = self
+
+    while has_key(l:super_class, '_super_')
+            \ && l:super_class._super_ !=# l:super_class._name_
         let l:super_name = l:super_class._super_
-        let l:super_class = eval(l:super_name . '#class()')
+        let l:super_class = class#class(l:super_name)
+        if empty(l:super_class)
+            return l:liSuper
+        else
+            call add(l:liSuper, l:super_name)
+        endif
     endwhile
 
     return l:liSuper
 endfunction "}}}
 
-" _ctor_: 
+" _ctor_: return #ctor function, or the dummy class#ctor()
 function! s:class._ctor_() dict abort "{{{
     let l:Ctor = function(self._name_ . '#ctor')
     if !exists('*l:Ctor')
@@ -115,6 +173,10 @@ endfunction "}}}
 
 " _suctor_: 
 function! s:class._suctor_() dict abort "{{{
+    if !has_key(self, '_super_')
+        return function('class#ctor')
+    endif
+
     let l:Ctor = function(self._super_ . '#ctor')
     if !exists('*l:Ctor')
         let l:Ctor = function('class#ctor')
@@ -155,9 +217,18 @@ function! s:class._old_() dict abort "{{{
     let self._name_ = ''
 endfunction "}}}
 
-" _copy_: 
+" _copy_: only copy normal data field, but method
 function! s:class._copy_(that) dict abort "{{{
+    if type(a:that) != 4
+        return
+    endif
+
     for l:sKey in keys(self)
+        " ignore reserve fields: _xxxx_
+        if match(l:sKey, '^_.*-$') != -1
+            continue
+        endif
+
         let l:iType = type(self[l:sKey])
         " Funcref = 2
         if l:iType == 2
@@ -173,6 +244,33 @@ function! s:class._copy_(that) dict abort "{{{
             let self[l:sKey] = a:that[l:sKey]
         endif
     endfor
+endfunction "}}}
+
+" _merge_: copy all fields, but not overide already existed key
+" make a:that as an interface class of slef
+function! s:class._merge_(that) dict abort "{{{
+    if type(a:that) != 4 || !has_key(a:that, '_name_')
+        return
+    endif
+
+    if has_key(self, '_interface_')
+        if index(self._interface_, a:that._name_) != -1
+            return
+        endif 
+    endif
+
+    for l:sKey in keys(a:that)
+        if has_key(self, l:sKey)
+            continue
+        endif
+        let self[l:sKey] = a:that[l:sKey]
+    endfor
+
+    if !has_key(self, '_interface_')
+        let self._interface_ = [a:that._name_]
+    else
+        call add(self._interface_, a:that._name_)
+    endif
 endfunction "}}}
 
 " class._del_: 
@@ -199,6 +297,50 @@ function! s:class._isobject_(that) dict abort "{{{
     else
         return v:false
     endif
+endfunction "}}}
+
+" _isa_: check self if is some super or interface of a:that class
+function! s:class._isa_(that) dict abort "{{{
+    if type(a:that) != 4 || !has_key(a:that, '_name_')
+        return v:false
+    endif
+
+    " a:that if object of self
+    if self._isobject_(a:that)
+        return v:true
+    endif
+
+    " self if super of a:that
+    if has_key(a:that, '_super_') && a:that._super_ ==# self._name_
+        return v:true
+    endif
+
+    " self if interface of a:that
+    if has_key(a:that, '_interface_')
+        if index(a:that._interface_, self._name_) != -1
+            return v:true
+        endif
+    endif
+
+    " recursive check super
+    if has_key(a:that, '_super_') && a:that._super_ !=# a:that._name_
+        let l:super = class#class(a:that._super_)
+        if !empty(l:super) && self._isa_(l:super)
+            return v:true
+        endif
+    endif
+
+    " recursive check interface
+    if has_key(a:that, '_interface_')
+        for l:sInterface in a:that._interface_
+            let l:interface = class#class(l:sInterface)
+            if !empty(l:interface) && self._isa_(l:interface)
+                return v:true
+            end
+        endfor
+    endif
+
+    return v:false
 endfunction "}}}
 
 " the shared instance: 
