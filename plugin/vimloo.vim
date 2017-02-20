@@ -44,3 +44,6 @@ command! -nargs=1 LogLevel call class#loger#SetLogLevel(<f-args>)
 " :LOG 'string' . l:variable
 " :LOG '-2 -WarningMsg ' . l:variable
 command! -nargs=+ LOG call class#loger#hLog(eval(<q-args>))
+
+" display an overview of a class, use full class name with #
+command! -nargs=1 ClassView execute 'call ' . <q-args> . '#class().echo()'

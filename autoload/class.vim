@@ -223,9 +223,13 @@ function! s:class._copy_(that) dict abort "{{{
         return
     endif
 
-    for l:sKey in keys(self)
+    for l:sKey in keys(a:that)
+        if !has_key(self, l:sKey)
+            continue
+        endif
+
         " ignore reserve fields: _xxxx_
-        if match(l:sKey, '^_.*-$') != -1
+        if match(l:sKey, '^_.*_$') != -1
             continue
         endif
 
@@ -237,9 +241,7 @@ function! s:class._copy_(that) dict abort "{{{
 
         " List = 3, Dict = 4
         if l:iType == 3 || l:iType == 4
-            if has_key(a:that, l:sKey)
-                let self[l:sKey] = copy(a:that[l:sKey])
-            endif
+            let self[l:sKey] = copy(a:that[l:sKey])
         else
             let self[l:sKey] = a:that[l:sKey]
         endif
@@ -360,6 +362,63 @@ function! s:class.hello(...) dict abort "{{{
         let l:word = a:1
     endif
     echo self.string() . '[' . self.number() . ']: hello ' . l:word . '!'
+endfunction "}}}
+
+" echo: 
+function! s:class.echo(...) dict abort "{{{
+    let l:sMember = "class member:\n"
+    let l:sMethod = "class method:\n"
+
+    let l:sMember .= s:FormatField(self, '_name_', '  ')
+    let l:sMember .= s:FormatField(self, '_version_', '  ')
+
+    if has_key(self, '_super_')
+        let l:sMember .= s:FormatField(self, '_super_', '  ')
+    endif
+    if has_key(self, '_interface_')
+        let l:sMember .= s:FormatField(self, '_interface_', '  ')
+    endif
+
+    let l:lsBasic = ['_name_', '_version_', '_super_', '_interface_']
+    let l:lsReserve = []
+
+    for l:sKey in sort(keys(self))
+        if index(l:lsBasic, l:sKey) != -1
+            continue
+        endif
+
+        " save other reserve keys: _xxx_
+        if match(l:sKey, '^_.*_$') != -1
+            call add(l:lsReserve, l:sKey)
+            continue
+        endif
+
+        if type(self[l:sKey]) != 2
+            let l:sMember .= s:FormatField(self, l:sKey, '  ')
+        else
+            let l:sMethod .= s:FormatField(self, l:sKey, '  ')
+        endif
+    endfor
+    
+    " option -a, also print reserve keys
+    if match(a:000, 'a') != -1
+        for l:sKey in l:lsReserve
+            if type(self[l:sKey]) != 2
+                let l:sMember .= s:FormatField(self, l:sKey, '  ')
+            else
+                let l:sMethod .= s:FormatField(self, l:sKey, '  ')
+            endif
+        endfor
+    endif
+
+    echo l:sMember . l:sMethod
+
+endfunction "}}}
+
+" FormatField: 
+function! s:FormatField(obj, key, lead) abort "{{{
+    let l:str = a:lead . a:key . ' = ' . string(a:obj[a:key]) . "\n"
+    return l:str
 endfunction "}}}
 
 " triggle to load this vimL file
