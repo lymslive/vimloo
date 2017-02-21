@@ -134,6 +134,13 @@ endfunction
 
 由于该函数也设计为构建一个新对象，故需返回一个对象。
 
+## 析构函数 dector
+
+这个函数应该极少用到。但是 `class` 基类也提供了一个 `#delete()` 
+函数，它将沿着继承路径自下而上，调用每个类的 `#dector()` 函数。
+所以如果实有需要清理工作的情况下，可为自定义类添加一个 `#dector()`
+函数，不带参数，并调用 `class#delete(obj)` 析构之。
+
 ## 继承函数 old
 
 ```
@@ -167,12 +174,55 @@ let sub = class#old('somebase')
 同时也可以对继承作更多的控制。比如在返回子类之前，删去某些属性，
 那这些属性就相当于私有的，无法被子类继承了。
 
-## 析构函数 dector
+## 多重接口 merge
 
-这个函数应该极少用到。但是 `class` 基类也提供了一个 `#delete()` 
-函数，它将沿着继承路径自下而上，调用每个类的 `#dector()` 函数。
-所以如果实有需要清理工作的情况下，可为自定义类添加一个 `#dector()`
-函数，不带参数，并调用 `class#delete(obj)` 析构之。
+多重继承在实现与使用上都容易出问题。所以 vimloo 只支持单继承，
+只允许一个父类，但可以另有多个接口类。函数 `#merge()` 用于处理
+自定义类被 “子类” 继承接口的实现代码。
+
+```
+function! tempclass#merge(that) abort
+  call a:that._merge_(s:class)
+endfunction
+```
+
+其中参数 `a:that` 是已经创建的子类。该方法表明将自已类中定义的键
+合并到子类的，但不会覆盖子类中原有的键。
+
+基类的继承函数 `class#old()` 扩展功能，可接收多个参数，都是类名字符串。
+第一个类名表示要继承的基类，其后的类名表示接口类。
+
+例如以下写法将是等效的功能：
+```
+let s:class = class#old('sample#base', 'sample#inter1', 'sample#inter2')
+" 或者
+let s:class = sample#base#old()
+call sample#inter1#merge(s:class)
+call sample#inter2#merge(s:class)
+```
+当然在第二种写法，要求基类已定义 `#old()` 函数，
+接口类中已定义 `#merge()` 函数。
+
+显示定义与调用 `#merge()` 函数虽然略显麻烦，但更能表明该类设计意图。
+一般良好的实践中，接口类可能只包含方法，而没有数据
+（或者可能有为辅助算法的数据成员）。
+由于继承接口采用无覆盖式的合并算法，所以多接口的顺序是重要的。
+同时也解决了键冲突的问题。
+
+## 对象类型检测
+
+分别设计了 `#isobject()` 与 `#isa()` 函数，参数是一个对象变量。
+用于检测该变量是否属性这个类的实例，或子类（继承或接口）的实例。
+
+```
+function! tempclass#isobject(that) abort
+  return s:class._isobject_(a:that)
+endfunction
+
+function! tempclass#isa(that) abort
+  return s:class._isa_(a:that)
+endfunction
+```
 
 ## 单例 instance
 

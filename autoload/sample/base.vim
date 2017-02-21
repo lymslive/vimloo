@@ -24,8 +24,8 @@ endfunction "}}}
 
 " CTOR:
 function! sample#base#ctor(this, argv) abort "{{{
-    if len(argv) > 0
-        let a:this.baseProperty = a:1
+    if len(a:argv) > 0
+        let a:this.baseProperty = a:argv[0]
     endif
 endfunction "}}}
 

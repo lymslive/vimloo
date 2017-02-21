@@ -46,3 +46,6 @@ command! -nargs=0 LogOff call class#loger#SetLogFile('')
 " :SLOG -2 -WarningMsg no need quote
 command! -nargs=+ LOG call class#loger#hLog(eval(<q-args>))
 command! -nargs=+ -complete=highlight SLOG call class#loger#hLog(<q-args>)
+
+" display an overview of a class, use full class name with #
+command! -nargs=1 ClassView execute 'call ' . <q-args> . '#class().echo()'
