@@ -38,9 +38,11 @@ command! -nargs=* -complete=file ClassTest call cmass#director#hClassTest(<f-arg
 " Log message to some file make use of :redir
 command! -nargs=1 -complete=file LogOn call class#loger#SetLogFile(<f-args>)
 command! -nargs=0 LogOff call class#loger#SetLogFile('')
-command! -nargs=1 LogLevel call class#loger#SetLogLevel(<f-args>)
 
 " :LOG mainly used in script as used :echo, but only support one expr, eg:
 " :LOG 'string' . l:variable
 " :LOG '-2 -WarningMsg ' . l:variable
+" if only option but no message, then set log level or/and highlight
+" :SLOG -2 -WarningMsg no need quote
 command! -nargs=+ LOG call class#loger#hLog(eval(<q-args>))
+command! -nargs=+ -complete=highlight SLOG call class#loger#hLog(<q-args>)

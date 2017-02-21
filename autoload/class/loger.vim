@@ -18,6 +18,8 @@ let s:class._version_ = 1
 let s:class.LogFile = ''
 " the min level of message that will loged by Echo method
 let s:class.LogLevel = 0
+" the default highlight
+let s:class.Highlight = 'WarningMsg'
 
 function! class#loger#class() abort "{{{
     return s:class
@@ -49,11 +51,20 @@ endfunction "}}}
 " SetLogFile: 
 function! class#loger#SetLogFile(pFileName) abort "{{{
     let l:instance = class#loger#instance()
+    let l:sOldFile = l:instance.LogFile
     let l:instance.LogFile = a:pFileName
     if !empty(a:pFileName)
         :execute 'redir >> ' . a:pFileName
     else
         :redir END
+    endif
+
+    if !empty(l:sOldFile) && !empty(a:pFileName)
+        echo 'change log file: ' . l:sOldFile . ' --> ' . a:pFileName
+    elseif !empty(l:sOldFile) && empty(a:pFileName)
+        echo 'stop log file: ' . l:sOldFile
+    elseif empty(l:sOldFile) && !empty(a:pFileName)
+        echo 'start log file: ' . a:pFileName
     endif
 endfunction "}}}
 
@@ -65,19 +76,27 @@ endfunction "}}}
 
 " Echo: 
 function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
-    if a:iLevel < self.LogLevel
+    " only set log level
+    if empty(a:sMessage) && a:iLevel != self.LogLevel
+        let self.LogLevel = a:iLevel
+    endif
+
+    if !empty(a:sHighlight)
+        " only set log highligh
+        if empty(a:sMessage)
+            let self.Highlight = a:sMessage
+        endif
+        :execute 'echohl ' . a:sHighlight
+    elseif !empty(self.Highlight)
+        :execute 'echohl ' . self.Highlight
+    endif
+
+    if empty(a:sMessage) || a:iLevel < self.LogLevel
         return 0
     endif
 
-    if !empty(a:sHighlight)
-        :execute 'echohl ' . a:sHighlight
-    endif
-
     echo a:sMessage
-
-    if !empty(a:sHighlight)
-        :echohl None
-    endif
+    :echohl None
 endfunction "}}}
 
 " Log: 
