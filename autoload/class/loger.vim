@@ -19,7 +19,7 @@ let s:class.LogFile = ''
 " the min level of message that will loged by Echo method
 let s:class.LogLevel = 0
 " the default highlight
-let s:class.Highlight = 'WarningMsg'
+let s:class.Highlight = 'Comment'
 
 function! class#loger#class() abort "{{{
     return s:class
@@ -60,11 +60,20 @@ function! class#loger#SetLogFile(pFileName) abort "{{{
     endif
 
     if !empty(l:sOldFile) && !empty(a:pFileName)
-        echo 'change log file: ' . l:sOldFile . ' --> ' . a:pFileName
+        echo 'change log file: ' . s:Absolute(l:sOldFile) . ' --> ' . s:Absolute(a:pFileName)
     elseif !empty(l:sOldFile) && empty(a:pFileName)
-        echo 'stop log file: ' . l:sOldFile
+        echo 'stop log file: ' . s:Absolute(l:sOldFile)
     elseif empty(l:sOldFile) && !empty(a:pFileName)
-        echo 'start log file: ' . a:pFileName
+        echo 'start log file: ' . s:Absolute(a:pFileName)
+    endif
+endfunction "}}}
+
+" Absolute: 
+function! s:Absolute(sPath) abort "{{{
+    if a:sPath =~ '^/'
+        return a:sPath
+    else
+        return simplify(getcwd() . '/' . a:sPath)
     endif
 endfunction "}}}
 
@@ -81,6 +90,13 @@ function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
         let self.LogLevel = a:iLevel
     endif
 
+    " only log when DEBUG set
+    if a:sHighlight ==# 'DEBUG'
+        if !exists('g:DEBUG') || empty(g:DEBUG)
+            return 0
+        endif
+    endif
+
     if !empty(a:sHighlight)
         " only set log highligh
         if empty(a:sMessage)
@@ -91,12 +107,15 @@ function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
         :execute 'echohl ' . self.Highlight
     endif
 
-    if empty(a:sMessage) || a:iLevel < self.LogLevel
+    if empty(a:sMessage) || a:iLevel > self.LogLevel
         return 0
     endif
 
-    echo a:sMessage
-    :echohl None
+    try
+        echo a:sMessage
+    finally
+        echohl None
+    endtry
 endfunction "}}}
 
 " Log: 
@@ -162,18 +181,25 @@ endfunction "}}}
 
 " TEST:
 function! class#loger#test(...) abort "{{{
-    :LogOn test.log
-    :LogLevel 0
+    :LOGON test.log
     :LOG 'literatur string'
     let l:str = 'a string variable'
     :LOG l:str
     :LOG 'literatur string concatente with ' . l:str
     :LOG '-WarningMsg ' . l:str
-    :LogLevel 2
+    :SLOG -2
     :LOG '-WarningMsg L0 ' . l:str
     :LOG '-1 -WarningMsg L1 ' . l:str
     :LOG '-WarningMsg -2 L2 ' . l:str
     :LOG '-WarningMsg -3 L3 ' . l:str
-    :LogOff
+    :SLOG -0
+    :ELOG 'error'
+    :WLOG 'waring'
+    unlet! g:DEBUG
+    :DLOG 'log debug'
+    let g:DEBUG = 1
+    :DLOG 'log debug too'
+    :LOG printf('%s[%d]', 'strig', 100)
+    :LOGOFF
     return 0
 endfunction "}}}
