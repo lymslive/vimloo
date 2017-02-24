@@ -82,7 +82,7 @@ endfunction "}}}
 
 " LOAD: -l
 let s:load = 1
-echo 'tempclass is loading ...'
+:DLOG 'tempclass is loading ...'
 function! tempclass#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load

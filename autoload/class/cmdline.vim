@@ -324,7 +324,7 @@ function! class#cmdline#load(...) abort "{{{
     endif
     return s:load
 endfunction "}}}
-echo 'class#cmdline loading ...'
+:DLOG 'class#cmdline loading ...'
 
 " TEST:
 function! class#cmdline#test(...) abort "{{{
