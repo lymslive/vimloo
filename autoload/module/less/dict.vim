@@ -50,6 +50,27 @@ function! s:class.Absorb(dOrigin, dForeign) dict abort "{{{
     endfor
 endfunction "}}}
 
+" Display: 
+" Print(dict, [indent, sort])
+function! s:class.Display(dict, ...) dict abort "{{{
+    let l:sIndent = get(a:000, 0, '')
+    let l:sSort = get(a:000, 1, '')
+    let l:bSort = !empty(l:sSort)
+
+    let l:lsKey = keys(a:dict)
+    if l:bSort
+        call sort(l:lsKey)
+    endif
+
+    let l:sText = ''
+    for l:sKey in l:lsKey
+        let l:sItem = printf('%s%s=%s', l:sIndent, l:sKey, a:dict[l:sKey])
+        let l:sText .= l:sItem
+    endfor
+
+    return l:sText
+endfunction "}}}
+
 " import: 
 function! module#less#dict#import() abort "{{{
     return s:class

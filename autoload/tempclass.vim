@@ -80,6 +80,11 @@ function! s:class.number() dict abort "{{{
     return self._version_
 endfunction "}}}
 
+" IMPORT: -Z
+function! tempclass#import() abort "{{{
+    return s:class
+endfunction "}}}
+
 " LOAD: -l
 let s:load = 1
 :DLOG 'tempclass is loading ...'

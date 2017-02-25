@@ -87,7 +87,7 @@ function! s:class.string(...) dict abort "{{{
     if self.Must()
         let l:sRet .= '  [+]' . self.Desc
     else
-        let l:sRet .= '  [-]' . self.Desc . '('. self.Default. ')'
+        let l:sRet .= '  [-]' . self.Desc . '('. string(self.Default) . ')'
     endif
 
     return l:sRet
