@@ -100,7 +100,7 @@ endfunction "}}}
 
 " SetDash: allow - as an special argument, set it's meaning
 function! s:class.SetDash(sDesc) dict abort "{{{
-    call a:this.AddSingle('-', 'DASH', a:sDesc)
+    call self.AddSingle('-', 'DASH', a:sDesc)
 endfunction "}}}
 
 " MapName: map option short name to long name
@@ -155,8 +155,10 @@ function! s:class.Check(argv) dict abort "{{{
     endfor
 
     if !empty(self.LastParsed) && self.LastParsed !=# '--'
-        echom 'the last option has not argument: --' . self.LastParsed
-        return 3
+        if !class#option#multiple#isobject(self.Option[self.LastParsed])
+            echom 'the last option has not argument: --' . self.LastParsed
+            return 3
+        endif
     endif
 
     let l:iCount = self.GetLackNum()
@@ -280,9 +282,9 @@ endfunction "}}}
 function! s:class.Set(sArg) dict abort "{{{
     if self.ExpectOption()
         if has_key(self.Option, a:sArg)
-            let l:jOption = self.Option[l:sName]
+            let l:jOption = self.Option[a:sArg]
         else
-            echoerr 'unkown option: ' . a:arg
+            echoerr 'unkown option: ' . a:sArg
             return -1
         endif
         if class#option#single#isobject(l:jOption)
@@ -296,10 +298,10 @@ function! s:class.Set(sArg) dict abort "{{{
         endif
         let l:jOption = self.Option[self.LastParsed]
         if class#option#pairs#isobject(l:jOption)
-            call l:jOption.SetValue(get(a:000, 0, ''))
+            call l:jOption.SetValue(a:sArg)
             let self.LastParsed = ''
         elseif class#option#multiple#isobject(l:jOption)
-            call l:jOption.SetValue(get(a:000, 0, ''))
+            call l:jOption.SetValue(a:sArg)
         else
             echoerr 'dismatch option type'
             return -1

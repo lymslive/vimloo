@@ -1,4 +1,4 @@
-" Class: module#less#multiple
+" Class: class#option#multiple
 " Author: lymslive
 " Description: option with multiple argument
 " Create: 2017-02-25
@@ -10,8 +10,8 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = class#old()
-let s:class._name_ = 'module#less#multiple'
+let s:class = class#option#pairs#old()
+let s:class._name_ = 'class#option#multiple'
 let s:class._version_ = 1
 
 " redefien argument and default type
@@ -20,19 +20,19 @@ unlet! s:class.Default
 let s:class.Argument = []
 let s:class.Default = []
 
-function! module#less#multiple#class() abort "{{{
+function! class#option#multiple#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! module#less#multiple#new(...) abort "{{{
+function! class#option#multiple#new(...) abort "{{{
     let l:obj = copy(s:class)
     call l:obj._new_(a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR: 4 arguments
-function! module#less#multiple#ctor(this, argv) abort "{{{
+function! class#option#multiple#ctor(this, argv) abort "{{{
     let l:Suctor = s:class._suctor_()
     call l:Suctor(a:this, a:argv[0:2])
 
@@ -41,7 +41,7 @@ function! module#less#multiple#ctor(this, argv) abort "{{{
     if len(a:argv) > 3
         let a:this.HasDefault = v:true
         if type(a:argv[3]) == type([])
-            call expand(a:this.Default, a:argv[3])
+            call extend(a:this.Default, a:argv[3])
         else
             call add(a:this.Default, a:argv[3])
         endif
@@ -51,18 +51,18 @@ endfunction "}}}
 " SetValue: 
 function! s:class.SetValue(arg) dict abort "{{{
     let self.Set = v:true
-    call add(self.Argument, arg)
+    call add(self.Argument, a:arg)
 endfunction "}}}
 
 " ISOBJECT:
-function! module#less#multiple#isobject(that) abort "{{{
+function! class#option#multiple#isobject(that) abort "{{{
     return s:class._isobject_(a:that)
 endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG 'module#less#multiple is loading ...'
-function! module#less#multiple#load(...) abort "{{{
+:DLOG 'class#option#multiple is loading ...'
+function! class#option#multiple#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -71,6 +71,6 @@ function! module#less#multiple#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! module#less#multiple#test(...) abort "{{{
+function! class#option#multiple#test(...) abort "{{{
     return 0
 endfunction "}}}
