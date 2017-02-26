@@ -16,7 +16,7 @@ function! cmass#director#hClassLoad(...) abort "{{{
     call l:jOption.AddSingle('r', 'reload', 'force reload script')
     call l:jOption.AddSingle('d', 'debug', 'set g:DEBUG to allow directlly reload')
     call l:jOption.AddSingle('D', 'nodebug', 'unset g:DEBUG variable')
-    let l:iRet = l:jOption.Check(a:000)
+    let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0
         return -1
     endif
@@ -62,7 +62,7 @@ endfunction "}}}
 function! cmass#director#hClassTest(...) abort "{{{
     let l:jOption = class#cmdline#new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
-    let l:iRet = l:jOption.Check(a:000)
+    let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0
         return -1
     endif

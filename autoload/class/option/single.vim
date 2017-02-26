@@ -64,7 +64,15 @@ endfunction "}}}
 " a:1, padding Name to this length, to make Desc align right 
 " the [0] before Desc show this option need no more argument
 function! s:class.string(...) dict abort "{{{
-    let l:sRet = '-' . self.Char . ', --' . self.Name
+    let l:sRet = self.DescName()
+
+    if self.Name ==# '-'
+        let l:sRet .= '(single dash) ' . self.Desc
+        return l:sRet
+    elseif self.Name ==# '--'
+        let l:sRet .= '(double dash) ' . self.Desc
+        return l:sRet
+    endif
 
     if a:0 > 0 && a:1 > 0
         let l:iPadding = a:1 - len(self.Name)

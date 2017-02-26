@@ -46,7 +46,7 @@ endfunction "}}}
 " STRING: -c, --Name    Desc
 " a:1, padding Name to this length, to make Desc align right 
 function! s:class.string(...) dict abort "{{{
-    let l:sRet = '-' . self.Char . ', --' . self.Name
+    let l:sRet = self.DescName()
 
     if a:0 > 0 && a:1 > 0
         let l:iPadding = a:1 - len(self.Name)
@@ -57,6 +57,18 @@ function! s:class.string(...) dict abort "{{{
 
     let l:sRet .= self.Desc
 
+    return l:sRet
+endfunction "}}}
+
+" DescName: 
+function! s:class.DescName() dict abort "{{{
+    if self.Name ==# '-'
+        let l:sRet = ''
+    elseif self.Name ==# '--'
+        let l:sRet = '--'
+    else
+        let l:sRet = '-' . self.Char . ', --' . self.Name
+    endif
     return l:sRet
 endfunction "}}}
 

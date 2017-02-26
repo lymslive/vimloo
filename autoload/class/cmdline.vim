@@ -1,8 +1,8 @@
 " Class: class#cmdline
 " Author: lymslive
-" Description: VimL class frame
+" Description: command line option parser for custom command 
 " Create: 2017-02-11
-" Modify: 2017-02-11
+" Modify: 2017-02-26
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -31,6 +31,7 @@ let s:class.Grouped = {}
 
 " for algorithm popurse, save last parsed option name
 let s:class.LastParsed = ''
+let s:class.LastError = ''
 
 function! class#cmdline#class() abort "{{{
     return s:class
@@ -98,9 +99,14 @@ function! s:class.AddMore(sChar, sName, sDesc, ...) dict abort "{{{
     return self.MapName(a:sChar, a:sName)
 endfunction "}}}
 
-" SetDash: allow - as an special argument, set it's meaning
-function! s:class.SetDash(sDesc) dict abort "{{{
-    call self.AddSingle('-', 'DASH', a:sDesc)
+" AddDash: allow - as an special argument, set it's meaning
+function! s:class.AddDash(sDesc) dict abort "{{{
+    call self.AddSingle('-', '-', a:sDesc)
+endfunction "}}}
+" SetDash: 
+function! s:class.SetDash() dict abort "{{{
+    call self.AddSingle('-', '-', 'special argument -')
+    call self.Option['-'].SetValue()
 endfunction "}}}
 
 " MapName: map option short name to long name
@@ -120,178 +126,139 @@ function! s:class.MapName(sChar, sName) dict abort "{{{
 endfunction "}}}
 
 " AddGroup: add an existed option to a group
-function! s:class.AddGroup(sGroup, sOption) dict abort "{{{
-    if !has_key(self.Option, sOption)
-        return -1
-    endif
-
-    if has_key(self.Group, sGroup)
-        call add(self.Group[sGroup], sOption)
-    else
-        let self.Group[sGroup] = [sOption]
-    endif
-
-    let self.Grouped[sOption] = sGroup
-    return 0
-endfunction "}}}
-
-" Check: parse and check the input argv
-" return some error number, 0 as success
-function! s:class.Check(argv) dict abort "{{{
-    for l:arg in a:argv
-        if l:arg ==# '?' || l:arg ==# '-?'
-            echo self.ShowUsage()
-            return -1
+function! s:class.AddGroup(sGroup, ...) dict abort "{{{
+    for l:sOption in a:000 
+        if !has_key(self.Option, l:sOption)
+            :ELOG l:sOption . ' is not valid option, use long name'
+            continue
         endif
 
-        if self.ExpectOption()
-            let l:iErr = self.ParseArg(l:arg)
-            if l:iErr != 0
-                return l:iErr
-            endif
+        if has_key(self.Group, a:sGroup)
+            call add(self.Group[a:sGroup], l:sOption)
         else
-            call self.Set(l:arg)
+            let self.Group[a:sGroup] = [l:sOption]
         endif
+
+        let self.Grouped[l:sOption] = a:sGroup
     endfor
-
-    if !empty(self.LastParsed) && self.LastParsed !=# '--'
-        if !class#option#multiple#isobject(self.Option[self.LastParsed])
-            echom 'the last option has not argument: --' . self.LastParsed
-            return 3
-        endif
-    endif
-
-    let l:iCount = self.GetLackNum()
-    if l:iCount > 0
-        echom 'have ' . l:iCount . ' option not provid argument'
-        echo self.ShowUsage()
-        return 4
-    endif
-
     return 0
 endfunction "}}}
 
-" ParseArg: parse each input argument
-" return some error number, 0 as success
-function! s:class.ParseArg(arg) dict abort "{{{
-    let l:iArgLen = len(a:arg)
-
-    if l:iArgLen == 0
-        return 0
-    endif
-
-    if a:arg[0] != '-'
-        call add(self.PostArgv, a:arg)
-        return 0
-    endif
-
-    " special argument - 
-    if l:iArgLen == 1
-        if has_key(self.Option, 'DASH')
-            call self.Option.DASH.SetValue()
-            return 0
-        else
-            :ELOG 'donot allow - argument, call SetDash() first'
-            return -1
+" ParseCheck: 
+function! s:class.ParseCheck(argv, ...) dict abort "{{{
+    let l:bPostUnkown = v:false
+    let l:iEnd = len(a:argv)
+    if a:0 > 0
+        let l:bPostUnkown = v:true
+        if a:1 < l:iEnd
+            let l:iEnd = a:1
         endif
     endif
 
-    " -- stop parser remain options
-    if l:iArgLen == 2 && a:arg ==# '--'
-        let self.LastParsed = '--'
-        return 0
-    endif
-
-    if a:arg[1] == '-'
-        return self.ParseLongOption(a:arg[2:])
-    else
-        return self.ParseShortOption(a:arg[1:])
-    endif
-endfunction "}}}
-
-" ParseShortOption: -o, 
-" may combined -xyz, 
-" the last part may be argument of the previous option
-" a:arg input have - removed
-function! s:class.ParseShortOption(arg) dict abort "{{{
-    let l:iend = len(a:arg)
     let l:idx = 0
-    while l:idx < l:iend
-        let l:sChar = a:arg[l:idx]
-        if has_key(self.CharName, l:sChar)
-            let l:sName = self.CharName[l:sChar]
-        else
-            let l:sName = ''
-            echom 'option char not supported: -' . l:sChar
-            return 1
-        endif
+    while l:idx < l:iEnd
+        let l:sArg = a:argv[l:idx]
+        let l:idx += 1
 
-        if l:sName ==# 'help'
+        " special arg
+        if l:sArg ==# '?' || l:sArg ==# '-?'
             echo self.ShowUsage()
             return -1
+        elseif l:sArg ==# '-'
+            call self.DealDash()
+            continue
+        elseif l:sArg ==# '--'
+            let self.LastParsed = '--'
+            continue
         endif
 
-        let l:idx = l:idx + 1
-
-        let l:iErr = self.Set(l:sName)
-        if l:iErr != 0
-            return l:iErr
+        if self.LastParsed ==# '--'
+            call add(self.PostArgv, l:sArg)
+            continue
         endif
 
-        if !self.ExpectOption()
-            break
+        let l:sDash = ''
+        let l:sWord = ''
+        let l:sArgPattern = '^\(-*\)\(.*\)'
+        let l:lsMatch = matchlist(l:sArg, l:sArgPattern)
+        if !empty(l:lsMatch)
+            let l:sDash = l:lsMatch[1]
+            let l:sWord = l:lsMatch[2]
+        else
+            :ELOG 'not valid argument'
+            return -1
+        endif
+
+        let l:sOption = ''
+        if empty(l:sDash)
+            call self.DealArgument(l:sWord)
+            continue
+        elseif l:sDash ==# '--'
+            let l:sOption = l:sWord
+        elseif l:sDash ==# '-'
+            let l:sOption = get(self.CharName, l:sWord[0], '')
+        endif
+
+        if empty(l:sOption) || !has_key(self.Option, l:sOption)
+            if l:bPostUnkown
+                call self.DealArgument(l:sArg)
+                continue
+            else
+                echoerr 'unknown option: ' . l:sArg
+                echo self.ShowUsage()
+                return -1
+            endif
+        endif
+
+        let l:jOption = self.Option[l:sOption]
+        call self.DealOption(l:jOption)
+        if l:sDash ==# '-'
+            while len(l:sWord) > 1
+                let l:sWord = l:sWord[1:]
+                if !class#option#single#isobject(l:jOption)
+                    call self.DealArgument(l:sWord)
+                    break
+                endif
+                let l:sChar = l:sWord[0]
+                let l:sOption = get(self.CharName, l:sChar, '')
+                if empty(l:sOption) || !has_key(self.Option, l:sOption)
+                    if l:bPostUnkown
+                        call self.DealArgument('-' . l:sWord)
+                        break
+                    else
+                        echoerr 'unknown option: ' . '-' . l:sWord
+                        echo self.ShowUsage()
+                        return -1
+                    endif
+                endif
+                let l:jOption = self.Option[l:sOption]
+                call self.DealOption(l:jOption)
+            endwhile
         endif
     endwhile
 
-    " tailed argument
-    if l:idx < l:iend
-        let l:sRest = a:arg[l:idx:]
-        call self.Set(l:sRest)
-    endif
-
-    return 0
-endfunction "}}}
-
-" ParseLongOption: --option
-" just option long name, the next wll follow it's argument
-" a:arg input have -- removed
-function! s:class.ParseLongOption(arg) dict abort "{{{
-    let l:sName = a:arg
-
-    if has_key(self.Option, l:sName)
-        let l:jOption = self.Option[l:sName]
-    else
-        echom 'unkown option: ' . a:arg
-        return -1
-    endif
-
-    if l:sName ==# 'help'
+    let l:iCount = self.GetLackNum()
+    if l:iCount > 0
+        echoerr 'have ' . l:iCount . ' option not provid argument'
         echo self.ShowUsage()
         return -1
     endif
-
-    return self.Set(l:sName)
 endfunction "}}}
 
-" ExpectOption: 
-function! s:class.ExpectOption() dict abort "{{{
-    return empty(self.LastParsed)
+" DealOption: 
+function! s:class.DealOption(jOption) dict abort "{{{
+    if class#option#single#isobject(a:jOption)
+        call a:jOption.SetValue()
+        let self.LastParsed = ''
+    else
+        let self.LastParsed= a:jOption.Name
+    end
 endfunction "}}}
 
-" Set: feed a arg as option name or it's argument
-function! s:class.Set(sArg) dict abort "{{{
-    if self.ExpectOption()
-        if has_key(self.Option, a:sArg)
-            let l:jOption = self.Option[a:sArg]
-        else
-            echoerr 'unkown option: ' . a:sArg
-            return -1
-        endif
-        if class#option#single#isobject(l:jOption)
-            call l:jOption.SetValue()
-        else
-            let self.LastParsed= a:sArg
-        end
+" DealArgument: 
+function! s:class.DealArgument(sArg) dict abort "{{{
+    if empty(self.LastParsed)
+        call add(self.PostArgv, a:sArg)
     else
         if self.LastParsed ==# '--'
             call add(self.PostArgv, a:sArg)
@@ -307,8 +274,31 @@ function! s:class.Set(sArg) dict abort "{{{
             return -1
         endif
     endif
+endfunction "}}}
 
-    return 0
+" DealDash: a sole '-' can be option or arguent
+function! s:class.DealDash() dict abort "{{{
+    if has_key(self.Option, '-')
+        let l:jOption = self.Option['-']
+        if class#option#single#isobject(l:jOption)
+            call l:jOption.SetValue()
+            let self.LastParsed= ''
+        else
+            let self.LastParsed= '-'
+        end
+    else
+        call self.DealArgument('-')
+    endif
+endfunction "}}}
+
+" ExpectOption: 
+function! s:class.ExpectOption() dict abort "{{{
+    return empty(self.LastParsed)
+endfunction "}}}
+
+" StopOption: 
+function! s:class.StopOption() dict abort "{{{
+    return self.LastParsed ==# '--'
 endfunction "}}}
 
 " Has: 
@@ -318,7 +308,7 @@ endfunction "}}}
 
 " HasDash: 
 function! s:class.HasDash() dict abort "{{{
-    return self.Has('DASH')
+    return self.Has('-')
 endfunction "}}}
 
 " Get: 
@@ -361,17 +351,17 @@ function! s:class.ShowUsage() abort "{{{
 
     let l:sRet = 'usage: ' . self.Command . " [options] ...\n"
     for l:sName in l:lsKeyName
-        if l:sName ==# 'help' || l:sName ==# '--' || l:sName ==# 'DASH'
+        if l:sName ==# 'help' || l:sName ==# '--' || l:sName ==# '-'
             continue
         endif
         let l:sRet .= self.Option[l:sName].string(l:iMaxName) . "\n"
     endfor
 
-    if has_key(self.Option, 'DASH')
-        let l:sRet .= self.Option['DASH'].string(l:iMaxName) . "\n"
-    endif
-    let l:sRet .= self.Option['--'].string(l:iMaxName) . "\n"
     let l:sRet .= self.Option['help'].string(l:iMaxName) . "\n"
+    let l:sRet .= self.Option['--'].string(l:iMaxName) . "\n"
+    if has_key(self.Option, '-')
+        let l:sRet .= self.Option['-'].string(l:iMaxName) . "\n"
+    endif
 
     return l:sRet
 endfunction "}}}

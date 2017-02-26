@@ -112,7 +112,7 @@ function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
     endif
 
     try
-        echo a:sMessage
+        echomsg a:sMessage
     finally
         echohl None
     endtry

@@ -75,7 +75,7 @@ endfunction "}}}
 " the [+|-] before Desc show if this option has default
 " [+] requires user must provided a argument
 function! s:class.string(...) dict abort "{{{
-    let l:sRet = '-' . self.Char . ', --' . self.Name
+    let l:sRet = self.DescName()
 
     if a:0 > 0 && a:1 > 0
         let l:iPadding = a:1 - len(self.Name)
