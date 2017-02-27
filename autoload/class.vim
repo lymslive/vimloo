@@ -21,17 +21,19 @@ function! class#class(...) abort "{{{
         return {}
     endif
 
-    " function() to get FuncRef won't autoload
-    " use eval
-    let l:class = eval(l:name . '#class()')
-    return l:class
+    let l:name = substitute(l:name, '[./]\+', '#', 'g')
+    try
+        let l:class = eval(l:name . '#class()')
+    catch
+        let l:name = 'class#' . l:name
+        try
+            let l:class = eval(l:name . '#class()')
+        catch
+            let l:class = {}
+        endtry
+    endtry
 
-"   let l:Class = function(l:name . '#class')
-"   if !exists('*l:Class')
-"       return {}
-"   else
-"       return l:Class()
-"   endif
+    return l:class
 endfunction "}}}
 
 " ctor: dummy function

@@ -59,6 +59,8 @@ endfunction "}}}
 function! tempclass#isobject(that) abort "{{{
     return s:class._isobject_(a:that)
 endfunction "}}}
+
+" ISA: -S
 function! tempclass#isa(that) abort "{{{
     return s:class._isa_(a:that)
 endfunction "}}}
