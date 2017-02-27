@@ -4,13 +4,13 @@
 " Create: 2017-02-25
 " Modify: 2017-02-25
 
-" CLASS:
-let s:class = class#old()
+" Module:
+let s:class = {}
 
 " Flat: 
 function! s:class.Flat(lsArgv, ...) dict abort "{{{
     let l:lsRet = []
-    for l:arg in lsArgv
+    for l:arg in a:lsArgv
         if type(l:arg) == type([])
             call extend(l:lsRet, l:arg)
         elseif  type(l:arg) == type({})

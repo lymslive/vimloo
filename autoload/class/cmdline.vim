@@ -249,6 +249,7 @@ endfunction "}}}
 function! s:class.DealOption(jOption) dict abort "{{{
     if class#option#single#isobject(a:jOption)
         call a:jOption.SetValue()
+        call self.OnGroupSet(a:jOption)
         let self.LastParsed = ''
     else
         let self.LastParsed= a:jOption.Name
@@ -266,9 +267,11 @@ function! s:class.DealArgument(sArg) dict abort "{{{
         let l:jOption = self.Option[self.LastParsed]
         if class#option#pairs#isobject(l:jOption)
             call l:jOption.SetValue(a:sArg)
+            call self.OnGroupSet(l:jOption)
             let self.LastParsed = ''
         elseif class#option#multiple#isobject(l:jOption)
             call l:jOption.SetValue(a:sArg)
+            call self.OnGroupSet(l:jOption)
         else
             echoerr 'dismatch option type'
             return -1
@@ -282,12 +285,56 @@ function! s:class.DealDash() dict abort "{{{
         let l:jOption = self.Option['-']
         if class#option#single#isobject(l:jOption)
             call l:jOption.SetValue()
+            call self.OnGroupSet(l:jOption)
             let self.LastParsed= ''
         else
             let self.LastParsed= '-'
         end
     else
         call self.DealArgument('-')
+    endif
+endfunction "}}}
+
+" OnGroupSet: Unset other options in the same group
+function! s:class.OnGroupSet(jOption) dict abort "{{{
+    let l:sOption = a:jOption.Name
+    let l:sGroup = get(self.Grouped, l:sOption, '')
+    if empty(l:sGroup) || !has_key(self.Group, l:sGroup)
+        return 0
+    endif
+
+    let l:ljOption = self.Group[l:sGroup]
+    for l:jOption in l:ljOption
+        if l:jOption.Name !=# l:sOption
+            call l:jOption.UnSet()
+        endif
+    endfor
+endfunction "}}}
+
+" HasGroup: which option in group has been set
+" return the setted option name or empty string if none
+function! s:class.HasGroup(sGroup) dict abort "{{{
+    if empty(a:sGroup) || !has_key(self.Group, a:sGroup)
+        return 0
+    endif
+
+    let l:ljOption = self.Group[a:sGroup]
+    for l:jOption in l:ljOption
+        if l:jOption.Has()
+            return l:jOption.Name
+        endif
+    endfor
+
+    return ''
+endfunction "}}}
+
+" GetGroup: get the value of setted option in group
+function! s:class.GetGroup(sGroup) dict abort "{{{
+    let l:sOption = self.HasGroup(a:sGroup)
+    if empty(l:sOption)
+        return ''
+    else
+        return self.Group[l:sOption].Value()
     endif
 endfunction "}}}
 

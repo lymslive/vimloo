@@ -63,7 +63,7 @@ endfunction "}}}
 " DescName: 
 function! s:class.DescName() dict abort "{{{
     if self.Name ==# '-'
-        let l:sRet = ''
+        let l:sRet = '-'
     elseif self.Name ==# '--'
         let l:sRet = '--'
     else

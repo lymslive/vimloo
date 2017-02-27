@@ -60,6 +60,11 @@ function! s:class.SetValue() dict abort "{{{
     let self.Set = v:true
 endfunction "}}}
 
+" UnSet: 
+function! s:class.UnSet() dict abort "{{{
+    let self.Set = v:false
+endfunction "}}}
+
 " STRING: -c, --Name    [0]Desc
 " a:1, padding Name to this length, to make Desc align right 
 " the [0] before Desc show this option need no more argument
