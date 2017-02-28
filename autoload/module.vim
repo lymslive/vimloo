@@ -8,7 +8,7 @@ let s:class = {}
 let s:class.basedir = 'module'
 let s:class.imported = {}
 
-function! s:class.class() dict abort "{{{
+function! module#class() abort "{{{
     return s:class
 endfunction "}}}
 
@@ -49,6 +49,10 @@ function! module#simport(name, ...) abort "{{{
     let l:pScriptFile = s:FindScript(a:name)
     if empty(l:pScriptFile)
         return l:class
+    endif
+
+    if l:pScriptFile[0] != '/'
+        let l:pScriptFile = getcwd() . '/' . l:pScriptFile
     endif
 
     execute 'source ' . l:pScriptFile

@@ -79,7 +79,7 @@ endfunction "}}}
 
 let s:pattern = {}
 " match a function definition line, the matchstr is function name
-let s:pattern.function_name = '^\s*function!\?\s\+\zs\h[:.#\w]*\ze\s*(.*)'
+let s:pattern.function_name = '^\s*function!\?\s\+\zs\h[:.#a-zA-Z0-9_]*\ze\s*(.*)'
 " s:function
 let s:pattern.function_local = '^s:\zs\h\w\+\ze$'
 " dict.function \1=dict-name \2=func-name

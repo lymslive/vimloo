@@ -170,7 +170,6 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-echo 'class#loger is loading ...'
 function! class#loger#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
