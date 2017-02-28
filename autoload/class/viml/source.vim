@@ -30,8 +30,8 @@ endfunction "}}}
 
 " CTOR:
 function! class#viml#source#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0
-        let a:this.path = a:argv[0]
+    if len(a:argv) > 0 && filereadable(a:argv[0])
+        let a:this.path = resolve(a:argv[0])
     else
         :ELOG 'class#viml#source need a full path'
     endif
@@ -49,9 +49,14 @@ function! s:class.SID() dict abort "{{{
         return self.sid
     endif
 
+    " :LOG 'self.path = ' . self.path
     let l:jMsg = class#messager#new('scriptnames')
     let l:lsOutPut = l:jMsg.CaptureList()
+    let l:filename = fnamemodify(self.path, ':t')
+    call filter(l:lsOutPut, 'v:val =~# l:filename')
     for l:sLine in l:lsOutPut
+        let l:sLine = substitute(sLine, '^\s\+', '', '')
+        let l:sLine = substitute(sLine, '\s\+$', '', '')
         let l:lsPart = split(l:sLine, '\s*:\s*')
         if len(l:lsPart) < 2
             continue

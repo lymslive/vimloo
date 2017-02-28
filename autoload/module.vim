@@ -52,7 +52,7 @@ function! module#simport(name, ...) abort "{{{
     endif
 
     if l:pScriptFile[0] != '/'
-        let l:pScriptFile = getcwd() . '/' . l:pScriptFile
+        let l:pScriptFile = fnamemodify(l:pScriptFile, ':p')
     endif
 
     execute 'source ' . l:pScriptFile
@@ -233,6 +233,19 @@ function! s:ParseImport(pScriptFile, lsOption) abort "{{{
     return l:dImport
 endfunction "}}}
 
+" IMPORT: command handler
+" a:args is a long string, passed as <q-args>
+function! module#hImport(args) abort "{{{
+    let l:lsArgv = split(a:args, '\s\+')
+    let l:iArgc = len(l:lsArgs)
+    let l:sModule = l:lsArgs[0]
+    if l:iArgc > 1
+        let l:lsOption = l:lsArgv[1:]
+        return module#import(l:sModule, l:lsOption)
+    else
+        return module#import(l:sModule)
+    endif
+endfunction "}}}
 " TEST:
 function! module#test(...) abort "{{{
     return 0
