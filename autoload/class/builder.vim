@@ -9,6 +9,7 @@ let s:class = class#old()
 let s:class._name_ = 'class#builder'
 let s:class._version_ = 1
 let s:class.ClassName = ''
+let s:class.TempName = ''
 
 echom 'class#builder load ...'
 
@@ -26,12 +27,18 @@ function! class#builder#ctor(this, argv) abort "{{{
     if len(a:argv) > 0
         let a:this.ClassName = a:argv[0]
     endif
+    if len(a:argv) > 1
+        let a:this.TempName = a:argv[1]
+    else
+        let a:this.TempName = s:tempclass
+    endif
 endfunction "}}}
 
 " ExtractLine: extract content of template with filter option
 " return a list of content lines
+" a:1 the template file name
 function! s:class.ExtractLine(sFilter) dict abort "{{{
-    let l:lsTemp = readfile(s:FullTempFile())
+    let l:lsTemp = readfile(self.FullTempFile())
     if empty(l:lsTemp)
         return []
     endif
@@ -85,8 +92,8 @@ function! s:class.ExtractLine(sFilter) dict abort "{{{
 
         else
             " replace class name
-            if !empty(self.ClassName) && match(l:sLine, s:tempclass) != -1
-                let l:sLine = substitute(l:sLine, s:tempclass, self.ClassName, 'g')
+            if !empty(self.ClassName) && match(l:sLine, self.TempName) != -1
+                let l:sLine = substitute(l:sLine, self.TempName, self.ClassName, 'g')
             endif
 
             " comment header
@@ -109,7 +116,7 @@ endfunction "}}}
 " SelectLine: select content of template with filter option, no default
 " return a list of content lines
 function! s:class.SelectLine(sFilter) dict abort "{{{
-    let l:lsTemp = readfile(s:FullTempFile())
+    let l:lsTemp = readfile(self.FullTempFile())
     if empty(l:lsTemp)
         return []
     endif
@@ -148,8 +155,8 @@ function! s:class.SelectLine(sFilter) dict abort "{{{
 
         else
             " replace class name
-            if !empty(self.ClassName) && match(l:sLine, s:tempclass) != -1
-                let l:sLine = substitute(l:sLine, s:tempclass, self.ClassName, 'g')
+            if !empty(self.ClassName) && match(l:sLine, self.TempName) != -1
+                let l:sLine = substitute(l:sLine, self.TempName, self.ClassName, 'g')
             endif
 
             " comment header
@@ -169,20 +176,19 @@ function! s:class.SelectLine(sFilter) dict abort "{{{
     return l:lsOutPut
 endfunction "}}}
 
-" Script Local Function: {{{1
-let s:template = '../tempclass.vim'
+" FullTempFile: 
+function! s:class.FullTempFile() dict abort "{{{
+    return s:pScript . '/../' . self.TempName . '.vim'
+endfunction "}}}
+
+" Script Local Variable: {{{1
+let s:pScript = fnamemodify(expand('<sfile>'), ':p:h')
 let s:tempclass = 'tempclass'
 if exists("*strftime")
     let s:today =  strftime('%Y-%m-%d')
 else
     let s:today = ''
 endif
-
-" FullTempFile: 
-let s:pScript = fnamemodify(expand('<sfile>'), ':p:h')
-function! s:FullTempFile() abort "{{{
-    return s:pScript . '/' . s:template
-endfunction "}}}
 
 " TEST: 
 function! class#builder#test() abort "{{{

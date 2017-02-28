@@ -2,7 +2,9 @@
 " Author: lymslive
 " Description: command use class#builder
 " Create: 2017-02-14
-" Modify: 2017-02-14
+" Modify: 2017-02-28
+
+let s:rtp = module#less#rtp#import()
 
 " Command Hander Interface: {{{1
 " ClassNew: open a new file name.vim and fill class frame
@@ -18,33 +20,47 @@ function! cmass#builder#hClassNew(name, ...) abort "{{{
         let l:pFileName = getcwd() . '/' . a:name
     endif
 
-    let l:pFullName = cmass#builder#CheckAutoName(l:pFileName)
-    if empty(l:pFullName)
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
         echom ':ClassNew only execute under autoload director'
         return 0
     endif
 
-    let l:jBuilder = class#builder#new(l:pFullName)
-    if a:0 == 0
+    if a:0 > 1 && !empty(a:2)
+        let l:jBuilder = class#builder#new(l:sAutoName, a:2)
+    else
+        let l:jBuilder = class#builder#new(l:sAutoName)
+    endif
+
+    if a:0 < 1
         let l:lsContent = jBuilder.ExtractLine('')
     else
         let l:lsContent = jBuilder.ExtractLine(a:1)
     endif
 
-    execute 'edit ' . a:name . '.vim'
+    execute 'edit ' . l:pFileName . '.vim'
     call setline(1, l:lsContent)
+endfunction "}}}
+
+" ModuleNew:
+function! cmass#builder#hModuleNew(name, ...) abort "{{{
+    if a:0 == 0
+        call cmass#builder#hClassNew(a:name, '', 'tempmodule')
+    else
+        call cmass#builder#hClassNew(a:name, a:1, 'tempmodule')
+    endif
 endfunction "}}}
 
 " ClassAdd: add class frame to current opened buffer
 function! cmass#builder#hClassAdd(...) abort "{{{
     let l:pFileName = expand('%:p:r')
-    let l:pFullName =cmass#builder#CheckAutoName(l:pFileName)
-    if empty(l:pFullName)
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
         echom ':ClassAdd only execute under autoload director'
         return 0
     endif
 
-    let l:jBuilder = class#builder#new(l:pFullName)
+    let l:jBuilder = class#builder#new(l:sAutoName)
     if a:0 == 0
         let l:lsContent = jBuilder.ExtractLine('')
     else
@@ -70,45 +86,15 @@ endfunction "}}}
 " ClassPart: 
 function! cmass#builder#hClassPart(sFilter) abort "{{{
     let l:pFileName = expand('%:p:r')
-    let l:pFullName =cmass#builder#CheckAutoName(l:pFileName)
-    if empty(l:pFullName)
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
         echom ':ClassPart only execute under autoload director'
         return 0
     endif
 
-    let l:jBuilder = class#builder#new(l:pFullName)
+    let l:jBuilder = class#builder#new(l:sAutoName)
     let l:lsContent = jBuilder.SelectLine(a:sFilter)
 
     call append(line('.'), l:lsContent)
-endfunction "}}}
-
-" Script Local Function: {{{1
-" CheckClassName: check if a file name is autoload vim file
-" a:pFileName should be as <leading-dir>/autoload/<subpath>/name
-" return subpath#name
-" return empty string if pFileName not under some autoload directory
-function! cmass#builder#CheckAutoName(pFileName) abort "{{{
-    if empty(a:pFileName)
-        return ''
-    endif
-
-    " split path by / or #, last file extention is removed
-    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '/\|#')
-
-    let l:iEnd = len(l:lsPath) - 1 
-    let l:idx = index(l:lsPath, 'autoload')
-
-    " last part is 'autoload/' ? no subdirctory
-    if l:idx == l:iEnd
-        return ''
-    endif
-
-    " full path and no 'autoload/' in path
-    if l:idx == -1 && a:pFileName[0] == '/'
-        return ''
-    endif
-
-    let l:pSubpath = join(l:lsPath[l:idx+1:], '#')
-    return l:pSubpath
 endfunction "}}}
 

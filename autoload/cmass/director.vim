@@ -9,6 +9,8 @@ if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
 
+let s:rtp = module#less#rtp#import()
+
 " ClassLoad: 
 " :ClassLoad [-r] [-d|D] [filename]
 function! cmass#director#hClassLoad(...) abort "{{{
@@ -28,13 +30,13 @@ function! cmass#director#hClassLoad(...) abort "{{{
         let l:pFileName = l:lsPostArgv[0]
     endif
 
-    let l:pAutoName = cmass#builder#CheckAutoName(l:pFileName)
-    if empty(l:pAutoName)
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
         echom ':ClassLoad only execute under autoload director'
         return -1
     endif
 
-    let l:FuncLoad = function(l:pAutoName . '#load')
+    let l:FuncLoad = function(l:sAutoName . '#load')
     if l:jOption.Has('reload')
         call l:FuncLoad(1)
     endif
@@ -75,13 +77,13 @@ function! cmass#director#hClassTest(...) abort "{{{
         let l:pFileName = expand('%:p:r')
     endif
 
-    let l:pAutoName =cmass#builder#CheckAutoName(l:pFileName)
-    if empty(l:pAutoName)
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
         echom ':ClassTest only execute under autoload director'
         return 0
     endif
 
-    call cmass#director#UnpackCall(l:pAutoName . '#test', l:lsPostArgv)
+    call cmass#director#UnpackCall(l:sAutoName . '#test', l:lsPostArgv)
 endfunction "}}}
 
 " UpcakArgv: convert a list to string as used in function call

@@ -20,6 +20,8 @@ command! -nargs=+ ClassNew call cmass#builder#hClassNew(<f-args>)
 command! -nargs=* ClassAdd call cmass#builder#hClassAdd(<f-args>)
 command! -nargs=* ClassTemp call cmass#builder#hClassTemp(<f-args>)
 
+command! -nargs=+ ModuleNew call cmass#builder#hModuleNew(<f-args>)
+
 " :ClassPart only add the sepecific paragraph subject it's option
 " ignore the default option in the tempcall file
 command! -nargs=1 ClassPart call cmass#builder#hClassPart(<f-args>)

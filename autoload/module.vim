@@ -6,53 +6,115 @@
 
 let s:class = {}
 let s:class.basedir = 'module'
+let s:class.imported = {}
+
+function! s:class.class() dict abort "{{{
+    return s:class
+endfunction "}}}
 
 " IMPORT:
 function! module#import(name, ...) abort "{{{
-    let l:name = substitute(a:name, '[./]\+', '#', 'g')
+    if has_key(s:class.imported, a:name)
+        return s:class.imported[a:name]
+    endif
+
     let l:class = {}
 
-    " full path name
+    " full module name?
     try
+        let l:name = substitute(a:name, '[./]\+', '#', 'g')
         let l:class = eval(l:name . '#import()')
     catch
-        let l:name = substitute(l:name, '^#', '', 'g')
-        let l:name = substitute(l:name, '#$', '', 'g')
-
-        let l:path = substitute(l:name, '#', '/', 'g')
-        if l:patn !~# '^autoload'
-            let l:path = 'autoload' . l:path
-        endif
-
-        let l:lsGlob = globpath(&runtimepath, l:path, 0, 1)
-        if !empty(l:lsGlob)
-            let l:pScriptFile = l:lsGlob[0]
-            execute 'source ' . l:pScriptFile
-            let l:Funcref = s:class.SelectImport(l:name)
-            if exists('*l:Funcref')
-                let l:class = l:Funcref()
-            else
-                let l:class = s:class.ParseImport(l:pScriptFile, a:000)
-            endif
-        endif
+        let l:class = module#simport(a:name, a:000)
     endtry
 
     if !empty(l:class)
+        let s:class.imported[a:name] = l:class
         return l:class
     endif
 
     " may ignore 'module' base dir
     if l:name !~# '^' . s:class.basedir
         let l:name = s:class.basedir . '#' . l:name
-        return module#import(l:name, a:000)
+        let l:class = module#import(l:name, a:000)
+    endif
+
+    if !empty(l:class)
+        let s:class.imported[a:name] = l:class
+        return l:class
     endif
 
     return l:class
 endfunction "}}}
 
+" SIMPORT: 
+function! module#simport(name, ...) abort "{{{
+    let l:class = {}
+
+    let l:pScriptFile = s:FindScript(a:name)
+    if empty(l:pScriptFile)
+        return l:class
+    endif
+
+    execute 'source ' . l:pScriptFile
+
+    let l:rtp = module#less#rtp#import()
+    if l:rtp.IsAutoload(l:pScriptFile)
+        let l:sModule = l:rtp.GetAutoName(l:pScriptFile)
+        if !empty(l:sModule)
+            let l:Funcref = s:SelectImport(l:pScriptFile)
+            if exists('*l:Funcref')
+                let l:class = l:Funcref()
+            endif
+        endif
+    endif
+
+    if empty(l:class)
+        let l:class = s:ParseImport(l:pScriptFile, a:000)
+    endif
+
+    return l:class
+endfunction "}}}
+
+" FindScript: 
+function! s:FindScript(name) abort "{{{
+    if empty(a:name)
+        return ''
+    elseif filereadable(a:name)
+        return a:name
+    endif
+
+    " transform #. separater to unified /, add .vim suffix
+    let l:name = substitute(a:name, '#', '/', 'g')
+    if l:name !~? '\.vim$'
+        let l:name = substitute(l:name, '\.', '/', 'g')
+        let l:name .= '.vim'
+    else
+        let l:base = substitute(l:name, '\.vim$', '', 'i')
+        let l:base = substitute(l:base, '\.', '/', 'g')
+        let l:name = l:base . '.vim'
+    endif
+
+    if filereadable(l:name)
+        return l:name
+    endif
+
+    " try script file under autoload subdirctory
+    if l:name !~# '^autoload'
+        let l:name = 'autoload/' . l:name
+    endif
+
+    let l:lsGlob = globpath(&runtimepath, l:name, 0, 1)
+    if !empty(l:lsGlob)
+        return l:lsGlob[0]
+    endif
+
+    return ''
+endfunction "}}}
+
 " SelectImport: 
 " try the order: #import(), #instance(), #class()
-function! s:class.SelectImport(sModule) dict abort "{{{
+function! s:SelectImport(sModule) abort "{{{
     let l:Funcref = function(a:sModule . '#import')
     if exists('*l:Funcref')
         return l:Funcref
@@ -72,15 +134,9 @@ function! s:class.SelectImport(sModule) dict abort "{{{
 endfunction "}}}
 
 " ParseImport: 
-function! s:class.ParseImport(pScriptFile, lsOption) dict abort "{{{
-    if type(a:lsOption) != type([])
-        let l:lsOption = [a:lsOption]
-    elseif len(a:lsOption) == 1 && type(a:lsOption[0]) == type([])
-        " recursively call module#import will pass [a:000]
-        let l:lsOption = a:lsOption[0]
-    else
-        let l:lsOption = a:lsOption
-    endif
+function! s:ParseImport(pScriptFile, lsOption) abort "{{{
+    let l:list = module#less#list#import()
+    let l:lsOption = l:list.Flat(a:lsOption, -1)
 
     let l:jOption = class#cmdline#new('Module module-name ...')
     call l:jOption.AddSingle('s', 'script-local', 'also load script localed function')

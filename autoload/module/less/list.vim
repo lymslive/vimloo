@@ -9,24 +9,25 @@ let s:class = {}
 
 " Flat: 
 function! s:class.Flat(lsArgv, ...) dict abort "{{{
+    let l:iDeepth = get(a:000, 0, 1)
+    if l:iDeepth == 0
+        return l:sArgv
+    endif
+
     let l:lsRet = []
+    let l:iDeepth -= 1
     for l:arg in a:lsArgv
         if type(l:arg) == type([])
-            call extend(l:lsRet, l:arg)
+            let l:lsRet += self.Flat(l:arg, l:iDeepth)
         elseif  type(l:arg) == type({})
             for [l:key, l:val] in items(l:arg)
-                call extend(l:lsRet, [l:key, l:val])
+                let l:lsRet += [l:key, l:val]
                 unlet l:key  l:val
             endfor
         else
-            call add(l:lsRet, l:arg)
+            let l:lsRet += [larg]
         endif
     endfor
-
-    let l:iDeepth = get(a:000, 0, 0)
-    if l:iDeepth > 1
-        let l:lsRet = self.Flat(l:lsRet, l:iDeepth - 1)
-    endif
 
     return l:lsRet
 endfunction "}}}
