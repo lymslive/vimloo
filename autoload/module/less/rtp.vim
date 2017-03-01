@@ -6,6 +6,13 @@
 
 " MODULE:
 let s:class = {}
+let s:class.separator = fnamemodify('.', ':p')[-1:]
+
+if has('win32') || has('win64') || has('win16') || has('win95')
+    let s:class.os =  'win'
+else
+    let s:class.os = 'unix'
+endif
 
 " GetAutoName: convert a script filename to autoload namespace
 " > a:pFileName, full path of a script file
@@ -17,7 +24,7 @@ function! s:class.GetAutoName(pFileName) dict abort "{{{
     endif
 
     " split path by / or #, last file extention is removed
-    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '/\|#')
+    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), self.separator . '\|#')
 
     let l:iEnd = len(l:lsPath) - 1 
     let l:idx = index(l:lsPath, 'autoload')
@@ -28,7 +35,7 @@ function! s:class.GetAutoName(pFileName) dict abort "{{{
     endif
 
     " full path and no 'autoload/' in path
-    if l:idx == -1 && a:pFileName[0] == '/'
+    if l:idx == -1 && self.IsAbsolute(a:pFileName)
         return ''
     endif
 
@@ -38,7 +45,45 @@ endfunction "}}}
 
 " IsAutoload: 
 function! s:class.IsAutoload(pFileName) dict abort "{{{
-    return a:pFileName =~# 'autoload/'
+    return a:pFileName =~# 'autoload' . self.separator
+endfunction "}}}
+
+" LikePath: 
+function! s:class.LikePath(pFileName) dict abort "{{{
+    return stridx(a:pFileName, self.separator) != -1
+endfunction "}}}
+
+" LikeFile: check a filename end with some extention
+function! s:class.LikeFile(pFileName, sExtention) dict abort "{{{
+    if a:sExtention =~ '^\.'
+        let l:sExtention = substitute(a:sExtention, '^\.\+', '', '')
+    else
+        let l:sExtention = a:sExtention
+    endif
+    let l:sPattern = '\.' . l:sExtention . '$'
+    return a:pFileName =~# l:sPattern
+endfunction "}}}
+
+" IsAbsolute: 
+function! s:class.IsAbsolute(pFileName) dict abort "{{{
+    if empty(a:pFileName)
+        return v:false
+    else
+        return a:pFileName[0] ==# self.separator
+    endif
+endfunction "}}}
+
+" Absolute: 
+function! s:class.Absolute(pFileName) dict abort "{{{
+    if self.IsAbsolute(a:pFileName)
+        return a:pFileName
+    endif
+
+    if filereadable(a:pFileName)
+        return fnamemodify(a:pFileName, ':p')
+    else
+        return fnamemodify(getcwd(), ':p') . self.separator . a:pFileName
+    endif
 endfunction "}}}
 
 " IMPORT:

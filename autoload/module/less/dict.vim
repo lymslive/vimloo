@@ -64,7 +64,7 @@ function! s:class.Display(dict, ...) dict abort "{{{
 
     let l:sText = ''
     for l:sKey in l:lsKey
-        let l:sItem = printf('%s%s=%s', l:sIndent, l:sKey, a:dict[l:sKey])
+        let l:sItem = printf('%s%s=%s', l:sIndent, l:sKey, string(a:dict[l:sKey]))
         let l:sText .= l:sItem
     endfor
 

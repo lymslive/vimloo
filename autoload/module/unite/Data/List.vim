@@ -1,4 +1,4 @@
-" File: Prelude
+" File: List
 " Author: Shougo
 " Description: (https://github.com/Shougo/unite.vim)
 " Modify: 2017-02-28
