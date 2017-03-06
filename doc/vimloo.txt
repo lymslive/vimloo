@@ -1,0 +1,241 @@
+*vimloo.txt*		OOP in VimL Script		Last change:2017-03-06
+
+version 0.51
+Author: lymslive <403708621@qq.com>
+License: MIT license
+
+========================================================+=====================
+CONTENTS						*vimloo*
+
+1. Concept Introduction					|vimloo-concept|
+  1.1 dictionary as class
+  1.2 autoload class
+  1.3 copy class as object instance
+  1.4 copy class as derived class
+  1.5 copy more class as interface
+  1.6 isolate class as module
+2. Base Class Component					|class.vim|
+  2.1 member key					|class-member|
+  2.2 method key					|class-method|
+  2.3 global sharp function				|class-function|
+3. Module Management Scheme				|module.vim|
+  3.1 import module					|module#import|
+  3.2 module less package				|module#less|
+  3.3 module unite package				|module#unite|
+4. Build Class From Template				|class-builder|
+5. Script Micro Command					|script-micro|
+
+========================================================+=====================
+1. Concept Introduction					*vimloo-concept*
+
+Object Orient Programming(OOP) in VimL Script is relative advance topic 
+or tricky skill. But to use |vimloo|, or write scipt in OOP way, is more easy
+than it first sounds, since the user need not care about the implement details
+of class.
+
+However, the basic concepts of VimL Script is still need to be understood.
+Please refer to the relation documents including |user_41.txt|, |eval.txt|.
+Of course, the concepts of OOP is also necessary, but that is beyond of this
+document.
+
+--------------------------------------------------------+---------------------
+1.1 dictionary as class
+
+Dictionary is the most variable type in VimL Script. The value saved in a key
+can be variable of any type(see |type()|), including ordinary data and fucntion
+(FuncRef in fact), and even another dictionary variable(reference).
+
+In the option of class, the data key is class member, and the FuncRef key is 
+class method.
+
+The key in a dictionary can be referenced in dictionary way, or in class way.
+For example: >
+	let dict = {'key': 'val'}
+	let dict.key = 'newval'
+	echo dict['key']
+	echo dict.key
+<
+Of course, when used in the class way, the key should be an ordinary string
+that can be used as identifier.
+
+The class member is simple to defined. It is suggested in class manner, using
+|let| command to define each member in each line. The definition of class
+method is a bit complex, as the following syntax: >
+	function! dict.method() dict abort
+		" method function body
+		" self refer to dict
+	endfunction
+<
+
+This way define an anonymous function, and save the FuncRef in "dict.method".
+The special argument "dict" to |:function| predicts that this fucntion must
+be call from a dictionary key, and in the function body, a special local 
+variable named "self" is refer to the dictionary variable.
+
+--------------------------------------------------------+---------------------
+1.2 autoload class
+
+When design a class, it is more useful if the class can be used from any other
+script, not only the script that just define the calss. Then the |autoload|
+mechanism come to be helpful.
+
+For example, a class named "foo" should defined in "autoload/foo.vim" under
+some runtime path(see 'rtp'), while "autoload/foo/bar.vim" may be defind a
+class named "foo#bar"(Note: "#" is part of the class name).
+
+The autoload script is triggered by sharp function(a global function with "#"
+character in it's name). Then we can define a sharp function to return the 
+definition of the class(a dictionary variable).
+
+So the primary frame of a VimL calss file is lick following: >
+	let s:class = {}
+	function! foo#bar#class() abort
+		return s:class
+	endfunction
+	" the other members and methods of s:class
+<
+
+The script local variable name "s:class" and sharp function name "#class" is
+arbitrary, but isn't cool to use the "reserved" key word "class"?
+
+--------------------------------------------------------+---------------------
+1.3 copy class as object instance
+
+Now we can get the class definition of "foo#bar" in any script by calling 
+"foo#bar#class()". To create a object instance of that class, only call the
+builtin function |copy()| or |deepcopy()|, some like following: >
+	let c = foo#bar#class()
+	let obj = copy(c)
+	" use obj to do funny things
+<
+
+--------------------------------------------------------+---------------------
+1.4 copy class as derived class
+
+Derived class is also a copy of the base class, adding some new member or/and
+method. For example, to define a "foo#bar#sub" class derived from "foo#bar": >
+	let s:base = foo#bar#class()
+	let s:class = copy(s:base)
+	function! foo#bar#sub#class() abort
+		return s:class
+	endfunction
+	" add more members and methods of s:class
+<
+
+Note: the derived class of "foo#bar" is not necessary having longer class name
+than it, not necessary under the "foo/bar/" sub-directory.
+
+--------------------------------------------------------+---------------------
+1.5 copy more class as interface
+
+Some OOP language supports multiply inheritance, like C++, some language only
+supports single inheritance, like java, but suppots multiply interface beside
+that. The later is relative simple and easy, and seems less buggy.
+
+To make use of multiply interface in VimL Script, can copy the method from 
+interface class to self class(dictionary), something like following: >
+	let s:base = base#class()
+	let s:class = copy(s:base)
+	let s:inter1 = inter1#class()
+	call extend(s:class, s:inter1)
+	let s:inter2 = inter2#class()
+	call extend(s:class, s:inter2)
+	...
+<
+
+How to solve the key conflict is depended on implement or design, see builtin
+|extend()|.
+
+--------------------------------------------------------+---------------------
+1.6 isolate class as module
+
+Module is a collection of utility functions to commom reuse. Class can be 
+served as a namespace for module functions. We can save all the functions of
+a module in the method key of a class. Such class may no need to have parent,
+nor child derived class, even nor object instance, just use the class itself
+as a module.
+
+Suppose "foo#bar" is designed as a module now, the primary frame can be like:
+>
+	let s:class = {}
+
+	function! s:class.func1() dict abort
+		" function body
+	endfunction
+
+	function! s:class.func2() dict abort
+		" function body
+	endfunction
+
+	function! foo#bar#import() abort
+		return s:class
+	endfunction
+<
+
+That there is no substance difference from the definition of class. But module
+usually has only method key, and we use another sharp function named "#import"
+to return the "s:class" dictionary.
+
+Then in the user client script, they can use the module as following: >
+	let s:module = foo#bar#import()
+	call s:module.func1()
+<
+
+========================================================+=====================
+2. Base Class Component					*class.vim*
+
+In the last section, the example code is kept simple, only to describe the 
+idea of OOP in VimL Script. This section will document a pratical class, 
+provided by |vimloo| in "autoload/class.vim", serving as the common base class
+of other custom class.
+
+In "class.vim", there are many keys named in the form of "_xxx_". They are
+reserved keys, with special implement purpose, other derived calss from it 
+should not redefine their meanings.
+
+--------------------------------------------------------+---------------------
+2.1 member key						*class-member*
+
+_name_			string
+	The name of class. It must match the full path name, relative to 
+	"autoload/", separated by "#". It is critical to find the sharp 
+	functions in the class script file.
+
+_version_		number
+	The version of class, maybe useful in some case.
+
+_super_		string
+	The name of the base class. The most base class "class.vim" itself has
+	no parent, then the "_super_" key to "class" itself.
+
+_interface_		list of string
+	The name of the interfaces current class derived. It is list, since
+	multiply interfaces are supported. Even if only a interface, it is a
+	list of one item. If there no interface, this key may not set.
+
+--------------------------------------------------------+---------------------
+2.2 method key						*class-method*
+
+--------------------------------------------------------+---------------------
+2.3 global sharp function				*class-function*
+
+========================================================+=====================
+3. Module Management Scheme				*module.vim*
+
+--------------------------------------------------------+---------------------
+3.1 import module					*module#import*
+
+--------------------------------------------------------+---------------------
+3.2 module less package					*module#less*
+
+--------------------------------------------------------+---------------------
+3.3 module unite package				*module#unite*
+
+========================================================+=====================
+4. Build Class From Template				*class-builder*
+
+========================================================+=====================
+5. Script Micro Command					*script-micro*
+
+========================================================+=====================
+vim:tw=78:ts=8:ft=text:norl:
