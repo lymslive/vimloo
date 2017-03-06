@@ -190,8 +190,12 @@ provided by |vimloo| in "autoload/class.vim", serving as the common base class
 of other custom class.
 
 In "class.vim", there are many keys named in the form of "_xxx_". They are
-reserved keys, with special implement purpose, other derived calss from it 
-should not redefine their meanings.
+reserved keys or private keys, with special implement purpose, other derived
+calss from it should not redefine their meanings.
+
+User derived class automatically inherit the following member and method. The
+shart function is not inherited, must define it's own sharp function if want
+to use them. The method should be overide only when necessary.
 
 --------------------------------------------------------+---------------------
 2.1 member key						*class-member*
@@ -200,11 +204,12 @@ _name_			string
 	The name of class. It must match the full path name, relative to 
 	"autoload/", separated by "#". It is critical to find the sharp 
 	functions in the class script file.
+	The user derived class should set it's name explicitly.
 
 _version_		number
 	The version of class, maybe useful in some case.
 
-_super_		string
+_super_			string
 	The name of the base class. The most base class "class.vim" itself has
 	no parent, then the "_super_" key to "class" itself.
 
@@ -216,8 +221,136 @@ _interface_		list of string
 --------------------------------------------------------+---------------------
 2.2 method key						*class-method*
 
+_new_			s:class._new_(argv)
+	Called by "#new()" sharp function, when creat new object instance, to
+	do the common things for any class. It will try to find the "#ctor()"
+	function of the class from which create it. If the usr class donot
+	provide "#ctor()" function, "_new_()" method call the dummy function
+	"class#ctor()" from the top base class.
+	The argument {a:argv} is a list, containing all arugments passed to
+	"#new()", usually is {a:000} to handle any number of argument when
+	create new instance. This argument is then passed to contruct function
+	"#ctor()".
+
+_old_			s:class._old_()
+	While "new" create object instance, "old" create derived class, as
+	they are both calling the builtin |copy()| funtion.
+	"_old_()" method is called when a class neen to derive from self.
+	It will set the sub-class's "_super_" member to self's name, and reset
+	the sub-class's "_name_" member, requring the sub-class set it's name
+	explicitly.
+
+_del_			s:class._del_()
+	Called by "class#delete()" function when a object is need destroy.
+	In VimL Script, the variable (and object too) is deleted and freed
+	automatically. So there is very few case need to call "class#delete()"
+	to delete a object.
+	When in case delete object is called, "_del_()" method will call the
+	deconstructor function "#dector()" of it's own, and then it's parent
+	class upwise, to make any clean work of the class tree.
+
+_ctor_			s:class._ctor_()
+	Find the sharp function "#ctor()", so called constructor funtion of 
+	self class. Return the FuncRef of that function if existed, otherwise
+	the FuncRef refer to "class#ctor()", which is dummy.
+
+_suctor_		s:class._suctor_()
+	Return a FuncRef of the constructor "#ctor()" of it's directlly base
+	class, or a dummy function if the base has no "#ctor()". In many
+	cases, the "#ctor()" of sub-class should call the one of base class,
+	with some subset of input arguments, to construct the base part of
+	class member.
+
+_dector_		s:class._dector_()
+	Find the deconstructor function "#dector()" and return the FuncRef,
+	or to a dummy function.
+
+_sudector_		s:class_sudector_()
+	Find the deconsturctor function "#dector()" of directlly base class.
+
+_supers_		s:class_supers_()
+	Find all base classes, directlly and indirectlly, uptoward the inherit
+	tree. Return a list of class name.
+
+_copy_			s:class._copy_(that)
+	Called by the copy constructor, a sharp function "#copy()".
+	"#ctor()" is used to create object from a dictionary, maybe some base
+	class of itself, containing a subset of member data.
+	"_copy_()" only copy normal data member key, exclude method key, and
+	reserved key in the form "_xxx_".
+	The argument "a:that" is the source dictionary or object.
+
+_merger_		s:class._merge_(that)
+	Derived interface of class {that}, copy all the keys in {that}, but
+	don't overide the already existed keys.
+	Add the class name of {that} to the self's "_interface_" list.
+	The argument "a:that" must be a class, plain dictionary is not enough.
+
+_isobject_		s:class._isobject_(that)
+	Check if the variable {that} is an instance object of self.
+	Return boolean |v:ture| or |v:false|.
+
+_isa_			s:class._isa_(that)
+	Check if the vairable {that} is an object of class derived from self,
+	or if self in an interface of that class.
+	Return boolean |v:ture| or |v:false|.
+
+string			s:class.string()
+	Convert the object to a string. In the base class, only return "_name_"
+	key. User class may overide it to build a more meaning string.
+
+number			s:class.number()
+	Convert the object to a number. In the base class, only return the
+	"_version_" key. User class may overide to ruturn a more useful value.
+
 --------------------------------------------------------+---------------------
 2.3 global sharp function				*class-function*
+
+The private method in the "_xxx_" form key, is suggested never called
+directlly, only called from a serial sharp function. Sharp function is in the
+global scope, and so is consider as public function.
+
+These sharp function is not method of class, and so user class cannot inherit
+from the base class. Each sharp function following should be defined in the
+user class file if that one is required. However, some function in the top base
+class may have more functionality, can accept a more argument as it's first
+argument, represent the class name to be performed, and so that user class may
+obsent the sharp function.
+
+#class			class#class(...)
+	In user class, "#class()" has no argument, return the definiation of
+	current class, that is "s:class" dictionary variable.
+	In base class, "class#class(name)" can accept class {name} as
+	argument. The {name} argument must be full pathed, but can be
+	separated by "#" or "." or "/". If the class in under "autoload/class"
+	sub-directory, the leading "class#" part can also ommited.
+	For example, if "autoload/class/foo/bar.vim" define a class, all the
+	following command can obtain the definition of that class: >
+		let c = class#foo#bar#class()
+		let c = class#class('class#foo#bar')
+		let c = class#class('foo#bar')
+		let c = class#class('foo.bar')
+		let c = class#class('class/foo.bar')
+<
+	Though mixed use of "[#./]" separator is acceptable, don't use that
+	yet.
+	Note: the "class#foo#bar#class()" function must defined in the file
+	"autoload/class/foo/bar.vim", otherwise the later "class#class(...)"
+	version cannot work either.
+	This "#class()" function is the only sharp function that must define
+	in the user class file.
+
+#new			class#new(...)
+#ctor			class#ctor(this, argv)
+#dector			class#dector()
+#old			class#old(...)
+#delete			class#delete(this)
+#copy			tempclass#copy(that, ...)
+#merge			tempclass#merge(that)
+#isobject		class#isobject(...)
+#isa			class#isa(...)
+#instance		class#instance()
+#import			tempclass#import()
 
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
