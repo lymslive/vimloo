@@ -111,6 +111,27 @@ function! cmass#director#UnpackEval(sFunc, lsArgv) abort "{{{
     execute l:sCmd
 endfunction "}}}
 
+" PluginLocal: redirect to another script
+" > a:pSource, the script full path where :PLUGINLOCAL in
+" > a:sExtention, the default redirect file extention
+" > a:1, a:pScript, default the same filename but wich a:sExtention
+"   relative to the dir where a:pSource in
+" < return true if redirect the target script successful
+function! cmass#director#hPluginLocal(pSource, sExtention, ...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        let l:pScript = fnamemodify(a:pSource, ':p:h') . s:rtp.separator . a:1
+    else
+        let l:pScript = fnamemodify(a:pSource, ':p:r') . a:sExtention
+    endif
+
+    if filereadable(l:pScript)
+        execute 'source ' . l:pScript
+        return v:true
+    else
+        return v:false
+    endif
+endfunction "}}}
+
 " LOAD: -l
 let s:load = 1
 function! cmass#director#load(...) abort "{{{
@@ -120,7 +141,7 @@ function! cmass#director#load(...) abort "{{{
     endif
     return s:load
 endfunction "}}}
-echo 'cmass#director loading ...'
+DLOG 'cmass#director loading ...'
 
 " TEST: -t
 function! cmass#director#test(...) abort "{{{

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: 
 " Create: 2017-02-28
-" Modify: 2017-02-28
+" Modify: 2017-03-04
 
 " Log message to some file make use of :redir
 command! -nargs=1 -complete=file LOGON call class#loger#SetLogFile(<f-args>)
@@ -23,3 +23,11 @@ command! -nargs=+ DLOG
         \     call class#loger#hLog('-DEBUG ' . eval(<q-args>)) <bar>
         \ endif
 
+" use to custom local plugin setting and mappings
+command! -nargs=? PLUGINLOCAL
+        \ if cmass#director#hPluginLocal(expand('<sfile>:p'), '.local', <q-args>) <bar>
+        \     finish <bar>
+        \ endif
+
+command! -nargs=? PLUGINAFTER
+        \ call cmass#director#hPluginLocal(expand('<sfile>:p'), '.after', <q-args>)
