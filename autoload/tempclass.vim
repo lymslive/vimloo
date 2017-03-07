@@ -84,7 +84,8 @@ endfunction "}}}
 
 " IMPORT: -Z
 function! tempclass#import() abort "{{{
-    let l:class = copy(s:class)
+    let l:class = {}
+    let l:class.class = s:class
     let l:class.new = function('tempclass#new')
     return l:class
 endfunction "}}}

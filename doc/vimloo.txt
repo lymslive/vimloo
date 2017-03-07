@@ -318,7 +318,7 @@ argument, represent the class name to be performed, and so that user class may
 obsent the sharp function.
 
 #class			class#class(...)
-	In user class, "#class()" has no argument, return the definiation of
+	In user class, "#class()" has no argument, return the definition of
 	current class, that is "s:class" dictionary variable.
 	In base class, "class#class(name)" can accept class {name} as
 	argument. The {name} argument must be full pathed, but can be
@@ -341,16 +341,139 @@ obsent the sharp function.
 	in the user class file.
 
 #new			class#new(...)
+	Create a object instance. The user class, for example "tempclass", 
+	simply make a copy of the class definition, then call _new_ method:
+	>
+		function! tempclass#new(...) abort
+			let l:obj = copy(s:class)
+			call l:obj._new_(a:000)
+			return l:obj
+		endfunction
+<
+	In most case, when define a user class, the "#new()" function can follow
+	this example.
+	In the top base class, "class#new()" function treat the first argument as
+	class name from which to create object, and then the rest arugments is 
+	passed to "_new_()" method.
+	For example, to create object of "class#foo#bar" class, the following two
+	manners are OK: >
+		let obj = class#foo#bar#new(...)
+		let obj = class#new('class#foo#bar', ...)
+		let obj = class#new('foo.bar', ...)
+<
+	The "..." is variable number of arguments, see |a:000|.
+
 #ctor			class#ctor(this, argv)
+	This is the constructor function of user class. "#ctor()" is called 
+	indirectlly, through "_new_()" method, by "#new()" function.
+	When "#ctor()" is called, the object is already created or copied.
+	The first argument {a:this} is refer to the just object.
+	The second argument {a:argv} is a list of arguments, passed from 
+	"#new()" function, which is |a:000| in essence.
+	In complex class, the {a:argv} may arbitrary, need carefully deal every
+	cases to construct new object.
+	In derived class, the "#ctor()" of base class may need to be called in
+	some way, it is determined by the implement of derived class.
+
 #dector			class#dector()
-#old			class#old(...)
 #delete			class#delete(this)
+	The deconstructor function "#dector()" seldom need. But if really neede,
+	it will be called by "class#delete()" function. Usually the user class
+	donot need it's own "#delete()", only use "class#delete()" is enough.
+
+#old			class#old(...)
+	While "#new()" create object, "#old()" create derived class. When you
+	want to derive from some class, call the "#old()" function of that 
+	class. If a class will never be used as parent class, then there is no
+	need to define "#old()" function.
+	In normal user class, the "#old()" function is like: >
+		function! tempclass#old() abort
+			let l:class = copy(s:class)
+			call l:class._old_()
+			return l:class
+		endfunction
+<
+	In the top base class, "class#old()" can receive arbitrary number of 
+	arguments, the first is treated as "_super_" calss, the other are
+	treated as "_interface_" classes. The orders of multiply interfaces
+	matters if key conflict existed, the one come first take precedence.
+
 #copy			tempclass#copy(that, ...)
+	"#copy()" plays the role of copy constructor function.
+	If {a:that} is object of the same class, use the builtin |copy()| or
+	|deepcopy()| is ok.
+	The main usage of "#copy()" is when {a:that} is object of some base
+	class, containing only part of member data. Calling "#copy()" to 
+	construct new object based on {a:that}, adding more extra arugments
+	if needed.
+	{a:that} argument can be plain dictionary, not necessary object.
+	The top base class donot define "#copy()" function, since it is mainly
+	designed for sub-class, but providing "_copy_()" method to do the hard
+	work.
+
 #merge			tempclass#merge(that)
+	While "#old()" function is derived as "_super_" class, "#merge()" is
+	derived as "_interface_" class, serving for any sub-class.
+	Only user class need to define "#merge()" fucntion, like: >
+		function! tempclass#merge(that) abort
+			call a:that._merge_(s:class)
+		endfunction
+<
+	{a:that} is the sub-class, copy some of self keys to that sub-class.
+	For example, to create a sub-class having multiply interfaces: >
+		let s:class = sample#base#old()
+		call sample#inter1#merge(s:class)
+		call sample#inter2#merge(s:class)
+<
+	Or, use "class#old()" function in one line: >
+		 let s:class = class#old('sample#base', 
+			 \ 'sample#inter1', 'sample#inter2')
+<
+	The user class designed to as interface, provide it's own "#merge()"
+	function to make more control when some sub-class use it.
+
 #isobject		class#isobject(...)
 #isa			class#isa(...)
+	The tow functions check if a vairable if belong to self calss, while
+	"#isa()" is boarder then "#isobject()".
+	When defined in user class, it accept only one arugment: >
+		let l:bool = tempclass#isobject(that)
+		let l:bool = tempclass#isa(that)
+<
+	When use the top base class version, the first arugment is class name,
+	the second argument is the variable to be check: >
+		let l:bool = class#isobject('tempclass', that)
+		let l:bool = class#isa('tempclass', that)
+<
+
 #instance		class#instance()
+	If a class is designed as a singleton class, can define "#instance()"
+	function as following: >
+		let s:instance = {}
+		function! tempclass#instance() abort
+		    if empty(s:instance)
+			let s:instance = class#new('tempclass')
+		    endif
+		    return s:instance
+		endfunction
+<
+
 #import			tempclass#import()
+	If a class also want to be used as a module, can define it's own
+	"#import()" function, to control the import behaviors. For example: >
+		function! tempclass#import() abort
+			let l:class = {}
+			let l:class.class = s:class
+			let l:class.new = function('tempclass#new')
+			return l:class
+		endfunction
+<
+	When called this "#imprt()" function, the client script will get a 
+	dictionary with a "class" key save the definition of the class, and a
+	"new" key to save the FuncRef of the "#new()" funtion, from which can
+	create a new object of that class.
+	When the class name become very long, "#import()" may be helpful.
+	See the next section for more detail of module.
 
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
