@@ -4,7 +4,7 @@
 ## Introduction
 
 * class is a dict variable defined in a script which under the autoload
-  subdirecotry, class name is the relative path to autolod.
+  subdirecotry, class name is the relative path to autoload.
 * object instance is a copy of class, may with modified data keys.
 * derived class is also a copy of base class, may add data or/and function
   keys.
