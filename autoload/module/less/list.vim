@@ -11,7 +11,7 @@ let s:class = {}
 function! s:class.Flat(lsArgv, ...) dict abort "{{{
     let l:iDeepth = get(a:000, 0, 1)
     if l:iDeepth == 0
-        return l:sArgv
+        return a:lsArgv
     endif
 
     let l:lsRet = []
