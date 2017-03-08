@@ -1,4 +1,4 @@
-*vimloo.txt*		OOP in VimL Script		Last change:2017-03-06
+*vimloo.txt*		OOP in VimL Script		Last change:2017-03-08
 
 version 0.51
 Author: lymslive <403708621@qq.com>
@@ -8,12 +8,12 @@ License: MIT license
 CONTENTS						*vimloo*
 
 1. Concept Introduction					|vimloo-concept|
-  1.1 dictionary as class
-  1.2 autoload class
-  1.3 copy class as object instance
-  1.4 copy class as derived class
-  1.5 copy more class as interface
-  1.6 isolate class as module
+  1.1 dictionary as class				|vimloo-4.1|
+  1.2 autoload class					|vimloo-4.2|
+  1.3 copy class as object instance			|vimloo-4.3|
+  1.4 copy class as derived class			|vimloo-4.4|
+  1.5 copy more class as interface			|vimloo-4.5|
+  1.6 isolate class as module				|vimloo-4.6|
 2. Base Class Component					|class.vim|
   2.1 member key					|class-member|
   2.2 method key					|class-method|
@@ -39,7 +39,7 @@ Of course, the concepts of OOP is also necessary, but that is beyond of this
 document.
 
 --------------------------------------------------------+---------------------
-1.1 dictionary as class
+1.1 dictionary as class					*vimloo-1.1*
 
 Dictionary is the most variable type in VimL Script. The value saved in a key
 can be variable of any type(see |type()|), including ordinary data and fucntion
@@ -73,7 +73,7 @@ be call from a dictionary key, and in the function body, a special local
 variable named "self" is refer to the dictionary variable.
 
 --------------------------------------------------------+---------------------
-1.2 autoload class
+1.2 autoload class					*vimloo-1.2*
 
 When design a class, it is more useful if the class can be used from any other
 script, not only the script that just define the calss. Then the |autoload|
@@ -99,7 +99,7 @@ The script local variable name "s:class" and sharp function name "#class" is
 arbitrary, but isn't cool to use the "reserved" key word "class"?
 
 --------------------------------------------------------+---------------------
-1.3 copy class as object instance
+1.3 copy class as object instance			*vimloo-1.3*
 
 Now we can get the class definition of "foo#bar" in any script by calling 
 "foo#bar#class()". To create a object instance of that class, only call the
@@ -110,7 +110,7 @@ builtin function |copy()| or |deepcopy()|, some like following: >
 <
 
 --------------------------------------------------------+---------------------
-1.4 copy class as derived class
+1.4 copy class as derived class				*vimloo-1.4*
 
 Derived class is also a copy of the base class, adding some new member or/and
 method. For example, to define a "foo#bar#sub" class derived from "foo#bar": >
@@ -126,10 +126,10 @@ Note: the derived class of "foo#bar" is not necessary having longer class name
 than it, not necessary under the "foo/bar/" sub-directory.
 
 --------------------------------------------------------+---------------------
-1.5 copy more class as interface
+1.5 copy more class as interface			*vimloo-4.5*
 
 Some OOP language supports multiply inheritance, like C++, some language only
-supports single inheritance, like java, but suppots multiply interface beside
+supports single inheritance, like java, but supports multiply interface beside
 that. The later is relative simple and easy, and seems less buggy.
 
 To make use of multiply interface in VimL Script, can copy the method from 
@@ -147,7 +147,7 @@ How to solve the key conflict is depended on implement or design, see builtin
 |extend()|.
 
 --------------------------------------------------------+---------------------
-1.6 isolate class as module
+1.6 isolate class as module				*vimloo-4.6*
 
 Module is a collection of utility functions to commom reuse. Class can be 
 served as a namespace for module functions. We can save all the functions of
@@ -468,7 +468,7 @@ obsent the sharp function.
 			return l:class
 		endfunction
 <
-	When called this "#imprt()" function, the client script will get a 
+	When called this "#import()" function, the client script will get a 
 	dictionary with a "class" key save the definition of the class, and a
 	"new" key to save the FuncRef of the "#new()" funtion, from which can
 	create a new object of that class.
@@ -478,20 +478,269 @@ obsent the sharp function.
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
 
+While class is data with methods, module is mainly focusing on functions to
+reuse. In the view of class, it is simpler and easier to create and use module.
+
+To use class, often it need to create an object first, by "#new()" function.
+To use module, only need to import that module, then using dictionary key to
+index the function from the module.
+
 --------------------------------------------------------+---------------------
 3.1 import module					*module#import*
+
+#import			module#import(name, ...)
+	The function "module#import()" defined in "autoload/medule.vim" 
+	provides a common way to import medules located in autoload script.
+	Return a dictionary represent the module, or an empty dictionary if
+	fail to import the module.
+	The argument {a:name} is the full path name, relative the "autoload"
+	int 'runtimepath', or relative the current directory is also allowed.
+	The module name can be separated by "#", "." or "/", and if the module
+	file is under "autoload/module" sub-directory, the leading "module#"
+	can be ommited.
+	"module#import()" try to call the following global sharp functions
+	defined in the target module file found: >
+		target#path#to#module#import()
+		target#path#to#module#instance()
+		target#path#to#module#class()
+<
+	In this order, the first one is called and return.
+
+#simport		module#simport(name, ...)
+	Read as script import. Much the same as the "#import()", but expects
+	the argument {a:name} as absolute path or relative path to current
+	directory.  In fact the "module#import()" function may also call this
+	"module#simport()" function if fail it's first attempt.
+
+	If all the "imported" functions are not defined in the target module
+	file.  Another try to open the source script file, and parse the content
+	to extract script local functions and global sharp functions, 
+	then return a dictionary containing FuncRef of these function.
+	The optional arguments {a:000} in "#import()" or "#simport()" is passed
+	to the parser, to specify options to include or exclude some function.
+		-S, donot import script localed function
+		-g, also import global but non-sharp function
+		-n, only import these function match the name
+		-u, also import private function name begin with _
+
+#cimport		module#cimport(name, ...)
+	Read as class import, designed for a special case when you know the
+	target {a:name} is a class file. When fails to call it's "#import()"
+	function, get it's class definition by "#class()" function, and then
+	build a dictionary with "class" key save the class definition, and
+	"new" key save the "#new()" function of the class. That is also the
+	suggested stuff to do in the explicitly defined "#import()" function,
+	however, you can custom to suit for any need in the explicitly defined 
+	"#import()" function.
+	
+Although these "module#import()" function are powerful, it is suggested to
+provide it's own "#import()" function in each module file. It may simple enough
+just return a script local dictionary variable, say "s:class".
 
 --------------------------------------------------------+---------------------
 3.2 module less package					*module#less*
 
+In the directory "vimloo/autoload/module/less/", is some modules maintained by
+myself, following the class manner, each provide it's own "#import()" function.
+It is only added when needed, far way from complete or enough.
+
+They can be imported by directlly call it's own "#import()" function, or by
+indirectlly call the "module#import()", for example: >
+	let s:dict = module#less#dict#import()
+	let s:dict = module#import('less.dict')
+<
+
+It seems the direct way is a bit shorter.
+
 --------------------------------------------------------+---------------------
 3.3 module unite package				*module#unite*
+
+In the directory "vimloo/autoload/module/unite", is the vital utility module
+from the |unite.vim| plugin. Each module file in it, is plenty of script local
+function. They can be imported by "module#import()" also, for example: >
+	let s:List = module#import('unite.Data.List')
+<
+
+It is also simple to convert the old style script, to the class-standard
+module file:
+	first: add a script local dictionary variable in the header >
+		let s:class = {}
+<
+	second: replace all "s:function" to "s:class.function" >
+		: g/^\s*function!\?\s\+s:\w\+/s/s:/s:class./
+<
+	also replce the calling "s:function()" to "s:class.function" if any >
+		: %s/s:/s:class./
+<
+	third: add an import function in the footer >
+		function module#unite#Data#List#import()
+			return s:class
+		endfunction
+<
+
+But I havenot do so, make little modification to the origin version.
 
 ========================================================+=====================
 4. Build Class From Template				*class-builder*
 
+The script "vimloo/autoload/tempclass.vim" is a simplified version of base
+"class.vim", it can be served as the template file when create new user class.
+The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
+
+:ClassNew {name} [, {filter}]				*:ClassNew*
+	Create a new class with {a:name} in a new script file with that name.
+	{a:name} is append after the current directory, and then configure out
+	the full path class name with "#". If the current directory is not under
+	some "autoload/" sub-directory, this command will fail.
+
+:ClassAdd [{filter}]					*:ClassAdd*
+	Some like the |:ClassNew|, but add class definition at the current editing
+	buffer, named after the current file name. If current file is not under
+	"autoload/", this command will also fail.
+	The directory containing the "autoload/" is not necessary in the
+	'runtimepath' on the time. You can add it to "runtimepath" after the plugin
+	project is finished or will be tested.
+
+:ClassTemp [{filter}]					*:ClassTemp*
+	Some like the |:ClassAdd|, but donot require the current buffer under
+	"autoload/". It only copy (part of) "tempclass.vim" to current buffer
+	to check what will generate.
+	Use ":ClassTemp -a" read the whole "tempclass.vim" into buffer.
+
+:ClassPart {filter}					*:ClassPart*
+	Some line |:ClassAdd|, but only add the parts specified in {a:filter}.
+	While |:ClassNew| and |:ClassAdd| whill copy some default parts 
+	determined by the "tempclass.vim". It is mainly used after the
+	|:ClassNew| or |:ClassAdd| has been executed, and then find neen more
+	parts.
+
+:ModuleNew {name} [, {filter}]				*:ModuleNew*
+	Same as |ClassNew|, but use "tempmodule.vim" to create a new module
+	file. "tempmodule.vim" is much simple, and so only provide command
+	"ModuleNew".
+
+The argument {a:filter} in the commands above, is in the form "-xyz" as one
+string, each letter control whether a template parts is output, in which 
+lowercase indicates output, while uppercase indicates not output.
+
+A part is a paragraph in "tempclass.vim" (or "tempmodule.vim") separated by
+blank line. Each part has a head commet line, and at the end of commet line
+is the option in the form "-x", where lowercase indicates that this part will
+be output by default when |:ClassNew| command etc executed. The arugment
+{a:filter} to the command can overide the default option labeled in the 
+template file.
+
+Support at most 25 options, except "-a" reserved means "all". However, more
+than one paragraphs are allowed to share a same option letter. A paragraph
+without option letter indicates must output, since on {a:filter} can disable
+it.
+
+Now the valid and default option in "tempclass.vim" is list bellow:
+	-h: comment header
+	-l: reload control code
+	-n: #new() function
+	-c: #ctor() function
+	-D: #dector() function
+	-P: #copy() copy constructor function
+	-O: #old() function
+	-M: #merge() function
+	-s: #isobject() function
+	-S: #isa() function
+	-I: #instance() function
+	-Z: #import() function
+	-t: #test() function
+So the default option is "-hlncst".
+
+The "tempmodule.vim" supports only few option, and the default is "-hzT".
+
+When use |:ClassNew| commands ect. the name of sharp function will be fixed by
+the right name according the class name or module name.
+
+It will be also helpful using "ultisnips" or some like plugin, to generate
+the frame code snippet of some type of fucntions. |vimloo| provide a function
+to get the full class name as used in the form: >
+	`!v cmass#util#GetAutoName(expand('%:p:r'))`
+<
+
+The quotation `!v {expr}` in "ultisnips" is refer to a vim expression to get 
+the result string as output.
+
 ========================================================+=====================
 5. Script Micro Command					*script-micro*
 
+In the sub-directory "vimloo/autoload/class/" is some pratical classes, 
+following these OOP ideas, while in "vimloo/autoload/cmass" is plain scripts
+without class burden, mainly a wrapper to use the class.
+
+Some special commands are provided by |vimloo|, which maybe helpful when 
+write and debug Viml Script. I call them as "micro" commands, since vim office
+already use the word "macro".
+
+:ClassLoad [-r] [-d|D] [filename]			*:ClassLoad*
+	Reload a class or script, after make some modification on developing.
+	Normally, the reload control code from "tempclass.vim" will protect a
+	script from loading the second, for some reason. However we need
+	frequently reload the script when developing and debugging. Then this
+	command maybe handful.
+	When without argument, default reload the script in current buffer.
+	With "-r" option force reload.
+	With "-d" option set the "g:DEBUG" variable,
+	While "-D" opiton unlet the "g:DEBUG" variable.
+	The "g:DEBUG" variable is checked in several cases, to do smart work.
+
+:ClassTest [-f filename] [argument]			*:ClassTest*
+	Call the "#test()" function in a script, default the current buffer.
+	It is suggested to write a "#test()" function in a script, especially
+	class file, as unite test.
+
+:ClassView						*:ClassView*
+	Print the members and/or methods of a class, in a more readable way.
+
+:LOGON	{file}						*:LOGON*
+:LOGOFF							*:LOGOFF*
+	Redir the message to {file}, or stop redir.
+
+:LOG {expr string}					*:LOG*
+:SLOG {literal string}					*:SLOG*
+	":LOG" require a {expr} as string type, while ":SLOG" requre a literal
+	string, for example: >
+		:LOG "string"
+		:LOG "string" . l:var
+		:SLOG string as see
+<
+	When {string} begin with option-like, it has specail meaning.
+	"-number" set the log level of current message
+	"-highlight" set the highlight name current message
+	If only contain option string without actual message string, then set
+	the default log level and highlight.
+	When the current log level is smaller than the default log level,
+	the current message will be skipped, not echo it.
+
+:ELOG {expr string}					*:ELOG*
+:WLOG {expr string}					*:WLOG*
+:DLOG {expr string}					*:DLOG*
+	With the special highlight name prefix to the message string, and then
+	same as ":LOG".
+	":ELOG" use "ErrorMsg" highlight
+	":WLOG" use "WarningMsg" highlight
+	":DLOG" use a virtual "DEBUG" highlight, when "g:DEBUG" not set,
+	skip this message.
+
+:PLUGINLOCAL [{file}]					*:PLUGINLOCAL*
+:PLUGINAFTER [{file}]					*:PLUGINAFTER*
+	These two special commands can only be used in script file, can be 
+	used in ex command line.
+	":PLUGINLOCAL" means "plugin local", it will search the same file
+	but with ".local" extention, in the same directory of the script.
+	If such file is found, source that file and finish current scipt.
+	":PLUGINAFTER" means "plugin after", it does almost the same thing,
+	except default to search ".after" file, and donot finish the current
+	script.
+	These two commands can also explicitly provide a file, to search for.
+	Normally, put ":PLUGINLOCAL" in the header of a script, then that 
+	scipt can be customized by a ".local" script, and put ":PLUGINAFTER"
+	in the footer of script, then that script can be extended by a 
+	".after" script. See |vnote-remap| for a example.
+
 ========================================================+=====================
-vim:tw=78:ts=8:ft=text:norl:
+vim:tw=78:ts=8:ft=help:norl:
