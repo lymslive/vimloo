@@ -70,7 +70,7 @@ function! s:FindScript(name) abort "{{{
 
     " try script file under autoload subdirctory
     if l:name !~# '^autoload'
-        let l:name = 'autoload/' . l:name
+        let l:name = 'autoload' . s:rtp.separator . l:name
     endif
 
     let l:lsGlob = globpath(&runtimepath, l:name, 0, 1)

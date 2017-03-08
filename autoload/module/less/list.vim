@@ -2,12 +2,15 @@
 " Author: lymslive
 " Description: VimL module frame, list util
 " Create: 2017-02-25
-" Modify: 2017-02-25
+" Modify: 2017-03-09
 
 " Module:
 let s:class = {}
 
 " Flat: 
+" > a:lsArgv, a list
+" > a:1, deepth
+" < return, a flattend list
 function! s:class.Flat(lsArgv, ...) dict abort "{{{
     let l:iDeepth = get(a:000, 0, 1)
     if l:iDeepth == 0

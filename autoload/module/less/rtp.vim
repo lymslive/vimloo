@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-02-28
+" Modify: 2017-03-09
 
 " MODULE:
 let s:class = {}
@@ -13,6 +13,27 @@ if has('win32') || has('win64') || has('win16') || has('win95')
 else
     let s:class.os = 'unix'
 endif
+
+" AddPath: 
+function! s:class.AddPath(base, sub) dict abort "{{{
+    return a:base . self.separator . a:sub
+endfunction "}}}
+
+" PutPath: 
+function! s:class.PutPath(sub, base) dict abort "{{{
+    return a:base . self.separator . a:sub
+endfunction "}}}
+
+" MakePath: 
+function! s:class.MakePath(...) dict abort "{{{
+    if a:0 > 1
+        return join(a:000, self.separator)
+    elseif a:0 == 1 && type(a:1) == type([])
+        return join(a:1, self.separator)
+    else
+        return ''
+    endif
+endfunction "}}}
 
 " GetAutoName: convert a script filename to autoload namespace
 " > a:pFileName, full path of a script file
@@ -84,6 +105,21 @@ function! s:class.Absolute(pFileName) dict abort "{{{
     else
         return fnamemodify(getcwd(), ':p') . self.separator . a:pFileName
     endif
+endfunction "}}}
+
+" FindAutoScript: find {path#to#script} in &rpt
+function! s:class.FindAutoScript(name) dict abort "{{{
+    let l:name = substitute(a:name, '#', s:rtp.separator, 'g')
+    let l:name .= '.vim'
+    if l:name !~# '^autoload'
+        let l:name = self.PutPath(l:name, 'autoload')
+    endif
+
+    let l:lsGlob = globpath(&runtimepath, l:name, 0, 1)
+    if !empty(l:lsGlob)
+        return l:lsGlob[0]
+    endif
+    return ''
 endfunction "}}}
 
 " IMPORT:
