@@ -107,9 +107,9 @@ function! s:class.Absolute(pFileName) dict abort "{{{
     endif
 endfunction "}}}
 
-" FindAutoScript: find {path#to#script} in &rpt
+" FindAutoScript: find {path#to#script} in &rtp
 function! s:class.FindAutoScript(name) dict abort "{{{
-    let l:name = substitute(a:name, '#', s:rtp.separator, 'g')
+    let l:name = substitute(a:name, '#', self.separator, 'g')
     let l:name .= '.vim'
     if l:name !~# '^autoload'
         let l:name = self.PutPath(l:name, 'autoload')

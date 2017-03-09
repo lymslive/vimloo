@@ -34,7 +34,7 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
         let l:cmd = 'edit +/%s %s'
         let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
         execute l:cmd
-        return line(.)
+        return line('.')
     else
         :ELOG 'cannot find function: ' . l:name
         return 0
@@ -69,7 +69,7 @@ function! edit#vim#GotoClassFunc(...) dict abort "{{{
 endfunction "}}}
 
 " GotoDefineFunc: 
-function! edit#vim#GotoDefineFunc(...) dict abort "{{{
+function! edit#vim#GotoDefineFunc(...) abort "{{{
     if a:0 == 0 || empty(a:1)
         let l:name = expand('<cword>')
     else
