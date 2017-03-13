@@ -2,14 +2,19 @@
 " Author: lymslive
 " Description: implement for ftplugin/vim.vim
 " Create: 2017-03-08
-" Modify: 2017-03-10
+" Modify: 2017-03-13
 
 " UpdateModity: 
 " automatically update the Modify time in the commet header
 function! edit#vim#UpdateModity() abort "{{{
     let l:sDate = strftime('%Y-%m-%d')
-    let l:cmd = '1,10 g/"\s*Modify:/s/\d\+[-]\d\+[-]\d\+/%s/'
-    let l:cmd = printf(l:cmd, l:sDate)
+    let l:iEnd = line('$')
+    if l:iEnd > 10
+        let l:iEnd = 10
+    endif
+
+    let l:cmd = '1,%d g/"\s*Modify:/s/\d\+[-]\d\+[-]\d\+/%s/'
+    let l:cmd = printf(l:cmd, l:iEnd, l:sDate)
 
     let l:save_cursor = getcurpos()
     execute l:cmd
