@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-02-10
+" Modify: 2017-03-14
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -366,7 +366,8 @@ function! s:class.hello(...) dict abort "{{{
     echo self.string() . '[' . self.number() . ']: hello ' . l:word . '!'
 endfunction "}}}
 
-" echo: 
+" echo: display class meber
+" -a, include reserved keys, -m, include method keys
 function! s:class.echo(...) dict abort "{{{
     let l:sMember = "class member:\n"
     let l:sMethod = "class method:\n"
@@ -413,8 +414,11 @@ function! s:class.echo(...) dict abort "{{{
         endfor
     endif
 
-    echo l:sMember . l:sMethod
-
+    if match(a:000, 'm') != -1
+        echo l:sMember . l:sMethod
+    else
+        echo l:sMember
+    endif
 endfunction "}}}
 
 " FormatField: 

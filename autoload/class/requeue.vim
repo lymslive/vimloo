@@ -96,16 +96,24 @@ endfunction "}}}
 
 " Add: add a item to tail, or rearrange to tail if already existed
 function! s:class.Add(item) dict abort "{{{
+    " first item
     if self.IsEmpty()
-        call add(self.array, item)
+        let self.array[0] = a:item
         let self.head = 0
         let self.tail = 1
+        return self
+    endif
+
+    " already in the tail
+    if a:item == self.array[self.tail-1]
+        return self
     endif
 
     let l:size = self.Size()
     let l:scan = 0
     let l:bFound = v:false
 
+    " re-add old item?
     let l:idx = self.head
     while l:scan < l:size
         if l:idx >= self.capacity
@@ -128,12 +136,14 @@ function! s:class.Add(item) dict abort "{{{
         return self
     endif
 
+    " add new item
     let self.array[self.tail] = a:item
     let self.tail += 1
     if self.tail >= self.capacity
         let self.tail = 0
     endif
 
+    " full array
     if l:size == self.capacity
        let self.head = self.tail
     endif
@@ -148,12 +158,12 @@ function! s:class.Normalize() dict abort "{{{
     endif
 
     if self.tail > self.head
-        return self.array(self.head : self.tail - 1)
+        return self.array[self.head : self.tail - 1]
     endif
 
-    let l:list = self.array(self.head : )
+    let l:list = self.array[self.head : ]
     if self.tail > 0
-        call extend(l:list, self.array(0 : self.tail - 1))
+        call extend(l:list, self.array[0 : self.tail - 1])
     endif
 
     return l:list
@@ -176,7 +186,7 @@ function! s:class.Resize(capacity) dict abort "{{{
         call extend(l:list, repeat([''], a:capacity - self.capacity))
         let self.array = l:list
     else
-        let self.array = l:list(0 : a:capacity - 1)
+        let self.array = l:list[0 : a:capacity - 1]
     endif
 
     let self.head = 0
@@ -231,5 +241,26 @@ endfunction "}}}
 
 " TEST:
 function! class#requeue#test(...) abort "{{{
+    let l:jObj = class#requeue#new(5)
+    for l:item in range(1, 10)
+        call l:jObj.Add(l:item)
+        echo 'add item: ' . l:item
+        echo 'obj.array:'
+        echo l:jObj.array
+        echo 'obj.list():'
+        echo l:jObj.list()
+        echo '-----'
+    endfor
+
+    for l:item in range(10, 6, -1)
+        call l:jObj.Add(l:item)
+        echo 'add item: ' . l:item
+        echo 'obj.array:'
+        echo l:jObj.array
+        echo 'obj.list():'
+        echo l:jObj.list()
+        echo '-----'
+    endfor
+
     return 0
 endfunction "}}}
