@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a fixed queue, only add, only remove when full
 " Create: 2017-03-13
-" Modify: 2017-03-14
+" Modify: 2017-03-15
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -195,8 +195,8 @@ function! s:class.Resize(capacity) dict abort "{{{
     return self
 endfunction "}}}
 
-" Fill: 
-function! s:class.Fill(array) dict abort "{{{
+" Fill: fill the queue, option a:1 is bIgnoreEmpty
+function! s:class.Fill(array, ...) dict abort "{{{
     if self.IsFull() || empty(a:array)
         return self
     endif
@@ -206,6 +206,10 @@ function! s:class.Fill(array) dict abort "{{{
         return self
     endif
 
+    let l:bIgnoreEmpty = get(a:000, 0, v:false)
+
+    let l:left = self.MaxSize() - self.Size()
+
     if self.head < 0
         let self.head = 0
     endif
@@ -213,14 +217,17 @@ function! s:class.Fill(array) dict abort "{{{
         let self.tail = 0
     endif
 
-    let l:left = self.MaxSize() - self.Size()
     let l:count = 0
     for l:item in a:array
         if l:count >= l:left
             break
         endif
 
-        let self.array[tail] = l:item
+        if empty(l:item) && l:bIgnoreEmpty
+            continue
+        endif
+
+        let self.array[self.tail] = l:item
         let self.tail += 1
         let l:count += 1
     endfor
