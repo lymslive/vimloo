@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a fixed queue, only add, only remove when full
 " Create: 2017-03-13
-" Modify: 2017-03-15
+" Modify: 2017-03-20
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -229,6 +229,9 @@ function! s:class.Fill(array, ...) dict abort "{{{
 
         let self.array[self.tail] = l:item
         let self.tail += 1
+        if self.tail >= self.capacity
+            let self.tail = 0
+        endif
         let l:count += 1
     endfor
 

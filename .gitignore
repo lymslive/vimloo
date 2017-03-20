@@ -6,3 +6,6 @@ doc/tags
 *.log
 core.*
 Session.vim
+Sessionx.vim
+*.tgz
+*.tar.gz
