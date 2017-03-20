@@ -24,6 +24,10 @@
 Just clone down this rep to a runtime path of vim(`&rtp`), or use some plugin
 manage tool to Install.
 
+* requirement: vim7.4 or above
+* for common user, only the code in `autoload/` is needed
+* for VimL Plugin writer, the command in `plugin` may also be helpful
+
 ## Documentation
 
 Online help `doc/vimloo.txt` is available.
