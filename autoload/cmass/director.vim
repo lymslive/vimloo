@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-02-14
+" Modify: 2017-03-21
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -126,9 +126,11 @@ function! cmass#director#hPluginLocal(pSource, sExtention, ...) abort "{{{
 
     if filereadable(l:pScript)
         execute 'source ' . l:pScript
-        return v:true
+        " return v:true
+        return 1
     else
-        return v:false
+        " return v:false
+        return 0
     endif
 endfunction "}}}
 
