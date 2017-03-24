@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-03-09
+" Modify: 2017-03-24
 
 " MODULE:
 let s:class = {}
@@ -24,7 +24,7 @@ function! s:class.PutPath(sub, base) dict abort "{{{
     return a:base . self.separator . a:sub
 endfunction "}}}
 
-" MakePath: 
+" MakePath: join each part in a list to a path string
 function! s:class.MakePath(...) dict abort "{{{
     if a:0 > 1
         return join(a:000, self.separator)
@@ -32,6 +32,35 @@ function! s:class.MakePath(...) dict abort "{{{
         return join(a:1, self.separator)
     else
         return ''
+    endif
+endfunction "}}}
+
+" MakeFull: 
+function! s:class.MakeFull(path, file, extention) dict abort "{{{
+    return a:path . self.separator . a:file . a:extention
+endfunction "}}}
+
+" AddSlash: add slash in the end
+function! s:AddSlash(path) abort "{{{
+    if empty(a:path)
+        return ''
+    endif
+    if a:path[-1] ==# self.separator
+        return a:path
+    else
+        return a:path . self.separator
+    endif
+endfunction "}}}
+
+" SubSlash: remove ending slash
+function! s:AddSlash(path) abort "{{{
+    if empty(a:path)
+        return ''
+    endif
+    if a:path[-1] ==# self.separator
+        return a:path[0:-2]
+    else
+        return a:path
     endif
 endfunction "}}}
 
@@ -120,6 +149,20 @@ function! s:class.FindAutoScript(name) dict abort "{{{
         return l:lsGlob[0]
     endif
     return ''
+endfunction "}}}
+
+" GlobFile: return a list of file name
+" > a:dir: the base directory
+" > a:file: file wild pattern
+" < file names, without heading directory, but may with extention.
+function! s:class.GlobFile(dir, file) dict abort "{{{
+    let l:sPattern = self.AddPath(a:dir, a:file)
+    let l:lpGlob = glob(l:sPattern, '', '')
+    if empty(l:lpGlob)
+        return []
+    endif
+    let l:iHead = len(a:dir) + 1
+    return map(l:lpGlob, 'strpart(v:val, l:iHead)')
 endfunction "}}}
 
 " IMPORT:

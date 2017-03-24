@@ -2,11 +2,12 @@
 " Author: lymslive
 " Description: command use class#builder
 " Create: 2017-02-14
-" Modify: 2017-02-28
+" Modify: 2017-03-23
 
 let s:rtp = module#less#rtp#import()
 
-" Command Hander Interface: {{{1
+" Command Hander Interface:
+" 
 " ClassNew: open a new file name.vim and fill class frame
 function! cmass#builder#hClassNew(name, ...) abort "{{{
     if empty(a:name)
