@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-03-24
+" Modify: 2017-03-25
 
 " MODULE:
 let s:class = {}
@@ -157,12 +157,27 @@ endfunction "}}}
 " < file names, without heading directory, but may with extention.
 function! s:class.GlobFile(dir, file) dict abort "{{{
     let l:sPattern = self.AddPath(a:dir, a:file)
-    let l:lpGlob = glob(l:sPattern, '', '')
+    let l:lpGlob = glob(l:sPattern, '', 1)
     if empty(l:lpGlob)
         return []
     endif
     let l:iHead = len(a:dir) + 1
     return map(l:lpGlob, 'strpart(v:val, l:iHead)')
+endfunction "}}}
+
+" FixrtpDir: return a directory suitable for rtp, or empty string
+" > a:pDirectory, the path candidate
+" if contains 'autoload' in middle part, fix upto it parent
+" otherwise check itself whether has 'autoload' subdirctory
+function! s:class.FixrtpDir(pDirectory) dict abort "{{{
+    if a:pDirectory =~# self.separator . 'autoload'
+        let l:pDirectory = substitute(a:pDirectory, self.separator . 'autoload' . '.*$', '', '')
+        return l:pDirectory
+    elseif isdirectory(self.MakePath(a:pDirectory, 'autoload'))
+        return a:pDirectory
+    else
+        return ''
+    endif
 endfunction "}}}
 
 " IMPORT:
