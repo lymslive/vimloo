@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: command line option parser for custom command 
 " Create: 2017-02-11
-" Modify: 2017-02-26
+" Modify: 2017-03-27
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -427,12 +427,19 @@ endfunction "}}}
 " TEST:
 function! class#cmdline#test(...) abort "{{{
     " :ClassTest -- -ac xyz -d efg
+    echo a:0
+    for l:i in range(1, a:0)
+        " echo a:1
+        " echo a:2
+        echo a:{l:i}
+    endfor
+
     let l:jCmdLine = class#cmdline#new('CmdLineTest')
     call l:jCmdLine.AddSingle('a', 'aaa', 'some thing a')
     call l:jCmdLine.AddSingle('b', 'bbb', 'some thing b')
     call l:jCmdLine.AddPairs('c', 'ccc', 'some thing c')
     call l:jCmdLine.AddPairs('d', 'ddd', 'some thing d', 'default')
-    call l:jCmdLine.Check(a:000)
+    call l:jCmdLine.ParseCheck(a:000)
     echo 'option[a] = ' . l:jCmdLine.Get('aaa')
     echo 'option[b] = ' . l:jCmdLine.Get('bbb')
     echo 'option[c] = ' . l:jCmdLine.Get('ccc')

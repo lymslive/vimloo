@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-03-21
+" Modify: 2017-03-27
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -83,32 +83,7 @@ function! cmass#director#hClassTest(...) abort "{{{
         return 0
     endif
 
-    call cmass#director#UnpackCall(l:sAutoName . '#test', l:lsPostArgv)
-endfunction "}}}
-
-" UpcakArgv: convert a list to string as used in function call
-" [1, 2, '3'] ==> 1, 2, '3'
-function! cmass#director#UpcakArgv(lsArgv) abort "{{{
-    let l:sArgv = string(a:lsArgv)
-    if type(a:lsArgv) == type([])
-        return l:sArgv[1:-2]
-    else
-        return l:sArgv
-    endif
-endfunction "}}}
-
-" UnpackCall: 
-function! cmass#director#UnpackCall(sFunc, lsArgv) abort "{{{
-    let l:sArgv = cmass#director#UpcakArgv(a:lsArgv)
-    let l:sCmd = 'call ' . a:sFunc . '(' . l:sArgv. ')'
-    execute l:sCmd
-endfunction "}}}
-
-" UnpackEval: 
-function! cmass#director#UnpackEval(sFunc, lsArgv) abort "{{{
-    let l:sArgv = cmass#director#UpcakArgv(a:lsArgv)
-    let l:sCmd = 'eval ' . a:sFunc . '(' . l:sArgv. ')'
-    execute l:sCmd
+    call call(l:sAutoName . '#test', l:lsPostArgv)
 endfunction "}}}
 
 " PluginLocal: redirect to another script

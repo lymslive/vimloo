@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-03-14
+" Modify: 2017-03-27
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -37,7 +37,7 @@ function! class#class(...) abort "{{{
 endfunction "}}}
 
 " ctor: dummy function
-function! class#ctor(this, argv) abort "{{{
+function! class#ctor(this, ...) abort "{{{
 endfunction "}}}
 
 " dector: 
@@ -64,7 +64,7 @@ function! class#new(...) abort "{{{
         let l:argv = []
     endif
 
-    call l:obj._new_(l:argv)
+    call l:obj._new_(l:argv, 1)
     return l:obj
 endfunction "}}}
 
@@ -205,10 +205,18 @@ function! s:class._sudector_() dict abort "{{{
 endfunction "}}}
 
 " _new_: 
-function! s:class._new_(argv) dict abort "{{{
+" > a:1, how to call #ctor()
+"   if a:1 not empty, persist argument list for #new(...), passing as it
+"   otherwise pack the argument into a list variable, passing the only one
+function! s:class._new_(argv, ...) dict abort "{{{
     let l:Ctor = self._ctor_()
     if exists('*l:Ctor')
-        call l:Ctor(self, a:argv)
+        if a:0 > 0 && !empty(a:1)
+            let l:argv = extend([self], a:argv)
+            call call(l:Ctor, l:argv)
+        else
+            call l:Ctor(self, a:argv)
+        endif
     endif
 endfunction "}}}
 

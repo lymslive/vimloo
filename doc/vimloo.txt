@@ -221,7 +221,7 @@ _interface_		list of string
 --------------------------------------------------------+---------------------
 2.2 method key						*class-method*
 
-_new_			s:class._new_(argv)
+_new_			s:class._new_({argv}, [persist])
 	Called by "#new()" sharp function, when creat new object instance, to
 	do the common things for any class. It will try to find the "#ctor()"
 	function of the class from which create it. If the usr class donot
@@ -231,6 +231,9 @@ _new_			s:class._new_(argv)
 	"#new()", usually is {a:000} to handle any number of argument when
 	create new instance. This argument is then passed to contruct function
 	"#ctor()".
+	If [perisist] is provided and non-empty, the {a:argv} is passed as the
+	argument list from "#new(...)", otherwise, the {a:argv} is passed as a
+	single list argument to "#cotr()".
 
 _old_			s:class._old_()
 	While "new" create object instance, "old" create derived class, as
@@ -364,6 +367,7 @@ obsent the sharp function.
 	The "..." is variable number of arguments, see |a:000|.
 
 #ctor			class#ctor(this, argv)
+#ctor			class#ctor(this, ...)
 	This is the constructor function of user class. "#ctor()" is called 
 	indirectlly, through "_new_()" method, by "#new()" function.
 	When "#ctor()" is called, the object is already created or copied.
@@ -374,6 +378,14 @@ obsent the sharp function.
 	cases to construct new object.
 	In derived class, the "#ctor()" of base class may need to be called in
 	some way, it is determined by the implement of derived class.
+	The "#ctor()" definition form is determined by how to call "_new_()"
+	from "#new(...)", see |class-mothod|. 
+	If [persist] is omitted, "#ctor()" accept a single list argument 
+	{a:argv}, as the first form.
+	If [persist] is non-empty, "#ctor()" accept a arugment list of
+	variable number, as the second form.
+	In the second form "#ctor(this, ...)", persist the meanig of {a:000}
+	as "#new(..)", and so is recommanded.
 
 #dector			class#dector()
 #delete			class#delete(this)

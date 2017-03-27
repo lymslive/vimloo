@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-15
-" Modify: 2017-02-15
+" Modify: 2017-03-27
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -26,16 +26,16 @@ function! class#loger#class() abort "{{{
 endfunction "}}}
 
 " CTOR:
-function! class#loger#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0 && !empty(a:argv[0])
-        let a:this.LogFile = a:argv[0]
+function! class#loger#ctor(this, ...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        let a:this.LogFile = a:1
     endif
 endfunction "}}}
 
 " NEW:
 function! class#loger#new(...) abort "{{{
     let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    call l:obj._new_(a:000, 1)
     return l:obj
 endfunction "}}}
 
