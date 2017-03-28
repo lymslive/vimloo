@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: deal with a text file
 " Create: 2017-03-22
-" Modify: 2017-03-22
+" Modify: 2017-03-28
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -16,25 +16,25 @@ let s:class._version_ = 1
 
 " absolute path of file
 let s:class.path = ''
+" let self.content_ = []
 
 function! class#textfile#class() abort "{{{
     return s:class
 endfunction "}}}
 
-" NEW:
+" NEW: new(path)
 function! class#textfile#new(...) abort "{{{
     let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    call l:obj._new_(a:000, 1)
     return l:obj
 endfunction "}}}
-
-" CTOR: argv = [full-path]
-function! class#textfile#ctor(this, argv) abort "{{{
-    if len(a:argv) < 1 || empty(a:argv[0])
+" CTOR:
+function! class#textfile#ctor(this, ...) abort "{{{
+    if a:0 < 1 || empty(a:1)
         :ELOG 'class#textfile expect a path'
         return -1
     else
-        let a:this.path = a:argv[0]
+        let a:this.path = a:1
     endif
 endfunction "}}}
 
@@ -63,7 +63,7 @@ function! s:class.list() dict abort "{{{
     if !filereadable(l:pFileName)
         let self.content_ = []
     else
-        let self.content_ readfile(l:pFileName)
+        let self.content_ = readfile(l:pFileName)
     endif
 
     return self.content_
