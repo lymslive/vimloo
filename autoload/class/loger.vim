@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-15
-" Modify: 2017-03-27
+" Modify: 2017-03-30
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -15,6 +15,7 @@ let s:class._name_ = 'class#loger'
 let s:class._version_ = 1
 
 " the log file :redir to
+" special arg: '-buffer' as current buffer
 let s:class.LogFile = ''
 " the min level of message that will loged by Echo method
 let s:class.LogLevel = 0
@@ -54,7 +55,11 @@ function! class#loger#SetLogFile(pFileName) abort "{{{
     let l:sOldFile = l:instance.LogFile
     let l:instance.LogFile = a:pFileName
     if !empty(a:pFileName)
-        :execute 'redir >> ' . a:pFileName
+        if a:pFileName !=? '-buffer'
+            :execute 'redir >> ' . a:pFileName
+        else
+            :redir END
+        endif
     else
         :redir END
     endif
@@ -108,11 +113,17 @@ function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
     endif
 
     if empty(a:sMessage) || a:iLevel > self.LogLevel
+        echohl None
         return 0
     endif
 
     try
-        echomsg a:sMessage
+        if self.LogFile ==? '-buffer'
+            call append('$', a:sMessage)
+            $print
+        else
+            echomsg a:sMessage
+        endif
     finally
         echohl None
     endtry

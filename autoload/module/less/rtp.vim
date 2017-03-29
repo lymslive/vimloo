@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-03-25
+" Modify: 2017-03-30
 
 " MODULE:
 let s:class = {}
@@ -132,7 +132,7 @@ function! s:class.Absolute(pFileName) dict abort "{{{
     if filereadable(a:pFileName)
         return fnamemodify(a:pFileName, ':p')
     else
-        return fnamemodify(getcwd(), ':p') . self.separator . a:pFileName
+        return fnamemodify(getcwd(), ':p') . a:pFileName
     endif
 endfunction "}}}
 
