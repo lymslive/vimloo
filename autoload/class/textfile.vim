@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: deal with a text file
 " Create: 2017-03-22
-" Modify: 2017-03-28
+" Modify: 2017-03-31
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -34,7 +34,7 @@ function! class#textfile#ctor(this, ...) abort "{{{
         :ELOG 'class#textfile expect a path'
         return -1
     else
-        let a:this.path = a:1
+        let a:this.path = expand(a:1)
     endif
 endfunction "}}}
 
