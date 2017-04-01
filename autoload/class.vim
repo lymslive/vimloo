@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-03-27
+" Modify: 2017-04-01
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -106,13 +106,13 @@ endfunction "}}}
 " isobect(class_name, objcet_variable)
 function! class#isobject(...) abort "{{{
     if a:0 == 0
-        return v:false
+        return s:false
     elseif a:0 == 1
         return s:class._isobject_(a:1)
     else
         let l:class = class#class(a:1)
         if empty(l:class)
-            return v:false
+            return s:false
         endif
         return l:class._isobject_(a:2)
     endif
@@ -122,13 +122,13 @@ endfunction "}}}
 " isa(class_name, objcet_variable)
 function! class#isa(...) abort "{{{
     if a:0 == 0
-        return v:false
+        return s:false
     elseif a:0 == 1
         return s:class._isa_(a:1)
     else
         let l:class = class#class(a:1)
         if empty(l:class)
-            return v:false
+            return s:false
         else
             return l:class._isa_(a:2)
         endif
@@ -305,32 +305,32 @@ endfunction "}}}
 " _isobject_: 
 function! s:class._isobject_(that) dict abort "{{{
     if type(a:that) == 4 && has_key(a:that, '_name_') && a:that._name_ ==# self._name_
-        return v:true
+        return s:true
     else
-        return v:false
+        return s:false
     endif
 endfunction "}}}
 
 " _isa_: check self if is some super or interface of a:that class
 function! s:class._isa_(that) dict abort "{{{
     if type(a:that) != 4 || !has_key(a:that, '_name_')
-        return v:false
+        return s:false
     endif
 
     " a:that if object of self
     if self._isobject_(a:that)
-        return v:true
+        return s:true
     endif
 
     " self if super of a:that
     if has_key(a:that, '_super_') && a:that._super_ ==# self._name_
-        return v:true
+        return s:true
     endif
 
     " self if interface of a:that
     if has_key(a:that, '_interface_')
         if index(a:that._interface_, self._name_) != -1
-            return v:true
+            return s:true
         endif
     endif
 
@@ -338,7 +338,7 @@ function! s:class._isa_(that) dict abort "{{{
     if has_key(a:that, '_super_') && a:that._super_ !=# a:that._name_
         let l:super = class#class(a:that._super_)
         if !empty(l:super) && self._isa_(l:super)
-            return v:true
+            return s:true
         endif
     endif
 
@@ -347,12 +347,12 @@ function! s:class._isa_(that) dict abort "{{{
         for l:sInterface in a:that._interface_
             let l:interface = class#class(l:sInterface)
             if !empty(l:interface) && self._isa_(l:interface)
-                return v:true
+                return s:true
             end
         endfor
     endif
 
-    return v:false
+    return s:false
 endfunction "}}}
 
 " the shared instance: 
@@ -434,6 +434,15 @@ function! s:FormatField(obj, key, lead) abort "{{{
     let l:str = a:lead . a:key . ' = ' . string(a:obj[a:key]) . "\n"
     return l:str
 endfunction "}}}
+
+" Boolean Value:
+if exists('v:false')
+    let s:false = v:false
+    let s:true = v:true
+else
+    let s:false = 0
+    let s:true = 1
+endif
 
 " triggle to load this vimL file
 function! class#load() abort "{{{
