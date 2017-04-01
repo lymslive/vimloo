@@ -445,11 +445,11 @@ else
 endif
 
 " Constant Defined:
-let class#TRUE = 1
-let class#FALSE = 0
-let class#EMPTY = ''
-let class#OK = 0
-let class#ERROR = -1
+let g:class#TRUE = 1
+let g:class#FALSE = 0
+let g:class#EMPTY = ''
+let g:class#OK = 0
+let g:class#ERROR = -1
 
 " triggle to load this vimL file
 function! class#load() abort "{{{
