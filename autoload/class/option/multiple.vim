@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: option with multiple argument
 " Create: 2017-02-25
-" Modify: 2017-02-25
+" Modify: 2017-04-08
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -50,7 +50,7 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue(arg) dict abort "{{{
-    let self.Set = v:true
+    let self.Set = g:class#TRUE
     call add(self.Argument, a:arg)
 endfunction "}}}
 

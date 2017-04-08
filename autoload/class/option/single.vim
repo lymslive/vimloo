@@ -2,15 +2,15 @@
 " Author: lymslive
 " Description: option without argument
 " Create: 2017-02-12
-" Modify: 2017-02-12
+" Modify: 2017-04-08
 
 " BASIC:
 let s:class = class#option#base#old()
 let s:class._name_ = 'class#option#single'
 let s:class._version_ = 1
 
-" dose this option is set?
-let s:class.Set = v:false
+" dose this option is set? // v:false
+let s:class.Set = g:class#FALSE
 
 function! class#option#single#class() abort "{{{
     return s:class
@@ -57,12 +57,12 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue() dict abort "{{{
-    let self.Set = v:true
+    let self.Set = g:class#TRUE
 endfunction "}}}
 
 " UnSet: 
 function! s:class.UnSet() dict abort "{{{
-    let self.Set = v:false
+    let self.Set = g:class#FALSE
 endfunction "}}}
 
 " STRING: -c, --Name    [0]Desc

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: option with argument
 " Create: 2017-02-13
-" Modify: 2017-02-13
+" Modify: 2017-04-08
 
 " BASIC:
 let s:class = class#option#single#old()
@@ -12,7 +12,7 @@ let s:class._version_ = 1
 " the argument for this option
 let s:class.Argument = ''
 " user must provide argument for this option?
-let s:class.HasDefault = v:false
+let s:class.HasDefault = g:class#FALSE
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
@@ -66,7 +66,7 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue(arg) dict abort "{{{
-    let self.Set = v:true
+    let self.Set = g:class#TRUE
     let self.Argument = a:arg
 endfunction "}}}
 
