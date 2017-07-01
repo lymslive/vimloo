@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-03-14
-" Modify: 2017-03-14
+" Modify: 2017-06-30
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -24,33 +24,33 @@ function! interface#queue#merge(that) abort "{{{
     call a:that._merge_(s:class)
 endfunction "}}}
 
-" list: user class must implement, operate which list?
-function! s:class.list() dict abort "{{{
+" queue: user class must implement, operate which list?
+function! s:class.queue() dict abort "{{{
     return []
 endfunction "}}}
 
 " push: 
 function! s:class.push(item) dict abort "{{{
-    let l:list = self.list()
-    call add(l:list, a:item)
+    let l:queue = self.queue()
+    call add(l:queue, a:item)
 endfunction "}}}
 
 " shift: 
 function! s:class.shift() dict abort "{{{
-    let l:list = self.list()
-    if empty(l:list)
+    let l:queue = self.queue()
+    if empty(l:queue)
         return ''
     endif
-    return remove(l:list, 0)
+    return remove(l:queue, 0)
 endfunction "}}}
 
 " front: 
 function! s:class.front() dict abort "{{{
-    let l:list = self.list()
-    if empty(l:list)
+    let l:queue = self.queue()
+    if empty(l:queue)
         return ''
     endif
-    return l:list[0]
+    return l:queue[0]
 endfunction "}}}
 
 " LOAD:

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: used a stack
 " Create: 2017-03-14
-" Modify: 2017-03-14
+" Modify: 2017-06-30
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -24,33 +24,33 @@ function! interface#stack#merge(that) abort "{{{
     call a:that._merge_(s:class)
 endfunction "}}}
 
-" list: user class must implement, operate which list?
-function! s:class.list() dict abort "{{{
+" stack: user class must implement, operate which list?
+function! s:class.stack() dict abort "{{{
     return []
 endfunction "}}}
 
 " push: 
 function! s:class.push(item) dict abort "{{{
-    let l:list = self.list()
-    call add(l:list, a:item)
+    let l:stack = self.stack()
+    call add(l:stack, a:item)
 endfunction "}}}
 
 " pop: 
 function! s:class.pop() dict abort "{{{
-    let l:list = self.list()
-    if empty(l:list)
+    let l:stack = self.stack()
+    if empty(l:stack)
         return ''
     endif
-    return remove(l:list, -1)
+    return remove(l:stack, -1)
 endfunction "}}}
 
 " top: 
 function! s:class.top() dict abort "{{{
-    let l:list = self.list()
-    if empty(l:list)
+    let l:stack = self.stack()
+    if empty(l:stack)
         return ''
     endif
-    return l:list[-1]
+    return l:stack[-1]
 endfunction "}}}
 
 " LOAD:

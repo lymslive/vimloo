@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-04-01
+" Modify: 2017-06-29
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -206,7 +206,7 @@ endfunction "}}}
 
 " _new_: 
 " > a:1, how to call #ctor()
-"   if a:1 not empty, persist argument list for #new(...), passing as it
+"   if a:1 not empty, persist argument list from #new(...), passing as it
 "   otherwise pack the argument into a list variable, passing the only one
 function! s:class._new_(argv, ...) dict abort "{{{
     let l:Ctor = self._ctor_()
