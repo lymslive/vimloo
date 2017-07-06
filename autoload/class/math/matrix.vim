@@ -1,8 +1,8 @@
 " Class: class#math#matrix
 " Author: lymslive
-" Description: matrix object
+" Description: matrix object, using screen coordinate
 " Create: 2017-06-30
-" Modify: 2017-06-30
+" Modify: 2017-07-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -121,6 +121,25 @@ endfunction "}}}
 " list: default to ReferList()
 function! s:class.list() dict abort "{{{
     return self.ReferList()
+endfunction "}}}
+
+" get: 
+function! s:class.get(row, col) dict abort "{{{
+    return self.data[a:row][a:col]
+endfunction "}}}
+" set: 
+function! s:class.set(row, col, val) dict abort "{{{
+    self.data[a:row][a:col] = a:val
+endfunction "}}}
+
+" raw: build and return a raw matrix data, or nested list
+" global function, not create matrix object
+" row * col matrix, with each cell init value with a:1 (default 0)
+function! class#math#matrix#raw(row, col, ...) abort "{{{
+    let l:val = get(a:000, 0, 0)
+    let l:mt = class#math#matrix#new(a:row, a:col)
+    call l:mt.Fill(l:val)
+    return l:mt.data
 endfunction "}}}
 
 " LOAD:

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a point(x, y) object
 " Create: 2017-06-30
-" Modify: 2017-06-30
+" Modify: 2017-07-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -106,16 +106,18 @@ function! s:class.IsBound(...) dict abort "{{{
     if a:0 == 2
         let l:pt1 = a:1
         let l:pt2 = a:2
-        return (self.x >= l:pt1.x && self.x <= l:pt2 || self.x <= l:pt1.x && self.x >= l:pt2.x)
-                    \ (self.y >= l:pt1.y && self.y <= l:pt2.y || self.y <= l:pt1.y && self.y >= l:pt2.y)
+        let l:x1 = l:pt1.x
+        let l:x2 = l:pt2.x
+        let l:y1 = l:pt1.y
+        let l:y2 = l:pt2.y
     elseif a:0 == 4
         let l:x1 = a:1
         let l:x2 = a:2
         let l:y1 = a:3
         let l:y2 = a:4
-        return (self.x >= l:x1 && self.x <= l:x2 || self.x <= l:x1 && self.x >= l:x2)
-                    \ (self.y >= l:y1 && self.y <= l:y2 || self.y <= l:y1 && self.y >= l:y2)
     endif
+    return (self.x >= l:x1 && self.x <= l:x2 || self.x <= l:x1 && self.x >= l:x2)
+                \ && (self.y >= l:y1 && self.y <= l:y2 || self.y <= l:y1 && self.y >= l:y2)
 endfunction "}}}
 
 " LOAD:
