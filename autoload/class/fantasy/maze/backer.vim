@@ -3,7 +3,7 @@
 " Description: maze generation with recursive backtracker algorithm
 "   refer to: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 " Create: 2017-06-29
-" Modify: 2017-07-05
+" Modify: 2017-07-06
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -63,7 +63,7 @@ function! s:class.stack() dict abort "{{{
 endfunction "}}}
 
 " Backtracker: 
-function! s:class.Backtracker() abort "{{{
+function! s:class.Generate() abort "{{{
     let l:x = self._random.Rand(self.width)
     let l:y = self._random.Rand(self.height)
     let l:cell = class#math#point#new(l:x, l:y)
@@ -172,7 +172,7 @@ endfunction "}}}
 function! class#fantasy#maze#backer#test(...) abort "{{{
     let l:maze = class#fantasy#maze#backer#new(10, 10)
     call l:maze.Reset()
-    call l:maze.Backtracker()
+    call l:maze.Generate()
     let l:lsString = l:maze.DrawMap()
     for l:str in l:lsString
         echo l:str

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-04
+" Modify: 2017-07-06
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -102,9 +102,11 @@ endfunction "}}}
 
 " DrawMap: 
 " return a list of string to draw
-function! s:class.DrawMap() dict abort "{{{
-    let l:iCellWidth = 3
-    let l:iCellHeight = 2
+function! s:class.DrawMap(...) dict abort "{{{
+    let l:iDefaultWidth = 3
+    let l:iDefaultHeight = 2
+    let l:iCellWidth = get(a:000, 0, l:iDefaultWidth)
+    let l:iCellHeight = get(a:000, 1, l:iDefaultHeight)
     let l:cCross = '+'
     let l:hSide = '-'
     let l:vSide = '|'
@@ -187,6 +189,11 @@ function! s:class.DrawMap() dict abort "{{{
     return l:lsString
 endfunction "}}}
 
+" ListOfWall: ['h', row, col] or ['v', row, col]
+" span list the hwall and vwall
+function! s:class.ListOfWall() dict abort "{{{
+    " code
+endfunction "}}}
 " LOAD:
 let s:load = 1
 :DLOG '-1 class#fantasy#maze#base is loading ...'
