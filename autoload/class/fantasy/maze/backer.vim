@@ -3,7 +3,7 @@
 " Description: maze generation with recursive backtracker algorithm
 "   refer to: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 " Create: 2017-06-29
-" Modify: 2017-07-06
+" Modify: 2017-07-11
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -15,8 +15,6 @@ let s:class = class#fantasy#maze#base#old()
 let s:class._name_ = 'class#fantasy#maze#backer'
 let s:class._version_ = 1
 
-" mark visited room
-let s:class.VISIT = 2
 call interface#stack#merge(s:class)
 
 function! class#fantasy#maze#backer#class() abort "{{{
@@ -47,10 +45,7 @@ endfunction "}}}
 
 " Reset: init a full blocked maze
 function! s:class.Reset() abort "{{{
-    let self.room = class#math#matrix#raw(self.height, self.width, self.VALID)
-    let self.hwall = class#math#matrix#raw(self.height-1, self.width, self.BLOCKED)
-    let self.vwall = class#math#matrix#raw(self.height, self.width-1, self.BLOCKED)
-
+    call self.GridWall()
     let self._stack = []
     let self._random = class#math#random#new()
 
@@ -64,6 +59,8 @@ endfunction "}}}
 
 " Backtracker: 
 function! s:class.Generate() abort "{{{
+    call self.Reset()
+
     let l:x = self._random.Rand(self.width)
     let l:y = self._random.Rand(self.height)
     let l:cell = class#math#point#new(l:x, l:y)
@@ -82,6 +79,21 @@ function! s:class.Generate() abort "{{{
         endif
     endwhile
 
+    call self.AfterGenerate()
+    return self
+endfunction "}}}
+
+" AfterGenerate: 
+function! s:class.AfterGenerate() dict abort "{{{
+    " remove room visit marker
+    for l:row in range(self.height)
+        for l:col in range(self.width)
+            let self.room[l:row][l:col] = self.VALID
+        endfor
+    endfor
+
+    unlet self._stack
+    unlet self._random
     return self
 endfunction "}}}
 
@@ -171,7 +183,7 @@ endfunction "}}}
 " TEST:
 function! class#fantasy#maze#backer#test(...) abort "{{{
     let l:maze = class#fantasy#maze#backer#new(10, 10)
-    call l:maze.Reset()
+    " call l:maze.Reset()
     call l:maze.Generate()
     let l:lsString = l:maze.DrawMap()
     for l:str in l:lsString

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-06
+" Modify: 2017-07-11
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -34,6 +34,10 @@ let s:class.PASSAGE = 0
 let s:class.BLOCKED = 1
 " usally no need to handle the corner
 let s:class.CORNER = -1
+
+" constant for algorithm
+" mark visited room
+let s:class.VISIT = 2
 
 function! class#fantasy#maze#base#class() abort "{{{
     return s:class
@@ -189,11 +193,136 @@ function! s:class.DrawMap(...) dict abort "{{{
     return l:lsString
 endfunction "}}}
 
-" ListOfWall: ['h', row, col] or ['v', row, col]
-" span list the hwall and vwall
+" ListOfWall: wall tuple is ['h', row, col] or ['v', row, col]
+" span list the hwall and then vwall, row by row
 function! s:class.ListOfWall() dict abort "{{{
-    " code
+    let l:list = []
+
+    for l:row in hwall
+        let l:row = map(copy(l:row), 'extend(["h"], v:val)')
+        call extend(l:list, l:row)
+    endfor
+
+    for l:row in vwall
+        let l:row = map(copy(l:row), 'extend(["v"], v:val)')
+        call extend(l:list, l:row)
+    endfor
+
+    return l:list
 endfunction "}}}
+
+" WallOfIndex: reindex in range[0, sizeof(hwall) + sizeof(vwall) - 1]
+" return a wall tuple
+function! s:class.WallOfIndex(index) dict abort "{{{
+    let l:iSizeHWall = (self.height-1) * self.width
+    let l:iSizeVWall = self.height * (self.width-1)
+    if a:index < 0 || a:index >= l:iSizeHWall + l:iSizeVWall
+        :ELOG 'beyond index range: ' . a:index
+        return []
+    endif
+
+    if a:index < l:iSizeHWall
+       let l:row = a:index / self.width
+       let l:col = a:index % self.width
+       return ['h', l:row, l:col]
+   else
+       let l:index = a:index - l:iSizeHWall
+       let l:row = l:index / (self.width - 1)
+       let l:col = l:index % (self.width - 1)
+       return ['v', l:row, l:col]
+    endif
+endfunction "}}}
+
+" RoomOfIndex: room tuple is [row, col]
+function! s:class.RoomOfIndex(index) dict abort "{{{
+    let l:iSizeRoom = self.width * self.height
+    if a:index < 0 || a:index >= l:iSizeRoom
+        :ELOG 'beyond index range: ' . a:index
+        return []
+    endif
+
+    let l:row = a:index / self.width
+    let l:col = a:index % self.width
+    return [l:row, l:col]
+endfunction "}}}
+
+" RoomOfWallIndex: get the walls devided by a wall
+" return a list of two room item [[row1, col1], [row2, col2]]
+function! s:class.RoomOfWallIndex(index) dict abort "{{{
+    let l:wall = self.WallOfIndex(a:index)
+    if empty(l:wall)
+        return []
+    endif
+
+    let l:row = l:wall[1]
+    let l:col = l:wall[2]
+
+    if l:wall[0] == 'h'
+        return [[l:row, l:col], [l:row + 1, l:col]]
+    elseif l:wall[0] == 'v'
+        return [[l:row, l:col], [l:row, l:col + 1]]
+    else
+        :ELOG 'error type of wall'
+        return []
+    endif
+endfunction "}}}
+
+" WallOfRoom: get at most four walls around a room
+" return a list of wall tuple
+function! s:class.WallOfRoom(room) dict abort "{{{
+    let l:row = a:room[0]
+    let l:col = a:room[1]
+
+    let l:lsWall = []
+    if l:row > 0
+        let l:wall = ['h', l:row-1, l:col]
+        call add(l:lsWall, l:wall)
+    endif
+    if l:col > 0
+        let l:wall = ['v', l:row, l:col-1]
+        call add(l:lsWall, l:wall)
+    endif
+    if l:row < self.height - 1
+        let l:wall = ['h', l:row, l:col]
+        call add(l:lsWall, l:wall)
+    endif
+    if l:col < self.width - 1
+        let l:wall = ['v', l:row, l:col]
+        call add(l:lsWall, l:wall)
+    endif
+    return l:lsWall
+endfunction "}}}
+
+" GridWall: init a full blocked maze
+function! s:class.GridWall() dict abort "{{{
+    let self.room = class#math#matrix#raw(self.height, self.width, self.VALID)
+    let self.hwall = class#math#matrix#raw(self.height-1, self.width, self.BLOCKED)
+    let self.vwall = class#math#matrix#raw(self.height, self.width-1, self.BLOCKED)
+
+    return self
+endfunction "}}}
+
+" PassageWall: set a wall as PASSAGE
+" a:wall is wall tuple
+function! s:class.PassageWall(wall) dict abort "{{{
+    if a:wall[0] == 'h'
+        let self.hwall[a:wall[1]][a:wall[2]] = self.PASSAGE
+    elseif a:wall[0] == 'v'
+        let self.vwall[a:wall[1]][a:wall[2]] = self.PASSAGE
+    else
+        :ELOG 'error wall type'
+        return v:none
+    endif
+    return self
+endfunction "}}}
+
+" MarkRoom: 
+" a:room is a room tuple [row, col]
+" a:marker is any value, usually number is ok
+function! s:class.MarkRoom(room, marker) dict abort "{{{
+    let self.room[a:room[0]][a:room[1]] = a:marker
+endfunction "}}}
+
 " LOAD:
 let s:load = 1
 :DLOG '-1 class#fantasy#maze#base is loading ...'
