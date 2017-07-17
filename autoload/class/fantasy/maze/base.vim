@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-11
+" Modify: 2017-07-17
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -38,6 +38,10 @@ let s:class.CORNER = -1
 " constant for algorithm
 " mark visited room
 let s:class.VISIT = 2
+
+let s:class.CHAR_CROSS = '+'
+let s:class.CHAR_HSIDE = '-'
+let s:class.CHAR_VSIDE = '|'
 
 function! class#fantasy#maze#base#class() abort "{{{
     return s:class
