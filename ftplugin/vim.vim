@@ -2,7 +2,11 @@
 " Author: yourname
 " Description: 
 " Create: 2017-03-08
-" Modify: 2017-03-09
+" Modify: 2017-07-22
+
+if exists('g:vimloo_ftplugin_disable')
+    finish
+endif
 
 setlocal iskeyword+=#
 setlocal iskeyword+=:

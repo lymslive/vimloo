@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: deal with a text file
 " Create: 2017-03-22
-" Modify: 2017-03-31
+" Modify: 2017-07-20
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -36,6 +36,13 @@ function! class#textfile#ctor(this, ...) abort "{{{
     else
         let a:this.path = expand(a:1)
     endif
+endfunction "}}}
+
+" OLD:
+function! class#textfile#old() abort "{{{
+    let l:class = copy(s:class)
+    call l:class._old_()
+    return l:class
 endfunction "}}}
 
 " ISOBJECT:

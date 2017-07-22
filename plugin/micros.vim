@@ -2,7 +2,11 @@
 " Author: lymslive
 " Description: 
 " Create: 2017-02-28
-" Modify: 2017-03-04
+" Modify: 2017-07-22
+
+if exists('g:vimloo_plugin_disable')
+    finish
+endif
 
 " Log message to some file make use of :redir
 command! -nargs=1 -complete=file LOGON call class#loger#SetLogFile(<f-args>)

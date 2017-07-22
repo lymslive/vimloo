@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-17
+" Modify: 2017-07-18
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -113,8 +113,8 @@ endfunction "}}}
 function! s:class.DrawMap(...) dict abort "{{{
     let l:iDefaultWidth = 3
     let l:iDefaultHeight = 2
-    let l:iCellWidth = get(a:000, 0, l:iDefaultWidth)
-    let l:iCellHeight = get(a:000, 1, l:iDefaultHeight)
+    let l:iCellHeight = get(a:000, 0, l:iDefaultHeight)
+    let l:iCellWidth = get(a:000, 1, l:iDefaultWidth)
     let l:cCross = '+'
     let l:hSide = '-'
     let l:vSide = '|'

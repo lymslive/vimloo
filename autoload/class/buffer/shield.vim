@@ -3,7 +3,7 @@
 " Description: a special buffer shield, protcted from manually editing
 "   suggest to create b:variable of this class
 " Create: 2017-07-14
-" Modify: 2017-07-15
+" Modify: 2017-07-19
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -51,6 +51,8 @@ function! s:class.Freeze() dict abort "{{{
     : setlocal bufhidden=delete 
     : setlocal nomodifiable
     : setlocal statusline=%t%=SHIELD
+    : setlocal nonumber
+    : setlocal nowrap
 endfunction "}}}
 
 " SetOwner: 
@@ -70,7 +72,7 @@ function! s:class.Update(lsText) dict abort "{{{
 
     let l:iOldEnd = line('$')
     call setline(1, a:lsText)
-    let l:iNewEnd = line('$')
+    let l:iNewEnd = len(a:lsText)
 
     if l:iOldEnd > l:iNewEnd
         let l:cmd = printf("%d,$ delete", l:iNewEnd + 1)
