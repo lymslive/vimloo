@@ -3,14 +3,14 @@
 " Description: a type of easy dynamic file, 
 "   with end mark name, and option slot marks
 " Create: 2017-07-20
-" Modify: 2017-07-22
+" Modify: 2017-07-24
 
 " Text File Format:
 " 1. line orient
 " 2. at end of line, mark name as <name>, if ommit, default <LINE_no>
-" 3. may have middle slot pieces with <slot%i=value>content<%>
+" 3. may have middle slot pieces with <slot/i=value>content<%>
 "    the optional slot mark can be name(before %) or number(after %)
-"    minum mark: <%=>content<%>
+"    minum mark: </>content</> </=0>content</>
 " 4. used for update specific line dynamiclly in program.
 
 "LOAD:
@@ -26,6 +26,8 @@ let s:class._version_ = 1
 " manage array of line-itme, and hash of line-name to line-itme
 let s:class.array = []
 let s:class.hash = {}
+" the lines in show
+let s:class.view = []
 
 " line-item seems like inner class
 let s:item = {}
@@ -37,6 +39,10 @@ let s:item.show = 1
 let s:item.text = ''
 " line-name
 let s:item.name = ''
+
+" show/hide constant
+let s:class.SHOW = 1
+let s:class.HIDE = 0
 
 " Strip: 
 function! s:Strip(item) abort "{{{
@@ -97,6 +103,7 @@ function! s:class.Init() dict abort "{{{
             let l:name = 'LINE' . l:line
         endif
 
+        let l:item.name = l:name
         call add(self.array, l:item)
         let self.hash[l:name] = l:item
     endfor
@@ -104,11 +111,13 @@ endfunction "}}}
 
 " Output: 
 function! s:class.Output() dict abort "{{{
+    let self.view = []
     let l:lsText = []
     for l:item in self.array
         if !l:item.show
             continue
         endif
+        call add(self.view, l:item)
         let l:sText = s:Strip(l:item)
         call add(l:lsText, l:sText)
     endfor
@@ -126,16 +135,69 @@ function! s:class.SetLine(name, text) dict abort "{{{
     let l:item.text = a:text
 endfunction "}}}
 
-" UpdateSlot: update the first slot text and value
+" UpdateSlot: update the first slot text and value(optional)
 " only support one slot now
-function! s:class.UpdateSlot(name, text, value) dict abort "{{{
+function! s:class.UpdateSlot(name, text, ...) dict abort "{{{
+    let l:value = get(a:000, 0, '')
     let l:item = self.GetLine(a:name)
     let l:text = l:item.text
-    let l:text = substitute(l:text, '<.*%.*>\zs.*\ze<%>', a:text, '')
-    if !empty(a:value)
-        let l:text = substitute(l:text, '<%=\zs[^>]*\ze>', a:value, '')
+    let l:text = substitute(l:text, '<.*/.*>\zs.*\ze</>', a:text, '')
+    if !empty(l:value)
+        let l:text = substitute(l:text, '</=\zs[^>]*\ze>', l:value, '')
     endif
     let l:item.text = l:text
+endfunction "}}}
+
+" GetSlotText: 
+function! s:class.GetSlotText(name) dict abort "{{{
+    let l:item = self.GetLine(a:name)
+    let l:text = l:item.text
+    return matchstr(l:text, '<.*/.*>\zs.*\ze</>')
+endfunction "}}}
+
+" GetSlotValue: 
+function! s:class.GetSlotValue(name) dict abort "{{{
+    let l:item = self.GetLine(a:name)
+    let l:text = l:item.text
+    return matchstr(l:text, '</=\zs[^>]*\ze>')
+endfunction "}}}
+
+" ShowLine: 
+" a:name, the line name
+" a:show, 0/1, show value
+" a:1, a shift number list, relate to line with a:name
+" default only set a:name line
+function! s:class.ShowLine(name, show, ...) dict abort "{{{
+    let l:item = self.GetLine(a:name)
+    if a:0 <= 0
+        let l:item.show = a:show
+    else
+        let l:len = len(self.array)
+        let l:liShift = a:1
+        for l:i in l:liShift
+            let l:line = l:item.line + l:i
+            if l:line >= 1 && l:line <= l:len
+                let self.array[l:line-1].show = a:show
+            else
+                let l:msg = printf('line number[%d] beyond range[%d, %d]', l:line, 1, l:len)
+                : WLOG l:msg
+            endif
+        endfor
+    endif
+
+    return self
+endfunction "}}}
+
+" ShowLineReg: 
+" set all line show/hide that match a:regexp
+function! s:class.ShowLineReg(regexp, show) dict abort "{{{
+    for l:item in self.array
+        if l:item.text =~# a:regexp
+            let l:item.show = a:show
+        endif
+    endfor
+
+    return self
 endfunction "}}}
 
 " LOAD:

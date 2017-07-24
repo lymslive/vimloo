@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-07-22
+" Modify: 2017-07-24
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -155,7 +155,7 @@ function! cmass#director#MessageRefix(count, type) abort "{{{
     else
         let l:count = a:count + 0
     endif
-    let l:lsContent = l:lsConte[-l:count:-1]
+    let l:lsContent = l:lsContent[-l:count:-1]
 
     let l:lsQF = []
     let l:bufnr = bufnr('%')
@@ -169,15 +169,15 @@ function! cmass#director#MessageRefix(count, type) abort "{{{
     endfor
 
     if a:type ==? 'qf'
-        call setqflist(l:winnr, l:lsQF)
+        call setqflist(l:lsQF)
         if !empty(l:lsQF)
-            :copen
+            : botright copen
         endif
     elseif a:type ==? 'll'
         let l:winnr = winnr()
         call setloclist(l:winnr, l:lsQF)
         if !empty(l:lsQF)
-            :lopen
+            : lopen
         endif
     endif
 
