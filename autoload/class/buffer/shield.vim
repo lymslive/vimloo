@@ -3,7 +3,7 @@
 " Description: a special buffer shield, protcted from manually editing
 "   suggest to create b:variable of this class
 " Create: 2017-07-14
-" Modify: 2017-07-19
+" Modify: 2017-07-25
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -17,6 +17,7 @@ let s:class._version_ = 1
 
 " the logical owner object
 let s:class.owner = {}
+let s:class.bufnr = 0
 
 function! class#buffer#shield#class() abort "{{{
     return s:class
@@ -30,6 +31,7 @@ function! class#buffer#shield#new(...) abort "{{{
 endfunction "}}}
 " CTOR:
 function! class#buffer#shield#ctor(this, ...) abort "{{{
+    let a:this.bufnr = bufnr('%')
 endfunction "}}}
 
 " OLD:
@@ -62,6 +64,21 @@ endfunction "}}}
 
 " Update: update current buffer with lsText
 function! s:class.Update(lsText) dict abort "{{{
+    " before update
+    let l:bSame = v:true
+    let l:bufnr = bufnr('%')
+    if l:bufnr != self.bufnr
+        let l:bSame = v:false
+        let l:winnr = bufwinnr(self.bufnr)
+        if l:winnr == -1
+            : WLOG 'the buffer ' . self.bufnr . ' is not in window any more'
+            return
+        endif
+        let l:winnr_old = winnr()
+        execute l:winnr . 'wincmd w'
+    endif
+
+    " update
     if empty(a:lsText)
         : 1,$ delete
         return
@@ -81,6 +98,11 @@ function! s:class.Update(lsText) dict abort "{{{
 
     call setpos('.', l:posCursor)
     : setlocal nomodifiable
+
+    " after update
+    if !bSame
+        execute l:winnr_old . 'wincmd w'
+    endif
 endfunction "}}}
 
 " LOAD:
