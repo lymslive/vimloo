@@ -1,8 +1,8 @@
 " Class: class#graph#node
 " Author: lymslive
-" Description: VimL class frame
+" Description: the vertex node of a graph
 " Create: 2017-07-12
-" Modify: 2017-07-12
+" Modify: 2017-07-27
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -10,15 +10,11 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = class#old()
-let s:class._name_ = 'class#graph#node'
-let s:class._version_ = 1
-
+" used as inner struct of graph, not based on class but bare dict
+let s:class = {}
 " identifier of a vertex node
 let s:class.id = 0
-" custome data related to this node
-let s:class.data = {}
-" edges to other vertext, a list of other vertext node
+" edges to other vertex, a list of other vertext node
 let s:class.edge = []
 
 function! class#graph#node#class() abort "{{{
@@ -28,82 +24,53 @@ endfunction "}}}
 " NEW:
 function! class#graph#node#new(...) abort "{{{
     let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
-    return l:obj
-endfunction "}}}
-" CTOR:
-function! class#graph#node#ctor(this, ...) abort "{{{
     if a:0 >= 1
-        let a:this.id = a:1
+        let l:obj.id = a:1
     endif
-    if a:0 >= 2
-        let a:this.data = a:2
-    else
-        let a:this.data = {}
-    endif
-    if a:0 >= 3
-        let a:this.edge = a:3
-    else
-        let a:this.edge = []
-    endif
-endfunction "}}}
-
-" ISOBJECT:
-function! class#graph#node#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    let l:obj.edge = []
+    return l:obj
 endfunction "}}}
 
 " AddEdge: add a edge object in my list
 " the edge should be from this vertex
-" a:1, check existed edge
-let s:SAFE_CHECK = 1
-function! s:class.AddEdge(jEdge, ...) dict abort "{{{
-    if !class#graph#edge#isobject(a:jEdge)
-        :ELOG 'expect a graph edge object'
-        return v:none
-    endif
-
+" a:1, check existed edge if not empty
+function! s:class.AddEdge(dEdge, ...) dict abort "{{{
     if a:0 > 0 && !empty(a:1)
         for l:edge in self.edge
-            if l:edge is a:jEdge
+            if l:edge is a:dEdge
                 :WLOG 'the edge already in list'
                 return self
             endif
         endfor
     endif
 
-    if a:jEdge.from isnot self
+    if a:dEdge.from isnot self
         :ELOG 'the edge is not from this vertex'
         return v:none
     endif
 
-    call add(self.edge, a:jEdge)
+    call add(self.edge, a:dEdge)
     return self
 endfunction "}}}
 
 " Connect: connect to another vertex, create a edge object
-function! s:class.Connect(vertex, ...) dict abort "{{{
-    if !class#graph#node#isobject(a:vertex)
-        :ELOG 'expect to connect to another vertex node'
-        return v:none
-    endif
-
-    if a:vertex is self
+function! s:class.Connect(dVertex, ...) dict abort "{{{
+    if a:dVertex is self
         :WLOG 'a graph vertex cannot connect to itself'
         return self
     endif
 
     " default edge weigth is 1
-    let l:weight = get(a:000, 0, 1)
-    let l:jEdge = class#graph#edge#new(self, a:vertex, l:weight)
-    return self.AddEdge(l:jEdge, s:SAFE_CHECK)
+    let l:iWeight = get(a:000, 0, 1)
+    let l:dEdge = class#graph#edge#new(self, a:dVertex, l:iWeight)
+    return self.AddEdge(l:dEdge)
 endfunction "}}}
 
 " RemoveEdge: 
-function! s:class.RemoveEdge(jEdge) dict abort "{{{
+function! s:class.RemoveEdge(dEdge) dict abort "{{{
     for l:index in range(len(self.edge))
         let l:edge = self.edge[l:index]
-        if l:edge is a:jEdge
+        if l:edge is a:dEdge
             call remove(self.edge, l:index)
             return self
         endif
@@ -113,27 +80,15 @@ function! s:class.RemoveEdge(jEdge) dict abort "{{{
 endfunction "}}}
 
 " Disconnect: 
-function! s:class.Disconnect(vertex) dict abort "{{{
+function! s:class.Disconnect(dVertex) dict abort "{{{
     for l:index in range(len(self.edge))
         let l:edge = self.edge[l:index]
-        if l:edge.to is a:vertex
+        if l:edge.to is a:dVertex
             call remove(self.edge, l:index)
             return self
         endif
     endfor
     :WLOG 'this vertex has no edge to that vertex, something maybe error'
-    return self
-endfunction "}}}
-
-" AttachData: 
-function! s:class.AttachData(data) dict abort "{{{
-    let self.data = a:data
-    return self
-endfunction "}}}
-" AppendData: 
-function! s:class.AppendData(data, ...) dict abort "{{{
-    let l:conflict = get(a:000, 'error')
-    call extend(self.data, a:data, l:conflict)
     return self
 endfunction "}}}
 

@@ -2,9 +2,9 @@
 " Author: lymslive
 " Description: 
 " Create: 2017-02-28
-" Modify: 2017-07-22
+" Modify: 2017-07-26
 
-if exists('g:vimloo_plugin_disable')
+if exists('g:vimloo_plugin_disable') && g:vimloo_plugin_disable > 1
     finish
 endif
 

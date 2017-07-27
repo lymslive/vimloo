@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: Graph data struct in VimL
 " Create: 2017-07-12
-" Modify: 2017-07-12
+" Modify: 2017-07-27
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -43,38 +43,33 @@ endfunction "}}}
 
 " AddVertex: 
 " a:1, check existed vertex, default not check
-" a:jVertex.id can auto-increace, or explict given by user(guard no repeat)
-function! s:class.AddVertex(jVertex, ...) dict abort "{{{
-    if !class#graph#node#isobject(a:jVertex)
-        :ELOG 'expect a graph node object'
-        return v:none
-    endif
-
+" a:dVertex.id can auto-increace, or explict given by user(guard no repeat)
+function! s:class.AddVertex(dVertex, ...) dict abort "{{{
     if a:0 > 0 && !empty(a:1)
         for l:vertex in self.vertex
-            if l:vertex is a:jVertex
+            if l:vertex is a:dVertex
                 :WLOG 'the vertex node already in list'
                 return self
             endif
         endfor
     endif
 
-    if a:jVertex.id == 0
+    if a:dVertex.id == 0
         let self._autoid += 1
-        let a:jVertex.id = self._autoid
+        let a:dVertex.id = self._autoid
     else
-        let self._autoid = a:jVertex.id
+        let self._autoid = a:dVertex.id
     endif
 
-    call add(self.vertex, a:jVertex)
+    call add(self.vertex, a:dVertex)
     return self
 endfunction "}}}
 
 " RemoveVertex: 
-function! s:class.RemoveVertex(jVertex) dict abort "{{{
+function! s:class.RemoveVertex(dVertex) dict abort "{{{
     for l:index in range(len(self.vertex))
         let l:vertex = self.vertex[l:index]
-        if l:vertex is a:jVertex
+        if l:vertex is a:dVertex
             call remove(self.vertex, l:index)
             return self
         endif
@@ -146,6 +141,25 @@ endfunction "}}}
 function! s:class.disp() dict abort "{{{
     let l:text = self.string
     echo l:text
+endfunction "}}}
+
+" VertexFieldAdd: 
+" add a key to each vertex node, silently overide existed key
+" a:key must be string, that can be a key
+" a:value init is copied into each node
+function! s:class.VertexFieldAdd(key, value) dict abort "{{{
+    for l:vertex in self.vertex
+        let l:vertex[a:key] = copy(a:value)
+    endfor
+    return self
+endfunction "}}}
+
+" VertexFieldRmv: 
+function! s:class.VertexFieldRmv(key) dict abort "{{{
+    for l:vertex in self.vertex
+        unlet! l:vertex[a:key]
+    endfor
+    return self
 endfunction "}}}
 
 " LOAD:

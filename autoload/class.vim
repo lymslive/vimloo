@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-06-29
+" Modify: 2017-07-27
 
 let s:class = {}
 let s:class._name_ = 'class'
