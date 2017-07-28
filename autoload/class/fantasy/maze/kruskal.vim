@@ -3,7 +3,7 @@
 " Description: maze generation by Randomized Kruskal's algorithm
 "   refer to: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 " Create: 2017-07-06
-" Modify: 2017-07-11
+" Modify: 2017-07-28
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -145,11 +145,16 @@ endfunction "}}}
 
 " TEST:
 function! class#fantasy#maze#kruskal#test(...) abort "{{{
-    let l:maze = class#fantasy#maze#kruskal#new(10, 10)
+    let l:iHeight = get(a:000, 0, 10) + 0
+    let l:iWidth = get(a:000, 1, 10) + 0
+    let l:maze = class#fantasy#maze#kruskal#new(l:iHeight, l:iWidth)
     call l:maze.Generate()
     let l:lsString = l:maze.DrawMap()
     for l:str in l:lsString
         echo l:str
     endfor
+
+    let l:graph = l:maze.ConvertGraph()
+    call l:graph.disp()
     return 0
 endfunction "}}}

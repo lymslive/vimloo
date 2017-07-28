@@ -156,12 +156,13 @@ endfunction "}}}
 
 " AddVertex: 
 " a:dVertex.id can auto-increace, or explict given by user(guard no repeat)
+" explict given id maybe string
 function! s:class.AddVertex(dVertex, ...) dict abort "{{{
-    if a:dVertex.id == 0
+    if empty(a:dVertex.id)
         let self.autoid_ += 1
         let a:dVertex.id = self.autoid_
     else
-        let self.autoid_ = a:dVertex.id
+        " let self.autoid_ = a:dVertex.id
     endif
 
     if has_key(self.hashid_, a:dVertex.id)
@@ -274,9 +275,9 @@ function! s:class.string() dict abort "{{{
 
     for l:vertex in self.vertex
         let l:iEdgeCnt = len(l:vertex.edge)
-        let l:sVertex = printf("Vertext: id=%d, %d*Edge\n", l:vertex.id, l:iEdgeCnt)
+        let l:sVertex = printf("Vertext: id=%s, %d*Edge\n", l:vertex.id, l:iEdgeCnt)
         for l:edge in l:vertex.edge
-            let l:sEdge = printf("  Edge to V[%d], weight[%d]\n", l:edge.to.id, l:edge.weight)
+            let l:sEdge = printf("  Edge to V[%s], weight[%d]\n", l:edge.to.id, l:edge.weight)
             let l:sVertex .= l:sEdge
         endfor
         call add(l:lsText, l:sVertex)

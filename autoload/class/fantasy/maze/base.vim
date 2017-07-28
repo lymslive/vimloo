@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-18
+" Modify: 2017-07-28
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -325,6 +325,41 @@ endfunction "}}}
 " a:marker is any value, usually number is ok
 function! s:class.MarkRoom(room, marker) dict abort "{{{
     let self.room[a:room[0]][a:room[1]] = a:marker
+endfunction "}}}
+
+" ConvertGraph: 
+" convert to class#graph
+" vertex(room) id is string 'row,col' zone-based index
+function! s:class.ConvertGraph() dict abort "{{{
+    " use edget matrix m*3 to build graph
+    let l:matEdge = []
+
+    let l:iEdgeCnt = 0
+    for l:row in range(self.height)
+        for l:col in range(self.width)
+            let l:idRoom = printf('%d,%d', l:row, l:col)
+            if l:row < self.height-1
+                if self.hwall[l:row][l:col] == self.PASSAGE
+                    let l:idRoomNext = printf('%d,%d', l:row+1, l:col)
+                    let l:tupEdge = [l:idRoom, l:idRoomNext, 1]
+                    call add(l:matEdge, l:tupEdge)
+                    let l:iEdgeCnt += 1
+                endif
+            endif
+            if l:col < self.width-1
+                if self.vwall[l:row][l:col] == self.PASSAGE
+                    let l:idRoomNext = printf('%d,%d', l:row, l:col+1)
+                    let l:tupEdge = [l:idRoom, l:idRoomNext, 1]
+                    call add(l:matEdge, l:tupEdge)
+                    let l:iEdgeCnt += 1
+                endif
+            endif
+        endfor
+    endfor
+
+    let l:graph = class#graph#new()
+    call l:graph.Init(l:matEdge, {'edge': l:iEdgeCnt, 'direct': 0})
+    return l:graph
 endfunction "}}}
 
 " LOAD:
