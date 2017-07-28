@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-07-27
+" Modify: 2017-07-28
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -41,7 +41,7 @@ function! class#ctor(this, ...) abort "{{{
 endfunction "}}}
 
 " dector: 
-function! class#dector() abort "{{{
+function! class#dector(this) abort "{{{
 endfunction "}}}
 
 " new: create a instance object of named class
@@ -290,14 +290,14 @@ endfunction "}}}
 function! s:class._del_() dict abort "{{{
     let l:Dector = function(self._name_ . '#dector')
     if exists('*l:Dector')
-        call l:Dector()
+        call l:Dector(self)
     endif
 
     let l:liSuper = self._supers_()
     for l:super in l:liSuper
         let l:Dector = function(l:super . '#dector')
         if exists('*l:Dector')
-            call l:Dector()
+            call l:Dector(self)
         endif
     endfor
 endfunction "}}}

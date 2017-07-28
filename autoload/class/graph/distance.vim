@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: solve distance problem of a graph
 " Create: 2017-07-26
-" Modify: 2017-07-27
+" Modify: 2017-07-28
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -91,7 +91,7 @@ function! s:class.Prepare() dict abort "{{{
 endfunction "}}}
 " PostClean: 
 function! s:class.PostClean() dict abort "{{{
-    call self.graph.VertexInjectOut(s:key)
+    call self.graph.VertexFieldRmv(s:key)
 endfunction "}}}
 
 " CompareDist: 
@@ -104,7 +104,7 @@ endfunction "}}}
 " a:2 target vertex
 " return a dict with key
 " 'dist' , the distance from source to target vertex
-" 'path' , a list of vertex object
+" 'path' , a list of vertex id
 function! s:class.SolveNoWeight(...) dict abort "{{{
     if a:0 >= 1
         let self.source = a:1
@@ -202,7 +202,7 @@ function! s:class.SolveWeighted(...) dict abort "{{{
     let l:jVertexHeap = class#new()
     call interface#heap#merge(l:jVertexHeap)
     let l:jVertexHeap.heap_ = []
-    let l:jVertexHeap.LessEqual = s:CompareDist
+    let l:jVertexHeap.LessEqual = function('s:CompareDist')
 
     call l:jVertexHeap.push(l:vSource)
     while !empty(l:jVertexHeap.heap_)
@@ -246,15 +246,12 @@ function! s:class.GetResult(vTarget) dict abort "{{{
         : ELOG 'something wrong, cannot solve shortest path problem'
     else
         let l:dRet.dist = l:vTarget[s:key].dist
-        let l:path = [l:vTarget]
+        let l:path = [l:vTarget.id]
         let l:vPrev = l:vTarget[s:key].prev
         while !empty(l:vPrev)
-            call add(l:path, l:vPrev)
+            call add(l:path, l:vPrev.id)
             let l:vPrev = l:vPrev[s:key].prev
         endwhile
-        if l:path[-1] isnot# l:vSource
-            : ELOG 'something wrong, fail to rebuild path'
-        endif
         let l:dRet.path = reverse(l:path)
     endif
 

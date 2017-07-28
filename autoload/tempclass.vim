@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-03-27
+" Modify: 2017-07-28
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -32,7 +32,7 @@ function! tempclass#ctor(this, ...) abort "{{{
 endfunction "}}}
 
 " DECTOR: -D
-function! tempclass#dector() abort "{{{
+function! tempclass#dector(this) abort "{{{
 endfunction "}}}
 
 " COPY: -P

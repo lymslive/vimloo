@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: edge object of a graph
 " Create: 2017-07-12
-" Modify: 2017-07-27
+" Modify: 2017-07-28
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -21,7 +21,7 @@ function! class#graph#edge#class() abort "{{{
 endfunction "}}}
 
 " NEW: #new(from, to, [weight, data])
-function! class#graph#edge#new(from, to) abort "{{{
+function! class#graph#edge#new(from, to, ...) abort "{{{
     let l:obj = copy(s:class)
     let l:obj.from = a:from
     let l:obj.to = a:to
