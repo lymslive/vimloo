@@ -3,7 +3,7 @@
 " Description: a type of easy dynamic file, 
 "   with end mark name, and option slot marks
 " Create: 2017-07-20
-" Modify: 2017-07-24
+" Modify: 2017-07-29
 
 " Text File Format:
 " 1. line orient
@@ -198,6 +198,19 @@ function! s:class.ShowLineReg(regexp, show) dict abort "{{{
     endfor
 
     return self
+endfunction "}}}
+
+" GetShowNumber: the line number(1-based) in the output buffer
+" return 0 if the line is not show
+function! s:class.GetShowNumber(name) dict abort "{{{
+    let l:iLine = 0
+    for l:i in range(len(self.view))
+        if self.view[l:i].name ==# a:name
+            let l:iLine = l:i + 1
+            break
+        endif
+    endfor
+    return l:iLine
 endfunction "}}}
 
 " LOAD:

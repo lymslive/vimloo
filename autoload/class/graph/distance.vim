@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: solve distance problem of a graph
 " Create: 2017-07-26
-" Modify: 2017-07-28
+" Modify: 2017-07-29
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -267,7 +267,7 @@ function! s:class.SequenTravel(lsVertex, bWeight) dict abort "{{{
 
     let l:index = 0
     let l:iEnd = len(a:lsVertex)
-    for l:index + 1 < l:iEnd
+    while l:index + 1 < l:iEnd
         let l:iSource = a:lsVertex[l:index]
         let l:iTarget = a:lsVertex[l:index+1]
         let l:dRet = {}
@@ -285,7 +285,7 @@ function! s:class.SequenTravel(lsVertex, bWeight) dict abort "{{{
             endif
         endif
         let l:index += 1
-    endfor
+    endwhile
 
     return l:dTotal
 endfunction "}}}
