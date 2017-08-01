@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-07-28
+" Modify: 2017-08-01
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -455,6 +455,9 @@ let g:class#ERROR = -1
 function! class#load() abort "{{{
     return 1
 endfunction "}}}
+
+" load micros command
+call vimloo#micros#load()
 
 " unit test for this vimL file
 function! class#test() abort "{{{

@@ -2,18 +2,9 @@
 " Author: yourname
 " Description: 
 " Create: 2017-03-08
-" Modify: 2017-07-22
+" Modify: 2017-08-01
 
-if exists('g:vimloo_ftplugin_disable')
-    finish
+if exists('g:vimloo_ftplugin_enable')
+    call vimloo#plugin#ftvim()
 endif
 
-setlocal iskeyword+=#
-setlocal iskeyword+=:
-
-augroup EDIT_VIM
-    autocmd! * <buffer>
-    autocmd BufWritePre <buffer> call edit#vim#UpdateModity()
-augroup END
-
-nnoremap <buffer> g<C-]> :call edit#vim#GotoDefineFunc()<CR>
