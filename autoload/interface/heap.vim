@@ -15,13 +15,31 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-" let s:class = class#old()
-let s:class = {}
+let s:class = interface#list#old()
 let s:class._name_ = 'interface#heap'
 let s:class._version_ = 1
 
 function! interface#heap#class() abort "{{{
     return s:class
+endfunction "}}}
+
+" NEW:
+function! interface#heap#new(...) abort "{{{
+    let l:obj = copy(s:class)
+    call l:obj._new_(a:000, 1)
+    return l:obj
+endfunction "}}}
+" CTOR:
+function! interface#heap#ctor(this, ...) abort "{{{
+    if a:0 == 0
+        let a:this.heap_ = []
+    elseif type(a:1) == v:t_list
+        let a:this.heap_ = a:1
+    else
+        : ELOG '[interface#heap#ctor] expect a list variable'
+    endif
+    let l:Suctor = s:class._suctor_()
+    call l:Suctor(a:this, a:this.heap_)
 endfunction "}}}
 
 " MERGE:
@@ -33,8 +51,9 @@ endfunction "}}}
 function! s:class.heap() dict abort "{{{
     if has_key(self, 'heap_')
         return self.heap_
+    else
+        return self.list()
     endif
-    return []
 endfunction "}}}
 
 " LessEqual: 
