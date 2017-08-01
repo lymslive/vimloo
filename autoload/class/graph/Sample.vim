@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: some graph for test & debug use
 " Create: 2017-07-28
-" Modify: 2017-07-28
+" Modify: 2017-08-01
 
 " https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 let s:matVertex = [
@@ -33,6 +33,11 @@ function! s:InputFromVertex() abort "{{{
     let l:graph = class#graph#new()
     call l:graph.Init(s:matVertex)
     call l:graph.disp()
+
+    let l:mspant = class#graph#mspant#new(l:graph)
+    call l:mspant.Kruskal()
+    call l:mspant.disp()
+
     call class#delete(l:graph)
 endfunction "}}}
 

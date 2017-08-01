@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: Graph data struct in VimL
 " Create: 2017-07-12
-" Modify: 2017-07-28
+" Modify: 2017-08-01
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -200,6 +200,9 @@ function! s:class.GetVertexByID(id) dict abort "{{{
     if has_key(self, 'hashid_') && !empty(self.hashid_)
         return self.hashid_[a:id]
     endif
+    if empty(a:id)
+        return {}
+    endif
     for l:vertex in self.vertex
         if l:vertex.id == a:id
             return l:vertex
@@ -251,13 +254,24 @@ function! s:class.ConnectEdge(idVertexOut, idVertexIn, ...) dict abort "{{{
 endfunction "}}}
 
 " EdgeList: 
-function! s:class.EdgeList() dict abort "{{{
+" a:1, if nonempty, sort by weight, -1 reverse sort
+function! s:class.EdgeList(...) dict abort "{{{
     let l:list = []
     for l:vertex in self.vertex
         if !empty(l:vertex.edge)
             call extend(l:list, l:vertex.edge)
         endif
     endfor
+
+    if a:0 > 0
+        if !empty(a:1)
+            call sort(l:list, function('class#graph#edge#Compare'))
+        endif
+        if a:1 ==# -1
+            call reverse(l:list)
+        endif
+    endif
+
     return l:list
 endfunction "}}}
 

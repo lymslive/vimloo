@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: solve distance problem of a graph
 " Create: 2017-07-26
-" Modify: 2017-07-29
+" Modify: 2017-08-01
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -105,6 +105,8 @@ endfunction "}}}
 " return a dict with key
 " 'dist' , the distance from source to target vertex
 " 'path' , a list of vertex id
+" if target not specified, calculate all distance from source
+" need clear result by user
 function! s:class.SolveNoWeight(...) dict abort "{{{
     if a:0 >= 1
         let self.source = a:1
@@ -119,10 +121,6 @@ function! s:class.SolveNoWeight(...) dict abort "{{{
         return {}
     endif
     let l:vTarget = self.graph.GetVertexByID(self.target)
-    if empty(l:vTarget)
-        : ELOG 'invalid target vertex id'
-        return {}
-    endif
 
     call self.Prepare()
 
@@ -168,7 +166,11 @@ function! s:class.SolveNoWeight(...) dict abort "{{{
         let l:iHead += 1
     endwhile
 
-    return self.GetResult(l:vTarget)
+    if empty(l:vTarget)
+        return {}
+    else
+        return self.GetResult(l:vTarget)
+    endif
 endfunction "}}}
 
 " SolveWeighted: Dijkstra's algorithm on solving graph with weighted edge
@@ -187,10 +189,6 @@ function! s:class.SolveWeighted(...) dict abort "{{{
         return {}
     endif
     let l:vTarget = self.graph.GetVertexByID(self.target)
-    if empty(l:vTarget)
-        : ELOG 'invalid target vertex id'
-        return {}
-    endif
 
     call self.Prepare()
 
@@ -199,13 +197,10 @@ function! s:class.SolveWeighted(...) dict abort "{{{
 
     let l:bTargetDone = v:false
 
-    let l:jVertexHeap = class#new()
-    call interface#heap#merge(l:jVertexHeap)
-    let l:jVertexHeap.heap_ = []
-    let l:jVertexHeap.LessEqual = function('s:CompareDist')
-
+    let l:jVertexHeap = class#heap#binary#new('idx_heap_', function('s:CompareDist'))
     call l:jVertexHeap.push(l:vSource)
-    while !empty(l:jVertexHeap.heap_)
+
+    while !l:jVertexHeap.empty()
         let l:vertex = l:jVertexHeap.pop()
 
         for l:edge in l:vertex.edge
@@ -217,10 +212,14 @@ function! s:class.SolveWeighted(...) dict abort "{{{
                 continue
             endif
 
-            if l:vertex_to[s:key].dist < 0 || l:vertex_to[s:key].dist > l:iDistNew
+            if l:vertex_to[s:key].dist < 0
                 let l:vertex_to[s:key].dist = l:iDistNew
-                call l:jVertexHeap.push(l:vertex_to)
                 let l:vertex_to[s:key].prev = l:vertex
+                call l:jVertexHeap.push(l:vertex_to)
+            elseif  l:vertex_to[s:key].dist > l:iDistNew
+                let l:vertex_to[s:key].dist = l:iDistNew
+                let l:vertex_to[s:key].prev = l:vertex
+                call l:jVertexHeap.decrease(l:vertex_to)
             endif
 
         endfor
@@ -232,7 +231,11 @@ function! s:class.SolveWeighted(...) dict abort "{{{
         endif
     endwhile
 
-    return self.GetResult(l:vTarget)
+    if empty(l:vTarget)
+        return {}
+    else
+        return self.GetResult(l:vTarget)
+    endif
 endfunction "}}}
 
 " GetResult: 
@@ -257,6 +260,11 @@ function! s:class.GetResult(vTarget) dict abort "{{{
 
     call self.PostClean()
     return dRet
+endfunction "}}}
+
+" CleanResult: 
+function! s:class.CleanResult() dict abort "{{{
+    call self.PostClean()
 endfunction "}}}
 
 " SequenTravel: find min path from one vertex to another in sequence

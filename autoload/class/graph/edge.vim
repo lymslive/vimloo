@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: edge object of a graph
 " Create: 2017-07-12
-" Modify: 2017-07-28
+" Modify: 2017-08-01
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -32,6 +32,11 @@ function! class#graph#edge#new(from, to, ...) abort "{{{
         let l:obj.weight = 1
     endif
     return l:obj
+endfunction "}}}
+
+" Compare: 
+function! class#graph#edge#Compare(first, second) abort "{{{
+    return a:first.weight - a:second.weight
 endfunction "}}}
 
 " LOAD:
