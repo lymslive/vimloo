@@ -47,6 +47,15 @@ call vimloo#plugin#load()
 
 Then some useful command is definded for writting vim script.
 
+## Plugin Practice
+
+There are some vim plugins based on `vimloo`, and so `vimloo` must be
+installed with any of them:
+
+* [vnote](https://github.com/lymslive/vnote)
+* [StartVim](https://github.com/lymslive/StartVim)
+* [tygame](https://github.com/lymslive/tygame)
+
 ## Documentation
 
 Online help `doc/vimloo.txt` is available.
