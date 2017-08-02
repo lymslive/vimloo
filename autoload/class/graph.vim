@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: Graph data struct in VimL
 " Create: 2017-07-12
-" Modify: 2017-08-01
+" Modify: 2017-08-02
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -103,7 +103,12 @@ function! s:class.FromVertexMatrix(matrix, option) dict abort "{{{
         endif
     endif
 
-    for l:iVertexID in range(1, l:iVertexCnt)
+    if has_key(a:option, 'id')
+        let l:lsVertexID = a:option.id
+    else
+        let l:lsVertexID = range(1, l:iVertexCnt)
+    endif
+    for l:iVertexID in l:lsVertexID
         let l:dVertex = class#graph#node#new(l:iVertexID)
         call self.AddVertex(l:dVertex)
     endfor
@@ -197,11 +202,11 @@ endfunction "}}}
 
 " GetVertexByID: 
 function! s:class.GetVertexByID(id) dict abort "{{{
-    if has_key(self, 'hashid_') && !empty(self.hashid_)
-        return self.hashid_[a:id]
-    endif
     if empty(a:id)
         return {}
+    endif
+    if has_key(self, 'hashid_') && !empty(self.hashid_)
+        return get(self.hashid_, a:id, {}) 
     endif
     for l:vertex in self.vertex
         if l:vertex.id == a:id

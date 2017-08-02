@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: min span tree
 " Create: 2017-07-31
-" Modify: 2017-08-01
+" Modify: 2017-08-02
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -35,8 +35,8 @@ function! class#graph#mspant#new(...) abort "{{{
 endfunction "}}}
 " CTOR:
 function! class#graph#mspant#ctor(this, graph) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this)
+    " let l:Suctor = s:class._suctor_()
+    " call l:Suctor(a:this)
     let a:this.graph = a:graph
     let a:this.tree = []
 endfunction "}}}

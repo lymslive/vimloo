@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: solve distance problem of a graph
 " Create: 2017-07-26
-" Modify: 2017-08-01
+" Modify: 2017-08-02
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -241,21 +241,25 @@ endfunction "}}}
 " GetResult: 
 " return the resulted dictionay, with shortest distance and path
 " clean the marker injection to the grap vertex after fetch result
-function! s:class.GetResult(vTarget) dict abort "{{{
+" a:1, build path, default true
+function! s:class.GetResult(vTarget, ...) dict abort "{{{
     let l:vTarget = a:vTarget
+    let l:bBuildPath = get(a:000, 0, 1)
 
     let l:dRet = {}
     if !l:vTarget[s:key].visit
         : ELOG 'something wrong, cannot solve shortest path problem'
     else
         let l:dRet.dist = l:vTarget[s:key].dist
-        let l:path = [l:vTarget.id]
-        let l:vPrev = l:vTarget[s:key].prev
-        while !empty(l:vPrev)
-            call add(l:path, l:vPrev.id)
-            let l:vPrev = l:vPrev[s:key].prev
-        endwhile
-        let l:dRet.path = reverse(l:path)
+        if l:bBuildPath
+            let l:path = [l:vTarget.id]
+            let l:vPrev = l:vTarget[s:key].prev
+            while !empty(l:vPrev)
+                call add(l:path, l:vPrev.id)
+                let l:vPrev = l:vPrev[s:key].prev
+            endwhile
+            let l:dRet.path = reverse(l:path)
+        endif
     endif
 
     call self.PostClean()
@@ -296,6 +300,41 @@ function! s:class.SequenTravel(lsVertex, bWeight) dict abort "{{{
     endwhile
 
     return l:dTotal
+endfunction "}}}
+
+" ConnetedGraph: 
+" build a sub full-connected grap from a subset of vertex,
+" the edges is min distance between each other.
+" a:lsVertex, list of vertex id of base graph
+" a:bWeight, the base graph edge is weighted or not
+" return, the new graph built
+function! s:class.ConnetedGraph(lsVertex, bWeight) dict abort "{{{
+    let l:iEnd = len(a:lsVertex)
+    let l:matDist = []
+
+    for i in range(l:iEnd)
+        let l:row = repeat([0], l:iEnd)
+        call add(l:matDist, l:row)
+
+        let l:iSource = a:lsVertex[i]
+        if a:bWeight
+            call self.SolveWeighted(l:iSource)
+        else
+            call self.SolveNoWeight(l:iSource)
+        endif
+
+        for j in range(l:iEnd)
+            let l:iTarget = a:lsVertex[j]
+            let l:vTarget = self.graph.GetVertexByID(l:iTarget)
+            let l:matDist[i][j] = l:vTarget[s:key].dist
+        endfor
+    endfor
+
+    let l:subGraph = class#graph#new()
+    let l:option = {'vertex': l:iEnd, 'id': a:lsVertex}
+    call l:subGraph.Init(l:matDist, l:option)
+
+    return l:subGraph
 endfunction "}}}
 
 " LOAD:
