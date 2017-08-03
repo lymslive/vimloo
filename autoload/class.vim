@@ -2,22 +2,22 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-01
+" Modify: 2017-08-03
 
 let s:class = {}
 let s:class._name_ = 'class'
-let s:class._version_ = 1
-let s:class._super_ = 'class'
+let s:class._version_ = 2
+let s:class._mother_ = 'class'
 
 " class: with no arg, return the class dict of this base class
 " with one arg, get the class dict by class name, or empty dict
 function! class#class(...) abort "{{{
-    if a:0 == 0
+    if a:0 == 0 || empty(a:1)
         return s:class
     endif
 
     let l:name = a:1
-    if type(l:name) != type('') || empty(a:1)
+    if type(l:name) != type('')
         return {}
     endif
 
@@ -44,62 +44,267 @@ endfunction "}}}
 function! class#dector(this) abort "{{{
 endfunction "}}}
 
-" new: create a instance object of named class
-" if name is empty or 0, use this base class
-function! class#new(...) abort "{{{
-    if a:0 > 0 && !empty(a:1)
-        let l:class = class#class(a:1)
-        if empty(l:class)
-            echoerr 'may not class: ' . a:1
-            return {}
+" CopyDict: copy keys from a dict into another, see extend()
+" a:dTarget, the target dict, may change it's content
+" a:dSource, the source dict, readonly
+" a:dOption, contry how to copy, accepte keys:
+"   data => bool, copy data key from dSource
+"   func => bool, copy FuncRef key
+"   new  => bool, add key when not in dTarget, if false, not add
+"   old  => bool, overide key value that already in dTarget
+"   ignore => regexp, ignore the key match regexp
+"     ignore default empty, and other default true.
+" return a:dTarget modified
+function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
+    let l:bData = get(a:dOption, 'data', v:true)
+    let l:bFunc = get(a:dOption, 'func', v:true)
+    let l:bNew  = get(a:dOption, 'new', v:true)
+    let l:bOld  = get(a:dOption, 'old', v:true)
+    let l:sIgnore = get(a:dOption, 'ignore', '')
+
+    for [l:sKey, l:xVal] in items(a:dSource)
+        if !empty(l:sIgnore) && l:sKey =~# l:sIgnore
+            continue
         endif
-        let l:obj = copy(l:class)
+
+        let l:iType = type(l:xVal)
+        if l:iType == 2 
+            if !l:bFunc
+                continue
+            endif
+        else
+            if !l:bData
+                continue
+            endif
+        endif
+
+        let l:bCopy = v:false
+        if has_key(a:dTarget, l:sKey)
+            if l:bOld
+                let l:bCopy = v:true
+            endif
+        else
+            if l:bNew
+                let l:bCopy = v:true
+            endif
+        endif
+
+        if l:bCopy
+            if l:iType == 3 || l:iType == 4
+                let a:dTarget[l:sKey] = copy(l:xVal)
+            else
+                let a:dTarget[l:sKey] = l:xVal
+            endif
+        endif
+
+    endfor
+endfunction "}}}
+
+let s:dNewOption = {'ignore': '^_.*_$'}
+let s:dOldOption = {'ignore': '.*_$'}
+let s:dFatherOption = {'ignore': '.*_$', 'func': v:false, 'new': v:false}
+let s:dMasterOption = {'ignore': '.*_$', 'data': v:false}
+
+" new: create a instance object of named class
+" a:1, class name or class dict, when empty, use this s:class
+" a:2, ... extra argument for class given by a:1
+function! class#new(...) abort "{{{
+    if a:0 == 0
+        let l:class = s:class
     else
-        let l:obj = copy(s:class)
+        if type(a:1) = type({})
+            let l:class = a:1
+        else
+            let l:class = class#class(a:1)
+        endif
+    endif
+    if empty(l:class)
+        echoerr 'may not class: ' . a:1
+        return {}
     endif
 
-    if a:0 > 1
-        let l:argv = a:000[1:]
-    else
-        let l:argv = []
+    " from single mother, mult father and master to create child
+    let l:obj = s:CopyDict({}, l:class, s:dNewOption)
+    if has_key(l:class, '_static_')
+        for l:sKey in l:class._static_
+            unlet! l:obj[l:sKey]
+        endfor
+    endif
+    let l:obj._class_ = l:class
+
+    if has_key(l:class, '_father_')
+        for l:sFather in l:class._father_
+            let l:CFather = class#class(l:sFather)
+            call s:CopyDict(l:obj, l:CFather, s:dFatherOption)
+        endfor
     endif
 
-    call l:obj._new_(l:argv, 1)
+    if has_key(l:class, '_master_')
+        for l:sFather in l:class._master_
+            let l:CMaster = class#class(l:sMaster)
+            call s:CopyDict(l:obj, l:CMaster, s:dMasterOption)
+        endfor
+    endif
+
+    " call #ctor function
+    try
+        let l:Ctor = function(l:class._name_ . '#ctor')
+        if a:0 > 1
+            let l:argv = a:000[1:]
+        else
+            let l:argv = []
+        endif
+
+        let l:argv = extend([l:obj], a:argv)
+        call call(l:Ctor, l:argv)
+    catch 
+        " no #ctor is allowed
+    endtry
+
     return l:obj
 endfunction "}}}
 
-" old: create a new class from super class
-" if super(a:1) is empty or 0, the super is this base class
-" more argument as interface names
+" old: create a new class from base class
+" a:1, base class name or class dict, when empty, use this s:class
+" return, child class, _mother_ is set to base class name
 function! class#old(...) abort "{{{
     if a:0 == 0 || empty(a:1)
-        let l:class = copy(s:class)
+        let l:CBase = s:class
     else
-        let l:super = class#class(a:1)
-        if empty(l:super)
-            echoerr 'may not class: ' . a:1
-            return {}
+        if type(a:1) = type({})
+            let l:CBase = a:1
+        else
+            let l:CBase = class#class(a:1)
         endif
-        let l:class = copy(l:super)
     endif
 
-    call l:class._old_()
+    if empty(l:CBase)
+        echoerr 'may not class: ' . a:1
+        return {}
+    endif
 
-    if a:0 > 1
-        for l:sInterface in a:000[1:]
-            let l:interface = class#class(l:sInterface)
-            if !empty(l:interface)
-                call l:class._merge_(l:interface)
-            endif
+    let l:class = s:CopyDict({}, l:CBase, s:dOldOption)
+    if has_key(l:CBase, '_protect_')
+        for l:sKey in l:class._protect_
+            unlet! l:class[l:sKey]
         endfor
     endif
+    let l:clas._mother_ = l:CBase._name_
 
     return l:class
 endfunction "}}}
 
 " delete: 
 function! class#delete(this) abort "{{{
-    call a:this._del_()
+    let l:class = a:this._class_
+
+    let l:Dector = function(l:class._name_ . '#dector')
+    if exists('*l:Dector')
+        call l:Dector(a:this)
+    endif
+
+    let l:lsSuper = class#Supers(l:class)
+    for l:sBase in l:lsSuper
+        let l:Dector = function(l:sBase . '#dector')
+        if exists('*l:Dector')
+            call l:Dector(a:this)
+        endif
+    endfor
+endfunction "}}}
+" free: 
+function! class#free(this) abort "{{{
+    call class#delete(a:this)
+endfunction "}}}
+
+" GetClass: 
+function! s:GetClass(class) abort "{{{
+    if type(a:class) == type({})
+        if !has_key(a:class, '_name_')
+            return {}
+        endif
+        let l:class = a:class
+    elseif type(a:class) == type('')
+        let l:class = class#class(a:class)
+    else
+        return {}
+    endif
+endfunction "}}}
+
+" Supers: return a list of super classes in derived path
+" a:class, class name or already class dict
+function! class#Supers(class) abort "{{{
+    let l:class = s:GetClass(a:class)
+
+    let l:lsSuper = []
+    let l:CBase = l:class
+
+    while has_key(l:CBase, '_mother_') && l:CBase._mother_ !=# l:CBase._name_
+        let l:sBase = l:CBase._mother_
+        let l:CBase = class#class(l:sBase)
+        if empty(l:CBase)
+            return l:lsSuper
+        else
+            call add(l:lsSuper, l:sBase)
+        endif
+    endwhile
+
+    return l:lsSuper
+endfunction "}}}
+
+" GetCtor: 
+function! class#GetCtor(class) abort "{{{
+    let l:class = s:GetClass(a:class)
+
+    let l:name = get(l:class, '_name_', '')
+    if empty(l:name)
+        return function('class#ctor')
+    endif
+
+    let l:Ctor = function(l:name . '#ctor')
+    if !exists('*l:Ctor')
+        let l:Ctor = function('class#ctor')
+    endif
+    return l:Ctor
+endfunction "}}}
+
+" GetDector: 
+function! class#GetDector(class) abort "{{{
+    let l:class = s:GetClass(a:class)
+    let l:Dector = function(l:class._name_ . '#dector')
+    if !exists('*l:Dector')
+        let l:Dector = function('class#dector')
+    endif
+    return l:Dector
+endfunction "}}}
+
+" Suctor: 
+function! class#Suctor(class) abort "{{{
+    let l:class = s:GetClass(a:class)
+
+    if !has_key(l:class, '_mother_')
+        return function('class#ctor')
+    endif
+
+    let l:Ctor = function(l:class._mother_ . '#ctor')
+    if !exists('*l:Ctor')
+        let l:Ctor = function('class#ctor')
+    endif
+    return l:Ctor
+endfunction "}}}
+
+" Sudector: 
+function! class#Sudector(class) abort "{{{
+    let l:class = s:GetClass(a:class)
+
+    if !has_key(l:class, '_mother_')
+        return function('class#dector')
+    endif
+
+    let l:Dector = function(l:class._mother_ . '#dector')
+    if !exists('*l:Dector')
+        let l:Dector = function('class#dector')
+    endif
+    return l:Dector
 endfunction "}}}
 
 " isobject: 
@@ -108,13 +313,17 @@ function! class#isobject(...) abort "{{{
     if a:0 == 0
         return s:false
     elseif a:0 == 1
-        return s:class._isobject_(a:1)
+        let l:class = s:class
+        let l:object = a:1
     else
-        let l:class = class#class(a:1)
-        if empty(l:class)
-            return s:false
-        endif
-        return l:class._isobject_(a:2)
+        let l:class = s:GetClass(a:1)
+        let l:object = a:2
+    endif
+
+    if type(l:object) == type({}) && get(l:object, '_class_', {}) is l:class 
+        return s:true
+    else
+        return s:false
     endif
 endfunction "}}}
 
@@ -124,15 +333,44 @@ function! class#isa(...) abort "{{{
     if a:0 == 0
         return s:false
     elseif a:0 == 1
-        return s:class._isa_(a:1)
+        let l:class = s:class
+        let l:object = a:1
     else
-        let l:class = class#class(a:1)
-        if empty(l:class)
-            return s:false
-        else
-            return l:class._isa_(a:2)
+        let l:class = s:GetClass(a:1)
+        let l:object = a:2
+    endif
+
+    if type(l:object) != type({})
+        return s:false
+    endif
+
+    let l:CObject = get(l:object, '_class_', {})
+    if empty(l:CObject)
+        return s:false
+    endif
+
+    if empty(get(l:class, '_name_', ''))
+        return s:false
+    endif
+
+    let l:lsSuper = class#Supers(l:CObject)
+    if index(l:lsSuper, l:class._name_) != -1
+        return s:true
+    endif
+
+    if has_key(l:CObject, '_father_')
+        if index(l:CObject._father_, l:class_name_) != -1
+            return s:true
         endif
     endif
+
+    if has_key(l:CObject, '_master_')
+        if index(l:CObject._master_, l:class_name_) != -1
+            return s:true
+        endif
+    endif
+
+    return s:false
 endfunction "}}}
 
 " convert object to string
@@ -145,220 +383,10 @@ function! s:class.number() dict abort "{{{
     return self._version_
 endfunction "}}}
 
-" return a list of super classes in derived path
-function! s:class._supers_() dict abort "{{{
-    let l:liSuper = []
-    let l:super_class = self
-
-    while has_key(l:super_class, '_super_')
-            \ && l:super_class._super_ !=# l:super_class._name_
-        let l:super_name = l:super_class._super_
-        let l:super_class = class#class(l:super_name)
-        if empty(l:super_class)
-            return l:liSuper
-        else
-            call add(l:liSuper, l:super_name)
-        endif
-    endwhile
-
-    return l:liSuper
-endfunction "}}}
-
-" _ctor_: return #ctor function, or the dummy class#ctor()
-function! s:class._ctor_() dict abort "{{{
-    let l:Ctor = function(self._name_ . '#ctor')
-    if !exists('*l:Ctor')
-        let l:Ctor = function('class#ctor')
-    endif
-    return l:Ctor
-endfunction "}}}
-
-" _suctor_: 
-function! s:class._suctor_() dict abort "{{{
-    if !has_key(self, '_super_')
-        return function('class#ctor')
-    endif
-
-    let l:Ctor = function(self._super_ . '#ctor')
-    if !exists('*l:Ctor')
-        let l:Ctor = function('class#ctor')
-    endif
-    return l:Ctor
-endfunction "}}}
-
-" _dector_: 
-function! s:class._dector_() dict abort "{{{
-    let l:Dector = function(self._name_ . '#dector')
-    if !exists('*l:Dector')
-        let l:Dector = function('class#dector')
-    endif
-    return l:Dector
-endfunction "}}}
-
-" _sudector_: 
-function! s:class._sudector_() dict abort "{{{
-    let l:Dector = function(self._super_ . '#dector')
-    if !exists('*l:Dector')
-        let l:Dector = function('class#dector')
-    endif
-    return l:Dector
-endfunction "}}}
-
-" _new_: 
-" > a:1, how to call #ctor()
-"   if a:1 not empty, persist argument list from #new(...), passing as it
-"   otherwise pack the argument into a list variable, passing the only one
-function! s:class._new_(argv, ...) dict abort "{{{
-    let l:Ctor = self._ctor_()
-    if exists('*l:Ctor')
-        if a:0 > 0 && !empty(a:1)
-            let l:argv = extend([self], a:argv)
-            call call(l:Ctor, l:argv)
-        else
-            call l:Ctor(self, a:argv)
-        endif
-    endif
-endfunction "}}}
-
-" class._old_: 
-" set the right name of super and self relation
-function! s:class._old_() dict abort "{{{
-    let self._super_ = self._name_
-    let self._name_ = ''
-endfunction "}}}
-
-" _copy_: only copy normal data field, but method
-function! s:class._copy_(that) dict abort "{{{
-    if type(a:that) != 4
-        return
-    endif
-
-    for l:sKey in keys(a:that)
-        if !has_key(self, l:sKey)
-            continue
-        endif
-
-        " ignore reserve fields: _xxxx_
-        if match(l:sKey, '^_.*_$') != -1
-            continue
-        endif
-
-        let l:iType = type(self[l:sKey])
-        " Funcref = 2
-        if l:iType == 2
-            continue
-        endif
-
-        " List = 3, Dict = 4
-        if l:iType == 3 || l:iType == 4
-            let self[l:sKey] = copy(a:that[l:sKey])
-        else
-            let self[l:sKey] = a:that[l:sKey]
-        endif
-    endfor
-endfunction "}}}
-
-" _merge_: copy all fields, but not overide already existed key
-" make a:that as an interface class of slef
-function! s:class._merge_(that) dict abort "{{{
-    if type(a:that) != 4 || !has_key(a:that, '_name_')
-        return
-    endif
-
-    if has_key(self, '_interface_')
-        if index(self._interface_, a:that._name_) != -1
-            return
-        endif 
-    endif
-
-    for l:sKey in keys(a:that)
-        if has_key(self, l:sKey)
-            continue
-        endif
-        let self[l:sKey] = a:that[l:sKey]
-    endfor
-
-    if !has_key(self, '_interface_')
-        let self._interface_ = [a:that._name_]
-    else
-        call add(self._interface_, a:that._name_)
-    endif
-endfunction "}}}
-
-" class._del_: 
-" call echa dector from bottom upwise
-function! s:class._del_() dict abort "{{{
-    let l:Dector = function(self._name_ . '#dector')
-    if exists('*l:Dector')
-        call l:Dector(self)
-    endif
-
-    let l:liSuper = self._supers_()
-    for l:super in l:liSuper
-        let l:Dector = function(l:super . '#dector')
-        if exists('*l:Dector')
-            call l:Dector(self)
-        endif
-    endfor
-endfunction "}}}
-
-" _isobject_: 
-function! s:class._isobject_(that) dict abort "{{{
-    if type(a:that) == 4 && has_key(a:that, '_name_') && a:that._name_ ==# self._name_
-        return s:true
-    else
-        return s:false
-    endif
-endfunction "}}}
-
-" _isa_: check self if is some super or interface of a:that class
-function! s:class._isa_(that) dict abort "{{{
-    if type(a:that) != 4 || !has_key(a:that, '_name_')
-        return s:false
-    endif
-
-    " a:that if object of self
-    if self._isobject_(a:that)
-        return s:true
-    endif
-
-    " self if super of a:that
-    if has_key(a:that, '_super_') && a:that._super_ ==# self._name_
-        return s:true
-    endif
-
-    " self if interface of a:that
-    if has_key(a:that, '_interface_')
-        if index(a:that._interface_, self._name_) != -1
-            return s:true
-        endif
-    endif
-
-    " recursive check super
-    if has_key(a:that, '_super_') && a:that._super_ !=# a:that._name_
-        let l:super = class#class(a:that._super_)
-        if !empty(l:super) && self._isa_(l:super)
-            return s:true
-        endif
-    endif
-
-    " recursive check interface
-    if has_key(a:that, '_interface_')
-        for l:sInterface in a:that._interface_
-            let l:interface = class#class(l:sInterface)
-            if !empty(l:interface) && self._isa_(l:interface)
-                return s:true
-            end
-        endfor
-    endif
-
-    return s:false
-endfunction "}}}
-
 " the shared instance: 
-let s:instance = {}
+" let s:instance = {}
 function! class#instance() abort "{{{
-    if empty(s:instance)
+    if exists('s:instance')
         let s:instance = class#new(0)
     endif
     return s:instance
