@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: option with multiple argument
 " Create: 2017-02-25
-" Modify: 2017-04-08
+" Modify: 2017-08-03
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -26,24 +26,22 @@ endfunction "}}}
 
 " NEW:
 function! class#option#multiple#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR: 4 arguments
-function! class#option#multiple#ctor(this, argv) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this, a:argv[0:2])
+function! class#option#multiple#ctor(this, ...) abort "{{{
+    call class#option#pairs#ctor(a:this, a:1, a:2, a:3)
 
     let a:this.Argument = []
     let a:this.Default = []
-    if len(a:argv) > 3
+    if a:0 > 3
         let a:this.HasDefault = v:true
-        if type(a:argv[3]) == type([])
-            call extend(a:this.Default, a:argv[3])
+        if type(a:4) == type([])
+            call extend(a:this.Default, a:4)
         else
-            call add(a:this.Default, a:argv[3])
+            call add(a:this.Default, a:4)
         endif
     endif
 endfunction "}}}
@@ -56,7 +54,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#option#multiple#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " LOAD:

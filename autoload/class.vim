@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-03
+" Modify: 2017-08-04
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -36,6 +36,18 @@ function! class#class(...) abort "{{{
     return l:class
 endfunction "}}}
 
+" GetClass: 
+function! s:GetClass(class) abort "{{{
+    if type(a:class) == type({})
+        let l:class = a:class
+    elseif type(a:class) == type('')
+        let l:class = class#class(a:class)
+    else
+        let l:class = {}
+    endif
+    return l:class
+endfunction "}}}
+
 " ctor: dummy function
 function! class#ctor(this, ...) abort "{{{
 endfunction "}}}
@@ -62,12 +74,12 @@ function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
     let l:bOld  = get(a:dOption, 'old', v:true)
     let l:sIgnore = get(a:dOption, 'ignore', '')
 
-    for [l:sKey, l:xVal] in items(a:dSource)
+    for [l:sKey, l:Val] in items(a:dSource)
         if !empty(l:sIgnore) && l:sKey =~# l:sIgnore
             continue
         endif
 
-        let l:iType = type(l:xVal)
+        let l:iType = type(l:Val)
         if l:iType == 2 
             if !l:bFunc
                 continue
@@ -91,13 +103,14 @@ function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
 
         if l:bCopy
             if l:iType == 3 || l:iType == 4
-                let a:dTarget[l:sKey] = copy(l:xVal)
+                let a:dTarget[l:sKey] = copy(l:Val)
             else
-                let a:dTarget[l:sKey] = l:xVal
+                let a:dTarget[l:sKey] = l:Val
             endif
         endif
-
     endfor
+
+    return a:dTarget
 endfunction "}}}
 
 let s:dNewOption = {'ignore': '^_.*_$'}
@@ -107,19 +120,16 @@ let s:dMasterOption = {'ignore': '.*_$', 'data': v:false}
 
 " new: create a instance object of named class
 " a:1, class name or class dict, when empty, use this s:class
-" a:2, ... extra argument for class given by a:1
+" a:2, argument list for class ctor passed by subclass#new
 function! class#new(...) abort "{{{
     if a:0 == 0
-        let l:class = s:class
-    else
-        if type(a:1) = type({})
-            let l:class = a:1
-        else
-            let l:class = class#class(a:1)
-        endif
+        return {}
     endif
+
+    let l:class = s:GetClass(a:1)
+    let l:argv = get(a:000, 1, [])
     if empty(l:class)
-        echoerr 'may not class: ' . a:1
+        echoerr '[class#new] expect class dict or class name'
         return {}
     endif
 
@@ -134,14 +144,14 @@ function! class#new(...) abort "{{{
 
     if has_key(l:class, '_father_')
         for l:sFather in l:class._father_
-            let l:CFather = class#class(l:sFather)
+            let l:CFather = s:GetClass(l:sFather)
             call s:CopyDict(l:obj, l:CFather, s:dFatherOption)
         endfor
     endif
 
     if has_key(l:class, '_master_')
         for l:sFather in l:class._master_
-            let l:CMaster = class#class(l:sMaster)
+            let l:CMaster = s:GetClass(l:sMaster)
             call s:CopyDict(l:obj, l:CMaster, s:dMasterOption)
         endfor
     endif
@@ -149,13 +159,7 @@ function! class#new(...) abort "{{{
     " call #ctor function
     try
         let l:Ctor = function(l:class._name_ . '#ctor')
-        if a:0 > 1
-            let l:argv = a:000[1:]
-        else
-            let l:argv = []
-        endif
-
-        let l:argv = extend([l:obj], a:argv)
+        let l:argv = extend([l:obj], l:argv)
         call call(l:Ctor, l:argv)
     catch 
         " no #ctor is allowed
@@ -164,22 +168,27 @@ function! class#new(...) abort "{{{
     return l:obj
 endfunction "}}}
 
+let class#father = s:dFatherOption
+let class#master = s:dMasterOption
+" extend: 
+function! class#extend(CTarget, CSource, ...) abort "{{{
+    let l:dOption = get(a:000, 0, {})
+    return s:CopyDict(CTarget, CSource, l:dOption)
+endfunction "}}}
+
 " old: create a new class from base class
 " a:1, base class name or class dict, when empty, use this s:class
 " return, child class, _mother_ is set to base class name
 function! class#old(...) abort "{{{
     if a:0 == 0 || empty(a:1)
+        return {}
         let l:CBase = s:class
     else
-        if type(a:1) = type({})
-            let l:CBase = a:1
-        else
-            let l:CBase = class#class(a:1)
-        endif
+        let l:CBase = s:GetClass(a:1)
     endif
 
     if empty(l:CBase)
-        echoerr 'may not class: ' . a:1
+        echoerr '[class#old] expect class dict or class name'
         return {}
     endif
 
@@ -189,7 +198,7 @@ function! class#old(...) abort "{{{
             unlet! l:class[l:sKey]
         endfor
     endif
-    let l:clas._mother_ = l:CBase._name_
+    let l:class._mother_ = l:CBase._name_
 
     return l:class
 endfunction "}}}
@@ -216,21 +225,7 @@ function! class#free(this) abort "{{{
     call class#delete(a:this)
 endfunction "}}}
 
-" GetClass: 
-function! s:GetClass(class) abort "{{{
-    if type(a:class) == type({})
-        if !has_key(a:class, '_name_')
-            return {}
-        endif
-        let l:class = a:class
-    elseif type(a:class) == type('')
-        let l:class = class#class(a:class)
-    else
-        return {}
-    endif
-endfunction "}}}
-
-" Supers: return a list of super classes in derived path
+" Supers: return a list of super classes in derived path upto top
 " a:class, class name or already class dict
 function! class#Supers(class) abort "{{{
     let l:class = s:GetClass(a:class)
@@ -308,7 +303,7 @@ function! class#Sudector(class) abort "{{{
 endfunction "}}}
 
 " isobject: 
-" isobect(class_name, objcet_variable)
+" isobect(class/name, objcet_variable)
 function! class#isobject(...) abort "{{{
     if a:0 == 0
         return s:false
@@ -328,7 +323,7 @@ function! class#isobject(...) abort "{{{
 endfunction "}}}
 
 " isa: 
-" isa(class_name, objcet_variable)
+" isa(class/name, objcet_variable)
 function! class#isa(...) abort "{{{
     if a:0 == 0
         return s:false
@@ -373,55 +368,37 @@ function! class#isa(...) abort "{{{
     return s:false
 endfunction "}}}
 
-" convert object to string
-function! s:class.string() dict abort "{{{
-    return self._name_
-endfunction "}}}
-
-" convert object to number
-function! s:class.number() dict abort "{{{
-    return self._version_
-endfunction "}}}
-
-" the shared instance: 
-" let s:instance = {}
-function! class#instance() abort "{{{
-    if exists('s:instance')
-        let s:instance = class#new(0)
-    endif
-    return s:instance
-endfunction "}}}
-
-" class.hello: 
-function! s:class.hello(...) dict abort "{{{
-    if a:0 == 0
-        let l:word = 'world'
-    else
-        let l:word = a:1
-    endif
-    echo self.string() . '[' . self.number() . ']: hello ' . l:word . '!'
-endfunction "}}}
-
-" echo: display class meber
+" echo: display class or object meber
 " -a, include reserved keys, -m, include method keys
-function! s:class.echo(...) dict abort "{{{
-    let l:sMember = "class member:\n"
-    let l:sMethod = "class method:\n"
-
-    let l:sMember .= s:FormatField(self, '_name_', '  ')
-    let l:sMember .= s:FormatField(self, '_version_', '  ')
-
-    if has_key(self, '_super_')
-        let l:sMember .= s:FormatField(self, '_super_', '  ')
-    endif
-    if has_key(self, '_interface_')
-        let l:sMember .= s:FormatField(self, '_interface_', '  ')
+function! class#echo(class, ...) abort "{{{
+    let l:class = s:GetClass(a:class)
+    if empty(l:class)
+        echo 'emplty class/objcet dictionary'
+        return
     endif
 
-    let l:lsBasic = ['_name_', '_version_', '_super_', '_interface_']
+    let l:sHeader = ''
+    if has_key(l:class, '_name_') && has_key(l:class, '_version_')
+        let l:sHeader = printf('class %s:%d', l:class._name_, l:class._version_)
+    elseif has_key(l:class, '_class_')
+        let l:name = get(l:class._class_, '_name_', '')
+        let l:version = get(l:class._class_, '_version_', 0)
+        if !empty(l:name)
+            let l:sHeader = printf('objcet of %s:%d', l:name, l:version)
+        else
+            let l:sHeader = 'Object as dictionary'
+        endif
+    endif
+
+    echo l:sHeader
+
+    let l:sMember = "member:\n"
+    let l:sMethod = "method:\n"
+
+    let l:lsBasic = ['_name_', '_version_', '_class_']
     let l:lsReserve = []
 
-    for l:sKey in sort(keys(self))
+    for l:sKey in sort(keys(l:class))
         if index(l:lsBasic, l:sKey) != -1
             continue
         endif
@@ -432,20 +409,20 @@ function! s:class.echo(...) dict abort "{{{
             continue
         endif
 
-        if type(self[l:sKey]) != 2
-            let l:sMember .= s:FormatField(self, l:sKey, '  ')
+        if type(l:class[l:sKey]) != 2
+            let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
         else
-            let l:sMethod .= s:FormatField(self, l:sKey, '  ')
+            let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
         endif
     endfor
     
     " option -a, also print reserve keys
     if match(a:000, 'a') != -1
         for l:sKey in l:lsReserve
-            if type(self[l:sKey]) != 2
-                let l:sMember .= s:FormatField(self, l:sKey, '  ')
+            if type(l:class[l:sKey]) != 2
+                let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
             else
-                let l:sMethod .= s:FormatField(self, l:sKey, '  ')
+                let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
             endif
         endfor
     endif
@@ -460,6 +437,12 @@ endfunction "}}}
 " FormatField: 
 function! s:FormatField(obj, key, lead) abort "{{{
     let l:str = a:lead . a:key . ' = ' . string(a:obj[a:key]) . "\n"
+    return l:str
+endfunction "}}}
+function! s:FormatMethod(obj, key, lead) abort "{{{
+    let l:iFuncNumber = matchstr(string(a:obj[a:key]), '\d\+')
+    let l:sFuncLabel = printf("function('%s')", l:iFuncNumber)
+    let l:str = a:lead . a:key . ' = ' .  l:sFuncLabel . "\n"
     return l:str
 endfunction "}}}
 
@@ -490,8 +473,9 @@ call vimloo#micros#load()
 " unit test for this vimL file
 function! class#test() abort "{{{
     let l:obj = class#new()
-    call l:obj.hello()
-    call l:obj.hello('vim')
+    let l:sub = class#old()
+    echo 'l:obj = ' l:obj
+    echo 'l:sub = ' l:sub
     return 1
 endfunction "}}}
 

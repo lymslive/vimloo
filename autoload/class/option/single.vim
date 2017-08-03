@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: option without argument
 " Create: 2017-02-12
-" Modify: 2017-04-08
+" Modify: 2017-08-03
 
 " BASIC:
 let s:class = class#option#base#old()
@@ -16,29 +16,30 @@ function! class#option#single#class() abort "{{{
     return s:class
 endfunction "}}}
 
-" CTOR:
-function! class#option#single#ctor(this, argv) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this, a:argv)
-endfunction "}}}
-
 " NEW:
 function! class#option#single#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
+endfunction "}}}
+
+" CTOR: 3 arguments
+function! class#option#single#ctor(this, ...) abort "{{{
+    if a:0 < 3
+        echoerr '[class#option#single] expcet 3 arguments: (Char, Name, Desc)'
+        return
+    endif
+    call class#option#base#ctor(a:this, a:1, a:2, a:3)
 endfunction "}}}
 
 " OLD:
 function! class#option#single#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " ISOBJECT:
 function! class#option#single#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Has: 

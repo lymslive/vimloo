@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-07-24
+" Modify: 2017-08-04
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -57,6 +57,24 @@ function! cmass#director#hClassLoad(...) abort "{{{
 
     call l:FuncLoad()
     return 0
+endfunction "}}}
+
+" ClassView: 
+" :ClassView [filename]
+function! cmass#director#hClassView(...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        let l:pFileName = a:1
+    else
+        let l:pFileName = expand('%:p:r')
+    endif
+
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
+        echom ':ClassView only execute under autoload director'
+        return 0
+    endif
+
+    call call('class#echo', [l:sAutoName, '-am'])
 endfunction "}}}
 
 " ClassTest: 

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-12
-" Modify: 2017-02-12
+" Modify: 2017-08-03
 
 " BASIC:
 let s:class = class#old()
@@ -17,18 +17,6 @@ function! class#option#base#class() abort "{{{
     return s:class
 endfunction "}}}
 
-" CTOR:
-function! class#option#base#ctor(this, argv) abort "{{{
-    if len(a:argv) < 3
-        echoerr 'class#option#base expcet 3 arguments: (Char, Name, Desc)'
-        return
-    endif
-
-    let a:this.Char = a:argv[0]
-    let a:this.Name = a:argv[1]
-    let a:this.Desc = a:argv[2]
-endfunction "}}}
-
 " NEW:
 function! class#option#base#new(...) abort "{{{
     let l:obj = copy(s:class)
@@ -36,10 +24,21 @@ function! class#option#base#new(...) abort "{{{
     return l:obj
 endfunction "}}}
 
+" CTOR:
+function! class#option#base#ctor(this, ...) abort "{{{
+    if a:0 < 3
+        echoerr '[class#option#base] expcet 3 arguments: (Char, Name, Desc)'
+        return
+    endif
+
+    let a:this.Char = a:1
+    let a:this.Name = a:2
+    let a:this.Desc = a:3
+endfunction "}}}
+
 " OLD:
 function! class#option#base#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 

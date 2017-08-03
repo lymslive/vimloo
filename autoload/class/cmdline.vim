@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: command line option parser for custom command 
 " Create: 2017-02-11
-" Modify: 2017-03-27
+" Modify: 2017-08-03
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -37,29 +37,21 @@ function! class#cmdline#class() abort "{{{
     return s:class
 endfunction "}}}
 
+" NEW:
+function! class#cmdline#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
+    return l:obj
+endfunction "}}}
+
 " CTOR:
-function! class#cmdline#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0
-        let a:this.Command = a:argv[0]
+function! class#cmdline#ctor(this, ...) abort "{{{
+    if a:0 > 0
+        let a:this.Command = a:1
     endif
 
-    " list or dict member must be re-init
-    let a:this.Option = {}
-    let a:this.PostArgv = []
-    let a:this.CharName = {}
-    let a:this.Group = {}
-    let a:this.Grouped = {}
 
     call a:this.AddSingle('?', 'help', 'display this usage')
     call a:this.AddSingle('', '--', 'stop parse left options')
-    let s:class.LastParsed = ''
-endfunction "}}}
-
-" NEW:
-function! class#cmdline#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
-    return l:obj
 endfunction "}}}
 
 " AddSingle: 

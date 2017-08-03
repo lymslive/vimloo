@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-07-28
+" Modify: 2017-08-03
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -21,64 +21,63 @@ endfunction "}}}
 
 " NEW: -n
 function! tempclass#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR: -c
 function! tempclass#ctor(this, ...) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this)
 endfunction "}}}
 
 " DECTOR: -D
 function! tempclass#dector(this) abort "{{{
 endfunction "}}}
 
-" COPY: -P
-function! tempclass#copy(that, ...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._copy_(a:that)
-    return l:obj
-endfunction "}}}
-
 " OLD: -O
 function! tempclass#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
-" MERGE: -M
-function! tempclass#merge(that) abort "{{{
-    call a:that._merge_(s:class)
+" MASTER: -M
+function! tempclass#master(that) abort "{{{
+    call class#extend(a:that, s:class, class#master)
+endfunction "}}}
+
+" FATHER: -F
+function! tempclass#father(that) abort "{{{
+    call class#extend(a:that, s:class, class#father)
 endfunction "}}}
 
 " ISOBJECT: -s
 function! tempclass#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " ISA: -S
 function! tempclass#isa(that) abort "{{{
-    return s:class._isa_(a:that)
+    return class#isa(s:class, a:that)
 endfunction "}}}
 
 " INSTANCE: -I
-let s:instance = {}
+" let s:instance = {}
 function! tempclass#instance() abort "{{{
-    if empty(s:instance)
-        let s:instance = class#new('tempclass')
+    if !exists(s:instance)
+        let s:instance = class#new(s:class)
     endif
     return s:instance
 endfunction "}}}
 
 " CONVERSION: -X
 function! s:class.string() dict abort "{{{
-    return self._name_
+    return self._class_._name_
 endfunction "}}}
 function! s:class.number() dict abort "{{{
-    return self._version_
+    return self._class_._version_
+endfunction "}}}
+
+" VIEW: -V
+function! s:class.disp() dict abort "{{{
+    echo self.string() . ':' . self.number()
 endfunction "}}}
 
 " IMPORT: -Z
@@ -91,16 +90,15 @@ endfunction "}}}
 
 " LOAD: -l
 let s:load = 1
-:DLOG '-1 tempclass is loading ...'
 function! tempclass#load(...) abort "{{{
-    if a:0 > 0 && !empty(a:1) && exists('s:load')
-        unlet s:load
-        return 0
+    if a:0 > 0 && !empty(a:1)
+        unlet! s:load
     endif
-    return s:load
 endfunction "}}}
 
 " TEST: -t
 function! tempclass#test(...) abort "{{{
+    let l:obj = tempclass#new()
+    call l:obj.disp()
     return 0
 endfunction "}}}
