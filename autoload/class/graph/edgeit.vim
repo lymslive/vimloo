@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: iterator of graph edge
 " Create: 2017-07-12
-" Modify: 2017-07-12
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -27,8 +27,7 @@ endfunction "}}}
 
 " NEW:
 function! class#graph#edgeit#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -45,7 +44,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#graph#edgeit#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " End: check if the iterator ends, return v:true or v:false

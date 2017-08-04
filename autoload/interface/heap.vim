@@ -3,7 +3,7 @@
 " Description: implement the min binary heap 
 "   refer to: https://en.wikipedia.org/wiki/Heap_(data_structure)
 " Create: 2017-07-27
-" Modify: 2017-07-27
+" Modify: 2017-08-04
 
 " zero-based list
 " full binary tree, children of n is 2n+1 and 2n+2
@@ -25,8 +25,7 @@ endfunction "}}}
 
 " NEW:
 function! interface#heap#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -38,7 +37,7 @@ function! interface#heap#ctor(this, ...) abort "{{{
     else
         : ELOG '[interface#heap#ctor] expect a list variable'
     endif
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.heap_)
 endfunction "}}}
 

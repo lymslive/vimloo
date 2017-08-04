@@ -115,8 +115,8 @@ endfunction "}}}
 
 let s:dNewOption = {'ignore': '^_.*_$'}
 let s:dOldOption = {'ignore': '.*_$'}
-let s:dFatherOption = {'ignore': '.*_$', 'func': v:false, 'new': v:false}
-let s:dMasterOption = {'ignore': '.*_$', 'data': v:false}
+let s:dFatherOption = {'ignore': '.*_$', 'func': v:false, 'old': v:false}
+let s:dMasterOption = {'ignore': '.*_$', 'data': v:false, 'old': v:false}
 
 " new: create a instance object of named class
 " a:1, class name or class dict, when empty, use this s:class
@@ -150,7 +150,7 @@ function! class#new(...) abort "{{{
     endif
 
     if has_key(l:class, '_master_')
-        for l:sFather in l:class._master_
+        for l:sMaster in l:class._master_
             let l:CMaster = s:GetClass(l:sMaster)
             call s:CopyDict(l:obj, l:CMaster, s:dMasterOption)
         endfor

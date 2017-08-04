@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: matrix object, using screen coordinate
 " Create: 2017-06-30
-" Modify: 2017-07-05
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -35,13 +35,12 @@ function! class#math#matrix#new(...) abort "{{{
         return v:none
     endif
 
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#math#matrix#ctor(this, rows, cols) abort "{{{
-    " let l:Suctor = s:class._suctor_()
+    " let l:Suctor = class#Suctor(s:class)
     " call l:Suctor(a:this)
     let a:this.rows = a:rows
     let a:this.cols = a:cols
@@ -50,7 +49,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#math#matrix#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Fill: fill the matrix all with the same value

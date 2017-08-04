@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-12
-" Modify: 2017-08-03
+" Modify: 2017-08-04
 
 " BASIC:
 let s:class = class#old()
@@ -19,8 +19,7 @@ endfunction "}}}
 
 " NEW:
 function! class#option#base#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 

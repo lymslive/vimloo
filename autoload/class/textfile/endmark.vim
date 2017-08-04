@@ -3,7 +3,7 @@
 " Description: a type of easy dynamic file, 
 "   with end mark name, and option slot marks
 " Create: 2017-07-20
-" Modify: 2017-07-29
+" Modify: 2017-08-04
 
 " Text File Format:
 " 1. line orient
@@ -60,13 +60,12 @@ function! class#textfile#endmark#new(...) abort "{{{
         return v:none
     endif
 
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#textfile#endmark#ctor(this, ...) abort "{{{
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:1)
     let a:this.array = []
     let a:this.hash = {}
@@ -74,7 +73,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#textfile#endmark#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Init: parse the input file

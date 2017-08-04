@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a fixed queue, only add, only remove when full
 " Create: 2017-03-13
-" Modify: 2017-03-20
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -29,25 +29,23 @@ endfunction "}}}
 
 " NEW: requeue(capacity, [init-array])
 function! class#requeue#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! class#requeue#ctor(this, argv) abort "{{{
-    let l:argc = len(a:argv)
-    if l:argc < 1 || type(a:argv[0]) != type(0)
+function! class#requeue#ctor(this, ...) abort "{{{
+    if a:0 < 1 || type(a:1) != type(0)
         :ELOG 'class#queue need a capacity'
         return -1
     endif
 
-    let a:this.capacity = a:argv[0]
+    let a:this.capacity = a:1
     let a:this.array = repeat([''], a:this.capacity)
     let a:this.head = -1
     let a:this.tail = -1
 
-    if l:argc > 1
-        call a:this.Fill(a:argv[1])
+    if a:0 > 1
+        call a:this.Fill(a:2)
     endif
 
     return 0
@@ -55,7 +53,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#requeue#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Size: 

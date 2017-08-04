@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a class deal with date
 " Create: 2017-02-17
-" Modify: 2017-02-17
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -24,26 +24,23 @@ endfunction "}}}
 
 " NEW:
 function! class#date#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR:
-function! class#date#ctor(this, argv) abort "{{{
-    let l:argc = len(a:argv)
-
-    if l:argc >= 3
-        let a:this.year = a:argv[0]
-        let a:this.month = a:argv[1]
-        let a:this.day = a:argv[2]
+function! class#date#ctor(this, ...) abort "{{{
+    if a:0 >= 3
+        let a:this.year = a:1
+        let a:this.month = a:2
+        let a:this.day = a:3
         return 0
     endif
 
-    if l:argc == 0
+    if a:0 == 0
         let l:sDatePath = strftime("%Y/%m/%d") 
-    elseif l:argc > 0
-        let l:sDatePath = a:argv[0]
+    elseif a:0 > 0
+        let l:sDatePath = a:1
     endif
 
     if empty(l:sDatePath)
@@ -70,7 +67,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#date#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " CONVERSION: date as a string, join by sep

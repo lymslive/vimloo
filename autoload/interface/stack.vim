@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: used a stack
 " Create: 2017-03-14
-" Modify: 2017-06-30
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -20,8 +20,7 @@ endfunction "}}}
 
 " NEW:
 function! interface#stack#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -33,7 +32,7 @@ function! interface#stack#ctor(this, ...) abort "{{{
     else
         : ELOG '[interface#stack#ctor] expect a list variable'
     endif
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.stack_)
 endfunction "}}}
 
