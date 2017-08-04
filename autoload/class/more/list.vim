@@ -1,4 +1,4 @@
-" Class: interface#list
+" Class: class#more#list
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-02
@@ -11,37 +11,37 @@ endif
 
 " CLASS:
 let s:class = class#old()
-let s:class._name_ = 'interface#list'
+let s:class._name_ = 'class#more#list'
 let s:class._version_ = 1
 
-function! interface#list#class() abort "{{{
+function! class#more#list#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! interface#list#new(...) abort "{{{
+function! class#more#list#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! interface#list#ctor(this, ...) abort "{{{
+function! class#more#list#ctor(this, ...) abort "{{{
     if a:0 == 0
         let a:this.list_ = []
     elseif type(a:1) == v:t_list
         let a:this.list_ = a:1
     else
-        : ELOG '[interface#list#ctor] expect a list variable'
+        : ELOG '[class#more#list#ctor] expect a list variable'
     endif
 endfunction "}}}
 
 " OLD:
-function! interface#list#old() abort "{{{
+function! class#more#list#old() abort "{{{
     let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " MERGE:
-function! interface#list#merge(that) abort "{{{
+function! class#more#list#merge(that) abort "{{{
     call a:that._merge_(s:class)
 endfunction "}}}
 
@@ -50,7 +50,7 @@ function! s:class.list() dict abort "{{{
     if has_key(self, 'list_')
         return self.list_
     else
-        : ELOG '[interface#list] ' . 'not implement list()'
+        : ELOG '[class#more#list] ' . 'not implement list()'
         return []
     endif
 endfunction "}}}
@@ -75,8 +75,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG '-1 interface#list is loading ...'
-function! interface#list#load(...) abort "{{{
+:DLOG '-1 class#more#list is loading ...'
+function! class#more#list#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -85,6 +85,6 @@ function! interface#list#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! interface#list#test(...) abort "{{{
+function! class#more#list#test(...) abort "{{{
     return 0
 endfunction "}}}

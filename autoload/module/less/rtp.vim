@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-03-30
+" Modify: 2017-08-04
 
 " MODULE:
 let s:class = {}
@@ -53,7 +53,7 @@ function! s:AddSlash(path) abort "{{{
 endfunction "}}}
 
 " SubSlash: remove ending slash
-function! s:AddSlash(path) abort "{{{
+function! s:SubSlash(path) abort "{{{
     if empty(a:path)
         return ''
     endif

@@ -1,4 +1,4 @@
-" Class: interface#queue
+" Class: class#more#queue
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-03-14
@@ -10,35 +10,30 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = interface#list#old()
-let s:class._name_ = 'interface#queue'
+let s:class = class#more#list#old()
+let s:class._name_ = 'class#more#queue'
 let s:class._version_ = 1
 
-function! interface#queue#class() abort "{{{
+function! class#more#queue#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! interface#queue#new(...) abort "{{{
+function! class#more#queue#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! interface#queue#ctor(this, ...) abort "{{{
+function! class#more#queue#ctor(this, ...) abort "{{{
     if a:0 == 0
         let a:this.queue_ = []
     elseif type(a:1) == v:t_list
         let a:this.queue_ = a:1
     else
-        : ELOG '[interface#queue#ctor] expect a list variable'
+        : ELOG '[class#more#queue#ctor] expect a list variable'
     endif
     let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.heap_)
-endfunction "}}}
-
-" MERGE:
-function! interface#queue#merge(that) abort "{{{
-    call a:that._merge_(s:class)
 endfunction "}}}
 
 " queue: user class must implement, operate which list?
@@ -76,8 +71,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG '-1 interface#queue is loading ...'
-function! interface#queue#load(...) abort "{{{
+:DLOG '-1 class#more#queue is loading ...'
+function! class#more#queue#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -86,6 +81,6 @@ function! interface#queue#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! interface#queue#test(...) abort "{{{
+function! class#more#queue#test(...) abort "{{{
     return 0
 endfunction "}}}

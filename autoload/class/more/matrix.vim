@@ -1,4 +1,4 @@
-" Class: interface#matrix
+" Class: class#more#matrix
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-02
@@ -10,39 +10,34 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = interface#list#old()
-let s:class._name_ = 'interface#matrix'
+let s:class = class#more#list#old()
+let s:class._name_ = 'class#more#matrix'
 let s:class._version_ = 1
 
-function! interface#matrix#class() abort "{{{
+function! class#more#matrix#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! interface#matrix#new(...) abort "{{{
+function! class#more#matrix#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! interface#matrix#ctor(this, ...) abort "{{{
+function! class#more#matrix#ctor(this, ...) abort "{{{
     if a:0 == 0
         let a:this.matrix_ = []
     elseif type(a:1) == v:t_list
         let a:this.matrix_ = a:1
     else
-        : ELOG '[interface#heap#ctor] expect a list variable'
+        : ELOG '[class#more#heap#ctor] expect a list variable'
     endif
     let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.matrix_)
 endfunction "}}}
 
-" MERGE:
-function! interface#matrix#merge(that) abort "{{{
-    call a:that._merge_(s:class)
-endfunction "}}}
-
 " ISOBJECT:
-function! interface#matrix#isobject(that) abort "{{{
+function! class#more#matrix#isobject(that) abort "{{{
     return class#isobject(s:class, a:that)
 endfunction "}}}
 
@@ -120,7 +115,7 @@ function! s:class.get(...) dict abort "{{{
         let l:row = a:1
         let l:col = a:2
     else
-        : ELOG '[interface#matrix.get] expect one or two index'
+        : ELOG '[class#more#matrix.get] expect one or two index'
         return v:none
     endif
 
@@ -176,8 +171,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG '-1 interface#matrix is loading ...'
-function! interface#matrix#load(...) abort "{{{
+:DLOG '-1 class#more#matrix is loading ...'
+function! class#more#matrix#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -186,6 +181,6 @@ function! interface#matrix#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! interface#matrix#test(...) abort "{{{
+function! class#more#matrix#test(...) abort "{{{
     return 0
 endfunction "}}}

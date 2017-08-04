@@ -1,4 +1,4 @@
-" Class: interface#stack
+" Class: class#more#stack
 " Author: lymslive
 " Description: used a stack
 " Create: 2017-03-14
@@ -10,35 +10,30 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = interface#list#old()
-let s:class._name_ = 'interface#stack'
+let s:class = class#more#list#old()
+let s:class._name_ = 'class#more#stack'
 let s:class._version_ = 1
 
-function! interface#stack#class() abort "{{{
+function! class#more#stack#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! interface#stack#new(...) abort "{{{
+function! class#more#stack#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! interface#stack#ctor(this, ...) abort "{{{
+function! class#more#stack#ctor(this, ...) abort "{{{
     if a:0 == 0
         let a:this.stack_ = []
     elseif type(a:1) == v:t_list
         let a:this.stack_ = a:1
     else
-        : ELOG '[interface#stack#ctor] expect a list variable'
+        : ELOG '[class#more#stack#ctor] expect a list variable'
     endif
     let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.stack_)
-endfunction "}}}
-
-" MERGE:
-function! interface#stack#merge(that) abort "{{{
-    call a:that._merge_(s:class)
 endfunction "}}}
 
 " stack: user class must implement, operate which list?
@@ -76,8 +71,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG '-1 interface#stack is loading ...'
-function! interface#stack#load(...) abort "{{{
+:DLOG '-1 class#more#stack is loading ...'
+function! class#more#stack#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -86,6 +81,6 @@ function! interface#stack#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! interface#stack#test(...) abort "{{{
+function! class#more#stack#test(...) abort "{{{
     return 0
 endfunction "}}}

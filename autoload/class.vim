@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-04
+" Modify: 2017-08-05
 
 let s:class = {}
 let s:class._name_ = 'class'
@@ -174,7 +174,10 @@ function! class#new(...) abort "{{{
 endfunction "}}}
 
 " old: create a new class from base class
+" class#old(mother, [master-list], [father-list])
 " a:1, base class name or class dict, when empty, use this s:class
+" a:2, list of master
+" a:3, list of father
 " return, child class, _mother_ is set to base class name
 function! class#old(...) abort "{{{
     if a:0 == 0 || empty(a:1)
@@ -197,15 +200,14 @@ function! class#old(...) abort "{{{
     endif
     let l:class._mother_ = l:CBase._name_
 
-    return l:class
-endfunction "}}}
+    if a:0 >= 2 && type(a:2) = type([])
+        let l:class._master_ = a:2
+    endif
+    if a:0 >= 3 && type(a:3) = type([])
+        let l:class._master_ = a:3
+    endif
 
-let class#father = s:dFatherOption
-let class#master = s:dMasterOption
-" extend: 
-function! class#extend(CTarget, CSource, ...) abort "{{{
-    let l:dOption = get(a:000, 0, {})
-    return s:CopyDict(CTarget, CSource, l:dOption)
+    return l:class
 endfunction "}}}
 
 " delete: 
@@ -305,6 +307,56 @@ function! class#Sudector(class) abort "{{{
         let l:Dector = function('class#dector')
     endif
     return l:Dector
+endfunction "}}}
+
+" extend: 
+function! class#extend(CTarget, CSource, ...) abort "{{{
+    let l:dOption = get(a:000, 0, {})
+    return s:CopyDict(a:CTarget, a:CSource, l:dOption)
+endfunction "}}}
+
+let class#father = s:dFatherOption
+let class#master = s:dMasterOption
+" AddFather: 
+function! class#AddFather(CTarget, CSource) abort "{{{
+    if !has_key(a:CSource, '_name_')
+        echoerr '[class#AddFather] CSource has no class name?'
+        return -1
+    endif
+    if !has_key(a:CTarget, '_father_')
+        let a:CTarget._father_ = [a:CSource._name_]
+    else
+        call add(a:CTarget._father_, a:Source._name_)
+    endif
+endfunction "}}}
+" AsFather: 
+function! class#AsFather(CTarget, CSource, ...) abort "{{{
+    let l:dOption = get(a:000, 0, class#father)
+    if type(l:dOption) != type({})
+        let l:dOPtion = class#father
+    endif
+    return class#extend(a:CTarget, a:CSource, l:dOption)
+endfunction "}}}
+
+" AddMaster: 
+function! class#AddMaster(CTarget, CSource) abort "{{{
+    if !has_key(a:CSource, '_name_')
+        echoerr '[class#AddMaster] CSource has no class name?'
+        return -1
+    endif
+    if !has_key(a:CTarget, '_master_')
+        let a:CTarget._master_ = [a:CSource._name_]
+    else
+        call add(a:CTarget._master_, a:Source._name_)
+    endif
+endfunction "}}}
+" AsMaster: 
+function! class#AsMaster(CTarget, CSource, ...) abort "{{{
+    let l:dOption = get(a:000, 0, class#father)
+    if type(l:dOption) != type({})
+        let l:dOPtion = class#master
+    endif
+    return class#extend(a:CTarget, a:CSource, l:dOption)
 endfunction "}}}
 
 " isobject: 
@@ -466,6 +518,28 @@ let g:class#FALSE = 0
 let g:class#EMPTY = ''
 let g:class#OK = 0
 let g:class#ERROR = -1
+
+" use: pack a class file definition
+" a:class, class name or dict var
+" a:1, #function name list, default only 'new'
+function! class#use(class, ...) abort "{{{
+    let l:class = s:GetClass(a:class)
+    let l:sName = l:class._name_
+
+    let l:lsDefualt = ['new']
+    let l:lsFunc = get(a:000, 0, l:lsDefualt)
+    if empty(l:lsFunc)
+        let l:lsFunc = l:lsDefualt
+    endif
+
+    let l:CPack = {}
+    let l:CPack.class = l:class
+    for l:sFunc in l:lsFunc
+        let l:CPack[l:sFunc] = function(l:sName . '#' . l:sFunc)
+    endfor
+
+    return CPack
+endfunction "}}}
 
 " triggle to load this vimL file
 function! class#load() abort "{{{

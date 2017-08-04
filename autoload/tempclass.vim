@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-08-03
+" Modify: 2017-08-05
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -39,13 +39,21 @@ function! tempclass#old() abort "{{{
 endfunction "}}}
 
 " MASTER: -M
-function! tempclass#master(that) abort "{{{
-    call class#extend(a:that, s:class, class#master)
+function! tempclass#master(that, ...) abort "{{{
+    if get(a:000, 0, {})
+        call class#AsMaster(a:that, s:class, a:1)
+    else
+        call class#AddMaster(a:that, s:class)
+    endif
 endfunction "}}}
 
 " FATHER: -F
-function! tempclass#father(that) abort "{{{
-    call class#extend(a:that, s:class, class#father)
+function! tempclass#father(that, ...) abort "{{{
+    if get(a:000, 0, {})
+        call class#AsFather(a:that, s:class, a:1)
+    else
+        call class#AddFather(a:that, s:class)
+    endif
 endfunction "}}}
 
 " ISOBJECT: -s
@@ -80,12 +88,9 @@ function! s:class.disp() dict abort "{{{
     echo self.string() . ':' . self.number()
 endfunction "}}}
 
-" IMPORT: -Z
-function! tempclass#import() abort "{{{
-    let l:class = {}
-    let l:class.class = s:class
-    let l:class.new = function('tempclass#new')
-    return l:class
+" USE: -U
+function! tempclass#use(...) abort "{{{
+    return class#use(s:class, a:000)
 endfunction "}}}
 
 " LOAD: -l

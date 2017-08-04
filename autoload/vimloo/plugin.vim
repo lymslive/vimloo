@@ -38,6 +38,8 @@ command! -nargs=* -complete=file ClassDebug call cmass#director#hClassDebug(<f-a
 
 " display an overview of a class, use full class name with #
 command! -nargs=* -complete=file ClassView call cmass#director#hClassView(<f-args>)
+" rename class file, fix calss#function
+command! -nargs=* -complete=file ClassRename call cmass#director#hClassRename(<f-args>)
 
 " display the last message in qf or local window
 command! -nargs=0 -count=5 MessageQ call cmass#director#MessageRefix(<count>, 'qf')

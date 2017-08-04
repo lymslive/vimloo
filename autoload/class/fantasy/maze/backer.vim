@@ -3,7 +3,7 @@
 " Description: maze generation with recursive backtracker algorithm
 "   refer to: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 " Create: 2017-06-29
-" Modify: 2017-08-04
+" Modify: 2017-08-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -15,8 +15,7 @@ let s:class = class#fantasy#maze#base#old()
 let s:class._name_ = 'class#fantasy#maze#backer'
 let s:class._version_ = 1
 
-let s:class._master_ = ['interface#stack']
-" call interface#stack#merge(s:class)
+let s:class._master_ = ['class#more#stack']
 
 function! class#fantasy#maze#backer#class() abort "{{{
     return s:class
