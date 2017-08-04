@@ -76,16 +76,19 @@ function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
 
     for [l:sKey, l:Val] in items(a:dSource)
         if !empty(l:sIgnore) && l:sKey =~# l:sIgnore
+            unlet l:Val
             continue
         endif
 
         let l:iType = type(l:Val)
         if l:iType == 2 
             if !l:bFunc
+                unlet l:Val
                 continue
             endif
         else
             if !l:bData
+                unlet l:Val
                 continue
             endif
         endif
@@ -108,13 +111,15 @@ function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
                 let a:dTarget[l:sKey] = l:Val
             endif
         endif
+
+        unlet l:sKey l:Val
     endfor
 
     return a:dTarget
 endfunction "}}}
 
 let s:dNewOption = {'ignore': '^_.*_$'}
-let s:dOldOption = {'ignore': '.*_$'}
+let s:dOldOption = {'ignore': '^_.*_$'}
 let s:dFatherOption = {'ignore': '.*_$', 'func': v:false, 'old': v:false}
 let s:dMasterOption = {'ignore': '.*_$', 'data': v:false, 'old': v:false}
 
@@ -168,14 +173,6 @@ function! class#new(...) abort "{{{
     return l:obj
 endfunction "}}}
 
-let class#father = s:dFatherOption
-let class#master = s:dMasterOption
-" extend: 
-function! class#extend(CTarget, CSource, ...) abort "{{{
-    let l:dOption = get(a:000, 0, {})
-    return s:CopyDict(CTarget, CSource, l:dOption)
-endfunction "}}}
-
 " old: create a new class from base class
 " a:1, base class name or class dict, when empty, use this s:class
 " return, child class, _mother_ is set to base class name
@@ -201,6 +198,14 @@ function! class#old(...) abort "{{{
     let l:class._mother_ = l:CBase._name_
 
     return l:class
+endfunction "}}}
+
+let class#father = s:dFatherOption
+let class#master = s:dMasterOption
+" extend: 
+function! class#extend(CTarget, CSource, ...) abort "{{{
+    let l:dOption = get(a:000, 0, {})
+    return s:CopyDict(CTarget, CSource, l:dOption)
 endfunction "}}}
 
 " delete: 
