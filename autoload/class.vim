@@ -2,14 +2,13 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-05
+" Modify: 2017-08-06
 
-" import helper functions
-let s:Fdict = class#less#dict#export()
-function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
-    return s:Fdict.CopyDict(a:dTarget, a:dSource, a:dOption)
-endfunction "}}}
+if exists('s:load') && !exists('g:DEBUG')
+    finish
+endif
 
+" Universe Dummy Clsss: {{{1
 let s:class = {}
 let s:class._name_ = 'class'
 let s:class._version_ = 2
@@ -42,6 +41,30 @@ function! class#class(...) abort "{{{
     return l:class
 endfunction "}}}
 
+" ctor: dummy function
+function! class#ctor(this, ...) abort "{{{
+endfunction "}}}
+
+" dector: 
+function! class#dector(this) abort "{{{
+endfunction "}}}
+
+" Create Child Object And Class: {{{1
+
+" import helper functions
+let s:Fdict = class#less#dict#export()
+function! s:CopyDict(dTarget, dSource, dOption) abort "{{{
+    if empty(a:dSource)
+        return a:dTarget
+    endif
+    return s:Fdict.CopyDict(a:dTarget, a:dSource, a:dOption)
+endfunction "}}}
+
+let s:dNewOption = {'ignorex': '^_.*_$'}
+let s:dOldOption = {'ignorex': '^_.*_$'}
+let s:dFatherOption = {'ignorex': '.*_$', 'func': v:false, 'old': v:false}
+let s:dMasterOption = {'ignorex': '.*_$', 'data': v:false, 'old': v:false}
+
 " GetClass: 
 function! s:GetClass(class) abort "{{{
     if type(a:class) == type('')
@@ -54,42 +77,18 @@ function! s:GetClass(class) abort "{{{
     return l:class
 endfunction "}}}
 
-" ctor: dummy function
-function! class#ctor(this, ...) abort "{{{
-endfunction "}}}
+" CreateObject: 
+function! s:CreateObject(class) abort "{{{
+    let l:class = a:class
+    let l:obj = {}
 
-" dector: 
-function! class#dector(this) abort "{{{
-endfunction "}}}
-
-let s:dNewOption = {'ignore': '^_.*_$'}
-let s:dOldOption = {'ignore': '^_.*_$'}
-let s:dFatherOption = {'ignore': '.*_$', 'func': v:false, 'old': v:false}
-let s:dMasterOption = {'ignore': '.*_$', 'data': v:false, 'old': v:false}
-
-" new: create a instance object of named class
-" a:1, class name or class dict, when empty, use this s:class
-" a:2, argument list for class ctor passed by subclass#new
-function! class#new(...) abort "{{{
-    if a:0 == 0
-        return {}
-    endif
-
-    let l:class = s:GetClass(a:1)
-    let l:argv = get(a:000, 1, [])
-    if empty(l:class)
-        echoerr '[class#new] expect class dict or class name'
-        return {}
-    endif
-
-    " from single mother, mult father and master to create child
-    let l:obj = s:CopyDict({}, l:class, s:dNewOption)
+    let l:option = copy(s:dNewOption)
     if has_key(l:class, '_static_')
-        for l:sKey in l:class._static_
-            unlet! l:obj[l:sKey]
-        endfor
+        let l:option.ignores = l:class._static_
     endif
-    let l:obj._class_ = l:class
+    " no need copy for s:class._object_
+    let l:option.copy = 0
+    let l:obj = s:CopyDict(l:obj, l:class, l:option)
 
     " convert master class name to class reference at the first time
     if has_key(l:class, '_master_')
@@ -115,6 +114,31 @@ function! class#new(...) abort "{{{
         endfor
         unlet! i
     endif
+
+    return l:obj
+endfunction "}}}
+
+" new: create a instance object of named class
+" a:1, class name or class dict, when empty, use this s:class
+" a:2, argument list for class ctor passed by subclass#new
+function! class#new(...) abort "{{{
+    if a:0 == 0
+        return {}
+    endif
+
+    let l:class = s:GetClass(a:1)
+    let l:argv = get(a:000, 1, [])
+    if empty(l:class)
+        echoerr '[class#new] expect class dict or class name'
+        return {}
+    endif
+
+    " create _object_ at the first time
+    if !has_key(l:class, '_object_') || empty(l:class._object_)
+        let l:class._object_ = s:CreateObject(l:class)
+    endif
+    let l:obj = deepcopy(l:class._object_)
+    let l:obj._class_ = l:class
 
     " call #ctor function
     try
@@ -147,11 +171,12 @@ function! class#old(...) abort "{{{
         return {}
     endif
 
-    let l:class = s:CopyDict({}, l:CBase, s:dOldOption)
-    if has_key(l:CBase, '_protect_')
-        for l:sKey in l:class._protect_
-            unlet! l:class[l:sKey]
-        endfor
+    if !has_key(l:CBase, '_protect_')
+        let l:class = s:CopyDict({}, l:CBase, s:dOldOption)
+    else
+        let l:option = copy(s:dOldOption)
+        let l:option.ignores = l:class._protect_
+        let l:class = s:CopyDict({}, l:CBase, l:option)
     endif
     let l:class._mother_ = l:CBase
 
@@ -186,6 +211,8 @@ endfunction "}}}
 function! class#free(this) abort "{{{
     call class#delete(a:this)
 endfunction "}}}
+
+" Query Class Relation: {{{1
 
 " Supers: return a list of super classes in derived path upto top
 " a:class, class name or already class dict
@@ -398,74 +425,56 @@ function! class#echo(class, ...) abort "{{{
         return
     endif
 
-    let l:sHeader = ''
-    if has_key(l:class, '_name_') && has_key(l:class, '_version_')
-        let l:sHeader = printf('class %s:%d', l:class._name_, l:class._version_)
-    elseif has_key(l:class, '_class_')
-        let l:name = get(l:class._class_, '_name_', '')
-        let l:version = get(l:class._class_, '_version_', 0)
-        if !empty(l:name)
-            let l:sHeader = printf('objcet of %s:%d', l:name, l:version)
-        else
-            let l:sHeader = 'Object as dictionary'
-        endif
+    call s:Fdict.PrintClass(l:class, get(a:000, 0, ''))
+endfunction "}}}
+
+" Class Package Manager: {{{1
+
+" record the used classes in this dictionary, to reuse faster later
+let s:used = {}
+let s:pack_default = ['new', 'isobject']
+
+" use: pack a class file definition
+" a:class, class name or dict var
+" a:1, #function name list, default only 'new'
+function! class#use(class, ...) abort "{{{
+    let l:class = s:GetClass(a:class)
+    let l:sName = get(l:class, '_name_', '')
+    if empty(l:class) || empty(l:sName)
+        return {}
     endif
 
-    echo l:sHeader
-
-    let l:sMember = "member:\n"
-    let l:sMethod = "method:\n"
-
-    let l:lsBasic = ['_name_', '_version_', '_class_']
-    let l:lsReserve = []
-
-    for l:sKey in sort(keys(l:class))
-        if index(l:lsBasic, l:sKey) != -1
-            continue
-        endif
-
-        " save other reserve keys: _xxx_
-        if match(l:sKey, '^_.*_$') != -1
-            call add(l:lsReserve, l:sKey)
-            continue
-        endif
-
-        if type(l:class[l:sKey]) != 2
-            let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
+    if !has_key(s:used, l:sName)
+        if a:0 < 1 || empty(a:1)
+            let l:lsFunc = s:pack_default
         else
-            let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
+            let l:lsFunc = a:1
         endif
-    endfor
-    
-    " option -a, also print reserve keys
-    if match(a:000, 'a') != -1
-        for l:sKey in l:lsReserve
-            if type(l:class[l:sKey]) != 2
-                let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
-            else
-                let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
-            endif
+
+        let l:CPack = {}
+        for l:sFunc in l:lsFunc
+            let l:CPack[l:sFunc] = function(l:sName . '#' . l:sFunc)
         endfor
-    endif
 
-    if match(a:000, 'm') != -1
-        echo l:sMember . l:sMethod
+        let l:CPack.class = l:class
+        let s:used[l:sName] = l:CPack
     else
-        echo l:sMember
+        let l:CPack = s:used[l:sName]
+        if a:0 > 0 && !empty(a:1)
+            let l:lsFunc = a:1
+            for l:sFunc in l:lsFunc
+                " add more func key to the prev used class pack
+                if !has_key(l:CPack, l:sFunc)
+                    let l:CPack[l:sFunc] = function(l:sName . '#' . l:sFunc)
+                endif
+            endfor
+        endif
     endif
+
+    return CPack
 endfunction "}}}
 
-" FormatField: 
-function! s:FormatField(obj, key, lead) abort "{{{
-    let l:str = a:lead . a:key . ' = ' . string(a:obj[a:key]) . "\n"
-    return l:str
-endfunction "}}}
-function! s:FormatMethod(obj, key, lead) abort "{{{
-    let l:iFuncNumber = matchstr(string(a:obj[a:key]), '\d\+')
-    let l:sFuncLabel = printf("function('%s')", l:iFuncNumber)
-    let l:str = a:lead . a:key . ' = ' .  l:sFuncLabel . "\n"
-    return l:str
-endfunction "}}}
+" Predefine Variable And Command: {{{1
 
 " Boolean Value:
 if exists('v:false')
@@ -483,35 +492,18 @@ let g:class#EMPTY = ''
 let g:class#OK = 0
 let g:class#ERROR = -1
 
-" use: pack a class file definition
-" a:class, class name or dict var
-" a:1, #function name list, default only 'new'
-function! class#use(class, ...) abort "{{{
-    let l:class = s:GetClass(a:class)
-    let l:sName = l:class._name_
-
-    let l:lsDefualt = ['new']
-    let l:lsFunc = get(a:000, 0, l:lsDefualt)
-    if empty(l:lsFunc)
-        let l:lsFunc = l:lsDefualt
-    endif
-
-    let l:CPack = {}
-    let l:CPack.class = l:class
-    for l:sFunc in l:lsFunc
-        let l:CPack[l:sFunc] = function(l:sName . '#' . l:sFunc)
-    endfor
-
-    return CPack
-endfunction "}}}
-
-" triggle to load this vimL file
-function! class#load() abort "{{{
-    return 1
-endfunction "}}}
-
 " load micros command
 call vimloo#micros#load()
+
+" Load And Test: {{{1
+
+" triggle to load this vimL file
+let s:load = 1
+function! class#load(...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        unlet! s:load
+    endif
+endfunction "}}}
 
 " unit test for this vimL file
 function! class#test() abort "{{{

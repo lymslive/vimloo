@@ -1,8 +1,8 @@
-" Class: class#loger
+" Class: class#viml#loger
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-15
-" Modify: 2017-08-04
+" Modify: 2017-08-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -11,7 +11,7 @@ endif
 
 " BASIC:
 let s:class = class#old()
-let s:class._name_ = 'class#loger'
+let s:class._name_ = 'class#viml#loger'
 let s:class._version_ = 1
 
 " the log file :redir to
@@ -22,35 +22,35 @@ let s:class.LogLevel = 0
 " the default highlight
 let s:class.Highlight = 'Comment'
 
-function! class#loger#class() abort "{{{
+function! class#viml#loger#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " CTOR:
-function! class#loger#ctor(this, ...) abort "{{{
+function! class#viml#loger#ctor(this, ...) abort "{{{
     if a:0 > 0 && !empty(a:1)
         let a:this.LogFile = a:1
     endif
 endfunction "}}}
 
 " NEW:
-function! class#loger#new(...) abort "{{{
+function! class#viml#loger#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " INSTANCE:
 let s:instance = {}
-function! class#loger#instance() abort "{{{
+function! class#viml#loger#instance() abort "{{{
     if empty(s:instance)
-        let s:instance = class#new('class#loger')
+        let s:instance = class#new('class#viml#loger')
     endif
     return s:instance
 endfunction "}}}
 
 " SetLogFile: 
-function! class#loger#SetLogFile(pFileName) abort "{{{
-    let l:instance = class#loger#instance()
+function! class#viml#loger#SetLogFile(pFileName) abort "{{{
+    let l:instance = class#viml#loger#instance()
     let l:sOldFile = l:instance.LogFile
     let l:instance.LogFile = a:pFileName
     if !empty(a:pFileName)
@@ -82,8 +82,8 @@ function! s:Absolute(sPath) abort "{{{
 endfunction "}}}
 
 " SetLogLevel: 
-function! class#loger#SetLogLevel(iLevel) abort "{{{
-    let l:instance = class#loger#instance()
+function! class#viml#loger#SetLogLevel(iLevel) abort "{{{
+    let l:instance = class#viml#loger#instance()
     let l:instance.LogLevel = 0 + a:iLevel
 endfunction "}}}
 
@@ -130,8 +130,8 @@ endfunction "}}}
 
 " Log: 
 " may have two option in the leading string: -n -HighName
-function! class#loger#hLog(sMessage) abort "{{{
-    let l:instance = class#loger#instance()
+function! class#viml#loger#hLog(sMessage) abort "{{{
+    let l:instance = class#viml#loger#instance()
 
     let l:iMsgLen = len(a:sMessage)
     if l:iMsgLen <= 0
@@ -180,7 +180,7 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-function! class#loger#load(...) abort "{{{
+function! class#viml#loger#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -189,7 +189,7 @@ function! class#loger#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! class#loger#test(...) abort "{{{
+function! class#viml#loger#test(...) abort "{{{
     :LOGON test.log
     :LOG 'literatur string'
     let l:str = 'a string variable'

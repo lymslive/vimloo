@@ -26,6 +26,8 @@ function! tempclass#new(...) abort "{{{
 endfunction "}}}
 " CTOR: -c
 function! tempclass#ctor(this, ...) abort "{{{
+    let l:Suctor = class#Suctor(s:class)
+    call l:Suctor(a:this)
 endfunction "}}}
 
 " DECTOR: -D

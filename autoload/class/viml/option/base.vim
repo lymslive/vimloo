@@ -1,32 +1,32 @@
-" Class: class#option#base
+" Class: class#viml#option#base
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-12
-" Modify: 2017-08-04
+" Modify: 2017-08-05
 
 " BASIC:
 let s:class = class#old()
-let s:class._name_ = 'class#option#base'
+let s:class._name_ = 'class#viml#option#base'
 let s:class._version_ = 1
 
 let s:class.Char = ''
 let s:class.Name = ''
 let s:class.Desc = ''
 
-function! class#option#base#class() abort "{{{
+function! class#viml#option#base#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! class#option#base#new(...) abort "{{{
+function! class#viml#option#base#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR:
-function! class#option#base#ctor(this, ...) abort "{{{
+function! class#viml#option#base#ctor(this, ...) abort "{{{
     if a:0 < 3
-        echoerr '[class#option#base] expcet 3 arguments: (Char, Name, Desc)'
+        echoerr '[class#viml#option#base] expcet 3 arguments: (Char, Name, Desc)'
         return
     endif
 
@@ -36,7 +36,7 @@ function! class#option#base#ctor(this, ...) abort "{{{
 endfunction "}}}
 
 " OLD:
-function! class#option#base#old() abort "{{{
+function! class#viml#option#base#old() abort "{{{
     let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
@@ -75,11 +75,11 @@ function! s:class.number() dict abort "{{{
 endfunction "}}}
 
 " LOAD:
-function! class#option#base#load() abort "{{{
+function! class#viml#option#base#load() abort "{{{
     return 1
 endfunction "}}}
 
 " TEST:
-function! class#option#base#test() abort "{{{
+function! class#viml#option#base#test() abort "{{{
     return 1
 endfunction "}}}

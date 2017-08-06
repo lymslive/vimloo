@@ -1,8 +1,8 @@
-" Class: class#option#multiple
+" Class: class#viml#option#multiple
 " Author: lymslive
 " Description: option with multiple argument
 " Create: 2017-02-25
-" Modify: 2017-08-03
+" Modify: 2017-08-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -10,8 +10,8 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = class#option#pairs#old()
-let s:class._name_ = 'class#option#multiple'
+let s:class = class#viml#option#pairs#old()
+let s:class._name_ = 'class#viml#option#multiple'
 let s:class._version_ = 1
 
 " redefien argument and default type
@@ -20,19 +20,20 @@ unlet! s:class.Default
 let s:class.Argument = []
 let s:class.Default = []
 
-function! class#option#multiple#class() abort "{{{
+function! class#viml#option#multiple#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! class#option#multiple#new(...) abort "{{{
+function! class#viml#option#multiple#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR: 4 arguments
-function! class#option#multiple#ctor(this, ...) abort "{{{
-    call class#option#pairs#ctor(a:this, a:1, a:2, a:3)
+function! class#viml#option#multiple#ctor(this, ...) abort "{{{
+    let l:Suctor = class#Suctor(s:class)
+    call l:Suctor(a:this, a:1, a:2, a:3)
 
     let a:this.Argument = []
     let a:this.Default = []
@@ -53,14 +54,14 @@ function! s:class.SetValue(arg) dict abort "{{{
 endfunction "}}}
 
 " ISOBJECT:
-function! class#option#multiple#isobject(that) abort "{{{
+function! class#viml#option#multiple#isobject(that) abort "{{{
     return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG 'class#option#multiple is loading ...'
-function! class#option#multiple#load(...) abort "{{{
+:DLOG 'class#viml#option#multiple is loading ...'
+function! class#viml#option#multiple#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -69,6 +70,6 @@ function! class#option#multiple#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! class#option#multiple#test(...) abort "{{{
+function! class#viml#option#multiple#test(...) abort "{{{
     return 0
 endfunction "}}}

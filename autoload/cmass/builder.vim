@@ -2,9 +2,10 @@
 " Author: lymslive
 " Description: command use class#builder
 " Create: 2017-02-14
-" Modify: 2017-03-23
+" Modify: 2017-08-05
 
-let s:rtp = module#less#rtp#import()
+let s:rtp = class#less#rtp#export()
+let s:CBuilder = class#use('class#viml#builder')
 
 " Command Hander Interface:
 " 
@@ -28,9 +29,9 @@ function! cmass#builder#hClassNew(name, ...) abort "{{{
     endif
 
     if a:0 > 1 && !empty(a:2)
-        let l:jBuilder = class#builder#new(l:sAutoName, a:2)
+        let l:jBuilder = s:CBuilder.new(l:sAutoName, a:2)
     else
-        let l:jBuilder = class#builder#new(l:sAutoName)
+        let l:jBuilder = s:CBuilder.new(l:sAutoName)
     endif
 
     if a:0 < 1
@@ -61,7 +62,7 @@ function! cmass#builder#hClassAdd(...) abort "{{{
         return 0
     endif
 
-    let l:jBuilder = class#builder#new(l:sAutoName)
+    let l:jBuilder = s:CBuilder.new(l:sAutoName)
     if a:0 == 0
         let l:lsContent = jBuilder.ExtractLine('')
     else
@@ -73,7 +74,7 @@ endfunction "}}}
 
 " ClassTemp: same as ClassAdd but don't care the filename
 function! cmass#builder#hClassTemp(...) abort "{{{
-    let l:jBuilder = class#builder#new('')
+    let l:jBuilder = s:CBuilder.new('')
 
     if a:0 == 0
         let l:lsContent = jBuilder.ExtractLine('')
@@ -93,7 +94,7 @@ function! cmass#builder#hClassPart(sFilter) abort "{{{
         return 0
     endif
 
-    let l:jBuilder = class#builder#new(l:sAutoName)
+    let l:jBuilder = s:CBuilder.new(l:sAutoName)
     let l:lsContent = jBuilder.SelectLine(a:sFilter)
 
     call append(line('.'), l:lsContent)

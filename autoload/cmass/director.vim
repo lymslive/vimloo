@@ -2,19 +2,20 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-08-04
+" Modify: 2017-08-06
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
 
-let s:rtp = module#less#rtp#import()
+let s:rtp = class#less#rtp#export()
+let s:cmdline = class#use('class#viml#cmdline')
 
 " ClassLoad: 
 " :ClassLoad [-r] [-d|D] [filename]
 function! cmass#director#hClassLoad(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassLoad')
+    let l:jOption = s:cmdline.new('ClassLoad')
     call l:jOption.AddSingle('r', 'reload', 'force reload script')
     call l:jOption.AddSingle('d', 'debug', 'set g:DEBUG to allow directlly reload')
     call l:jOption.AddSingle('D', 'nodebug', 'unset g:DEBUG variable')
@@ -63,7 +64,7 @@ endfunction "}}}
 " :ClassView [filename]
 function! cmass#director#hClassView(...) abort "{{{
     if a:0 > 0 && !empty(a:1)
-        let l:pFileName = a:1
+        let l:pFileName = s:rtp.Absolute(a:1)
     else
         let l:pFileName = expand('%:p:r')
     endif
@@ -80,7 +81,7 @@ endfunction "}}}
 " ClassTest: 
 " :ClassTest [-f filename] -- [argument-list-pass-to-#test]
 function! cmass#director#hClassTest(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassTest')
+    let l:jOption = s:cmdline.new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
     let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0
@@ -109,7 +110,7 @@ endfunction "}}}
 " problem: error abort may confuse the redir
 let s:output = ''
 function! cmass#director#hClassDebug(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassTest')
+    let l:jOption = s:cmdline.new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
     let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0

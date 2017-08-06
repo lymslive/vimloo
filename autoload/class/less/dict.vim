@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-24
-" Modify: 2017-08-05
+" Modify: 2017-08-06
 
 let s:class = {}
 function! class#less#dict#export() abort "{{{
@@ -19,7 +19,11 @@ endfunction "}}}
 "   old  => bool, overide key value that already in dTarget
 "   ignores => list of key ignore the keys match any
 "   ignorex => a string as regexp
-"     ignore default empty, and other default true.
+"          ignore default empty, and other default true.
+"   copy => number, how to copy list/dict item
+"      0, not copy, use = as normal, share reference
+"      1, defaut use copy()
+"      2, use deepcopy()
 " return a:dTarget modified
 function! s:class.CopyDict(dTarget, dSource, dOption) dict abort "{{{
     let l:bData = get(a:dOption, 'data', v:true)
@@ -27,7 +31,8 @@ function! s:class.CopyDict(dTarget, dSource, dOption) dict abort "{{{
     let l:bNew  = get(a:dOption, 'new', v:true)
     let l:bOld  = get(a:dOption, 'old', v:true)
     let l:lsIgnore = get(a:dOption, 'ignores', [])
-    let l:reIgnore = get(a:dOption, 'ignores', '')
+    let l:reIgnore = get(a:dOption, 'ignorex', '')
+    let l:xCopy = get(a:dOption, 'copy', 1)
 
     let l:lsKey = keys(a:dSource)
     for l:sKey in l:lsKey
@@ -79,7 +84,13 @@ function! s:class.CopyDict(dTarget, dSource, dOption) dict abort "{{{
         if l:bCopy
             " copy list and dict key
             if l:iType == 3 || l:iType == 4
-                let a:dTarget[l:sKey] = copy(l:Val)
+                if l:xCopy == 1
+                    let a:dTarget[l:sKey] = copy(l:Val)
+                elseif l:xCopy == 2
+                    let a:dTarget[l:sKey] = deepcopy(l:Val)
+                else
+                    let a:dTarget[l:sKey] = l:Val
+                endif
             else
                 let a:dTarget[l:sKey] = l:Val
             endif
@@ -119,6 +130,87 @@ function! s:class.Print(dict, ...) dict abort "{{{
     endfor
 
     return join(l:lsText, "\n")
+endfunction "}}}
+
+" PrintClass: 
+" especailly for display class or object dict
+" {a:option} may contain letter:
+"  'a', include reserved keys such as '_key_'
+"  'm', include method keys
+function! s:class.PrintClass(class, option) dict abort "{{{
+    let l:class = a:class
+
+    let l:sHeader = ''
+    if has_key(l:class, '_name_')
+        let l:version = get(l:class, '_version_', '')
+        let l:sHeader = printf('class %s:%d', l:class._name_, l:version)
+        if has_key(l:class, '_mother_') && type(l:class._mother_) == 4
+                \ && get(l:class._mother_, '_name_', '')
+            let l:sHeader .= ' < ' . l:class._mother_._name_
+        endif
+    elseif has_key(l:class, '_class_') && type(l:class._class_) == 4
+        let l:name = get(l:class._class_, '_name_', '')
+        let l:version = get(l:class._class_, '_version_', 0)
+        if !empty(l:name)
+            let l:sHeader = printf('objcet of %s:%d', l:name, l:version)
+        else
+            let l:sHeader = 'Object as dictionary'
+        endif
+    endif
+
+    echo l:sHeader
+
+    let l:sMember = "member:\n"
+    let l:sMethod = "method:\n"
+
+    let l:lsBasic = ['_name_', '_version_', '_class_', '_object_', '_mother_']
+    let l:lsReserve = []
+
+    for l:sKey in sort(keys(l:class))
+        if index(l:lsBasic, l:sKey) != -1
+            continue
+        endif
+
+        " save other reserve keys: _xxx_
+        if match(l:sKey, '^_.*_$') != -1
+            call add(l:lsReserve, l:sKey)
+            continue
+        endif
+
+        if type(l:class[l:sKey]) != 2
+            let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
+        else
+            let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
+        endif
+    endfor
+
+    if match(a:option, 'a') != -1
+        for l:sKey in l:lsReserve
+            if type(l:class[l:sKey]) != 2
+                let l:sMember .= s:FormatField(l:class, l:sKey, '  ')
+            else
+                let l:sMethod .= s:FormatMethod(l:class, l:sKey, '  ')
+            endif
+        endfor
+    endif
+
+    if match(a:option, 'm') != -1
+        echo l:sMember . l:sMethod
+    else
+        echo l:sMember
+    endif
+endfunction "}}}
+
+" FormatField: 
+function! s:FormatField(obj, key, lead) abort "{{{
+    let l:str = a:lead . a:key . ' = ' . string(a:obj[a:key]) . "\n"
+    return l:str
+endfunction "}}}
+function! s:FormatMethod(obj, key, lead) abort "{{{
+    let l:iFuncNumber = matchstr(string(a:obj[a:key]), '\d\+')
+    let l:sFuncLabel = printf("function('%s')", l:iFuncNumber)
+    let l:str = a:lead . a:key . ' = ' .  l:sFuncLabel . "\n"
+    return l:str
 endfunction "}}}
 
 " FromList: [key1, val1, key2, val2, ...]

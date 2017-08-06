@@ -1,44 +1,45 @@
-" Class: class#option#single
+" Class: class#viml#option#single
 " Author: lymslive
 " Description: option without argument
 " Create: 2017-02-12
-" Modify: 2017-08-03
+" Modify: 2017-08-05
 
 " BASIC:
-let s:class = class#option#base#old()
-let s:class._name_ = 'class#option#single'
+let s:class = class#viml#option#base#old()
+let s:class._name_ = 'class#viml#option#single'
 let s:class._version_ = 1
 
 " dose this option is set? // v:false
 let s:class.Set = g:class#FALSE
 
-function! class#option#single#class() abort "{{{
+function! class#viml#option#single#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! class#option#single#new(...) abort "{{{
+function! class#viml#option#single#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR: 3 arguments
-function! class#option#single#ctor(this, ...) abort "{{{
+function! class#viml#option#single#ctor(this, ...) abort "{{{
     if a:0 < 3
-        echoerr '[class#option#single] expcet 3 arguments: (Char, Name, Desc)'
+        echoerr '[class#viml#option#single] expcet 3 arguments: (Char, Name, Desc)'
         return
     endif
-    call class#option#base#ctor(a:this, a:1, a:2, a:3)
+    let l:Suctor = class#Suctor(s:class)
+    call l:Suctor(a:this, a:1, a:2, a:3)
 endfunction "}}}
 
 " OLD:
-function! class#option#single#old() abort "{{{
+function! class#viml#option#single#old() abort "{{{
     let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " ISOBJECT:
-function! class#option#single#isobject(that) abort "{{{
+function! class#viml#option#single#isobject(that) abort "{{{
     return class#isobject(s:class, a:that)
 endfunction "}}}
 
@@ -93,11 +94,11 @@ function! s:class.string(...) dict abort "{{{
 endfunction "}}}
 
 " LOAD:
-function! class#option#single#load() abort "{{{
+function! class#viml#option#single#load() abort "{{{
     return 1
 endfunction "}}}
 
 " TEST:
-function! class#option#single#test() abort "{{{
+function! class#viml#option#single#test() abort "{{{
     return 1
 endfunction "}}}

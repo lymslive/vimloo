@@ -1,12 +1,12 @@
-" Class: class#option#pairs
+" Class: class#viml#option#pairs
 " Author: lymslive
 " Description: option with argument
 " Create: 2017-02-13
-" Modify: 2017-08-03
+" Modify: 2017-08-05
 
 " BASIC:
-let s:class = class#option#single#old()
-let s:class._name_ = 'class#option#pairs'
+let s:class = class#viml#option#single#old()
+let s:class._name_ = 'class#viml#option#pairs'
 let s:class._version_ = 1
 
 " the argument for this option
@@ -16,23 +16,24 @@ let s:class.HasDefault = g:class#FALSE
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
-function! class#option#pairs#class() abort "{{{
+function! class#viml#option#pairs#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! class#option#pairs#new(...) abort "{{{
+function! class#viml#option#pairs#new(...) abort "{{{
     let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR: 4 arguments
-function! class#option#pairs#ctor(this, ...) abort "{{{
+function! class#viml#option#pairs#ctor(this, ...) abort "{{{
     if a:0 < 3
-        echoerr '[class#option#pairs] expcet at least 3 arguments: (Char, Name, Desc)'
+        echoerr '[class#viml#option#pairs] expcet at least 3 arguments: (Char, Name, Desc)'
         return
     endif
-    call class#option#single#ctor(a:this, a:1, a:2, a:3)
+    let l:Suctor = class#Suctor(s:class)
+    call l:Suctor(a:this, a:1, a:2, a:3)
     if a:0 > 3
         let a:this.HasDefault = v:true
         let a:this.Default = a:4
@@ -40,13 +41,13 @@ function! class#option#pairs#ctor(this, ...) abort "{{{
 endfunction "}}}
 
 " OLD:
-function! class#option#pairs#old() abort "{{{
+function! class#viml#option#pairs#old() abort "{{{
     let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " ISOBJECT:
-function! class#option#pairs#isobject(that) abort "{{{
+function! class#viml#option#pairs#isobject(that) abort "{{{
     return class#isobject(s:class, a:that)
 endfunction "}}}
 
@@ -95,11 +96,11 @@ function! s:class.string(...) dict abort "{{{
 endfunction "}}}
 
 " LOAD:
-function! class#option#pairs#load() abort "{{{
+function! class#viml#option#pairs#load() abort "{{{
     return 1
 endfunction "}}}
 
 " TEST:
-function! class#option#pairs#test() abort "{{{
+function! class#viml#option#pairs#test() abort "{{{
     return 1
 endfunction "}}}
