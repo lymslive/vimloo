@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-08-05
+" Modify: 2017-08-07
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -106,6 +106,5 @@ endfunction "}}}
 " TEST: -t
 function! tempclass#test(...) abort "{{{
     let l:obj = tempclass#new()
-    call l:obj.disp()
-    return 0
+    call class#echo(l:obj)
 endfunction "}}}

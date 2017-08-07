@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-02
-" Modify: 2017-08-04
+" Modify: 2017-08-07
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -38,11 +38,6 @@ endfunction "}}}
 function! class#more#list#old() abort "{{{
     let l:class = class#old(s:class)
     return l:class
-endfunction "}}}
-
-" MERGE:
-function! class#more#list#merge(that) abort "{{{
-    call a:that._merge_(s:class)
 endfunction "}}}
 
 " list: 
