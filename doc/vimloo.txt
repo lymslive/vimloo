@@ -8,12 +8,12 @@ License: MIT license
 CONTENTS						*vimloo*
 
 1. Concept Introduction					|vimloo-concept|
-  1.1 dictionary as class				|vimloo-4.1|
-  1.2 autoload class					|vimloo-4.2|
-  1.3 copy class as object instance			|vimloo-4.3|
-  1.4 copy class as derived class			|vimloo-4.4|
-  1.5 copy more class as interface			|vimloo-4.5|
-  1.6 isolate class as module				|vimloo-4.6|
+  1.1 dictionary as class				|vimloo-1.1|
+  1.2 autoload class					|vimloo-1.2|
+  1.3 copy class as object instance			|vimloo-1.3|
+  1.4 copy class as derived class			|vimloo-1.4|
+  1.5 copy more class as interface			|vimloo-1.5|
+  1.6 isolate class as module				|vimloo-1.6|
 2. Base Class Component					|class.vim|
   2.1 member key					|class-member|
   2.2 method key					|class-method|
@@ -28,20 +28,18 @@ CONTENTS						*vimloo*
 ========================================================+=====================
 1. Concept Introduction					*vimloo-concept*
 
-Object Orient Programming(OOP) in VimL Script is relative advance topic 
-or tricky skill. But to use |vimloo|, or write scipt in OOP way, is more easy
-than it first sounds, since the user need not care about the implement details
-of class.
+VimL script can be as simple as several copying lines from the ex command line.
+Yet, along with the developing of vim, VimL script also becomes a well featured
+language. When come to relative complex situation, VimL can even be assembled 
+in the Object Orient Programming(OOP) way.
 
-However, the basic concepts of VimL Script is still need to be understood.
-Please refer to the relation documents including |user_41.txt|, |eval.txt|.
-Of course, the concepts of OOP is also necessary, but that is beyond of this
-document.
+Please refer to the documents including |user_41.txt| and |eval.txt|, for the
+basic concept of VimL, especially the dictionary type and autoload function.
 
 --------------------------------------------------------+---------------------
 1.1 dictionary as class					*vimloo-1.1*
 
-Dictionary is the most variable type in VimL Script. The value saved in a key
+Dictionary is the most valuable type in VimL Script. The value saved in a key
 can be variable of any type(see |type()|), including ordinary data and fucntion
 (FuncRef in fact), and even another dictionary variable(reference).
 
@@ -63,7 +61,7 @@ The class member is simple to defined. It is suggested in class manner, using
 method is a bit complex, as the following syntax: >
 	function! dict.method() dict abort
 		" method function body
-		" self refer to dict
+		" operate on self which refer to dict
 	endfunction
 <
 
@@ -123,7 +121,7 @@ method. For example, to define a "foo#bar#sub" class derived from "foo#bar": >
 <
 
 Note: the derived class of "foo#bar" is not necessary having longer class name
-than it, not necessary under the "foo/bar/" sub-directory.
+than it, nor necessary under the "foo/bar/" sub-directory.
 
 --------------------------------------------------------+---------------------
 1.5 copy more class as interface			*vimloo-4.5*
@@ -173,13 +171,15 @@ Suppose "foo#bar" is designed as a module now, the primary frame can be like:
 <
 
 That there is no substance difference from the definition of class. But module
-usually has only method key, and we use another sharp function named "#import"
-to return the "s:class" dictionary.
-
-Then in the user client script, they can use the module as following: >
+usually has only method key, and in the function body may not use "self" at all.
+If we use another sharp function named "#import" to return the "s:class" 
+dictionary, then in the user client script, they can use the module as: >
 	let s:module = foo#bar#import()
 	call s:module.func1()
 <
+
+With these concepts in mind, it is easy to write some simple class and object
+directly and immediately. But you can do much more with |vimloo|.
 
 ========================================================+=====================
 2. Base Class Component					*class.vim*
@@ -189,13 +189,124 @@ idea of OOP in VimL Script. This section will document a pratical class,
 provided by |vimloo| in "autoload/class.vim", serving as the common base class
 of other custom class.
 
-In "class.vim", there are many keys named in the form of "_xxx_". They are
-reserved keys or private keys, with special implement purpose, other derived
-calss from it should not redefine their meanings.
+You can image the class defined in the "class.vim" (named "s:class") as the 
+universal super class of all other user customized class. However, since this
+class dictionary has no interesting keys, actually the main purpose is 
+providing utility functions to build custome class hierarchy.
 
-User derived class automatically inherit the following member and method. The
-shart function is not inherited, must define it's own sharp function if want
-to use them. The method should be overide only when necessary.
+--------------------------------------------------------+---------------------
+2.1 global sharp class#function				*class-function*
+
+We call those function that has one or more "#" characters in it's name as
+sharp funtion. Sharp function is autoload function in the global scope.
+
+class#class([{name}])					*class#class*
+	Return a dictionary denoted as a class definition.
+	With no argument, return the definition of the universal but dummy
+	class which is defind as "s:class" dictionary variable in "class.vim".
+	With one argument {name}, it is supposed as full class name path, but
+	can be separated by "#" or "." or "/". If the class in under
+	"autoload/class" sub-directory, the leading "class#" part can also
+	ommited.
+	For example, if "autoload/class/foo/bar.vim" define a class, all the
+	following command can obtain the definition of that class: >
+		let c = class#foo#bar#class()
+		let c = class#class('class#foo#bar')
+		let c = class#class('foo#bar')
+		let c = class#class('foo.bar')
+		let c = class#class('class/foo.bar')
+<
+	Though mixed use of "[#./]" separator is acceptable, don't use that
+	yet.
+	Note: the "class#foo#bar#class()" function must defined in the file
+	"autoload/class/foo/bar.vim", otherwise the later "class#class(...)"
+	version cannot work either.
+	The "#class()" function is the only sharp function that must define
+	in the user class file.
+
+class#new({class}, [{arguments}])			*class#new*
+	Create and return a object instance. 
+	{class} can be already a dict, or a string, and when it is a string,
+	class#new() will first call "class#class()" above to get the dict that
+	represent a class. Then an object dict is built base on this class dict,
+	and initialized with {arguments}.
+	{arguments} is a list packed with all arguments.
+
+class#old({class}, [{master}, {father}])		*class#old*
+	While "class#new()" create object, "class#old()" create derived class. 
+	Because in the low level, both are something like copying a dict.
+	{class} can be a class dict or class name as "class#new()".
+
+#ctor			class#ctor(this, argv)
+#ctor			class#ctor(this, ...)
+    This is the constructor function of user class. "#ctor()" is called 
+    indirectlly, through "_new_()" method, by "#new()" function.
+    When "#ctor()" is called, the object is already created or copied.
+    The first argument {a:this} is refer to the just object.
+    The second argument {a:argv} is a list of arguments, passed from 
+    "#new()" function, which is |a:000| in essence.
+    In complex class, the {a:argv} may arbitrary, need carefully deal every
+    cases to construct new object.
+    In derived class, the "#ctor()" of base class may need to be called in
+    some way, it is determined by the implement of derived class.
+    The "#ctor()" definition form is determined by how to call "_new_()"
+    from "#new(...)", see |class-mothod|. 
+    If [persist] is omitted, "#ctor()" accept a single list argument 
+{a:argv}, as the first form.
+If [persist] is non-empty, "#ctor()" accept a arugment list of
+variable number, as the second form.
+In the second form "#ctor(this, ...)", persist the meanig of {a:000}
+as "#new(..)", and so is recommanded.
+
+#dector			class#dector()
+#delete			class#delete(this)
+The deconstructor function "#dector()" seldom need. But if really neede,
+    it will be called by "class#delete()" function. Usually the user class
+    donot need it's own "#delete()", only use "class#delete()" is enough.
+
+
+#isobject		class#isobject(...)
+#isa			class#isa(...)
+	   The tow functions check if a vairable if belong to self calss, while
+	   "#isa()" is boarder then "#isobject()".
+	   When defined in user class, it accept only one arugment: >
+	   let l:bool = tempclass#isobject(that)
+	   let l:bool = tempclass#isa(that)
+	   <
+	   When use the top base class version, the first arugment is class name,
+	   the second argument is the variable to be check: >
+	   let l:bool = class#isobject('tempclass', that)
+	   let l:bool = class#isa('tempclass', that)
+	   <
+
+#instance		class#instance()
+	   If a class is designed as a singleton class, can define "#instance()"
+	   function as following: >
+	   let s:instance = {}
+    function! tempclass#instance() abort
+if empty(s:instance)
+    let s:instance = class#new('tempclass')
+    endif
+    return s:instance
+    endfunction
+    <
+
+#import			tempclass#import()
+    If a class also want to be used as a module, can define it's own
+    "#import()" function, to control the import behaviors. For example: >
+    function! tempclass#import() abort
+    let l:class = {}
+    let l:class.class = s:class
+    let l:class.new = function('tempclass#new')
+		return l:class
+		    endfunction
+		    <
+		    When called this "#import()" function, the client script will get a 
+		    dictionary with a "class" key save the definition of the class, and a
+		    "new" key to save the FuncRef of the "#new()" funtion, from which can
+		    create a new object of that class.
+		    When the class name become very long, "#import()" may be helpful.
+		    See the next section for more detail of module.
 
 --------------------------------------------------------+---------------------
 2.1 member key						*class-member*
@@ -306,187 +417,6 @@ number			s:class.number()
 	Convert the object to a number. In the base class, only return the
 	"_version_" key. User class may overide to ruturn a more useful value.
 
---------------------------------------------------------+---------------------
-2.3 global sharp function				*class-function*
-
-The private method in the "_xxx_" form key, is suggested never called
-directlly, only called from a serial sharp function. Sharp function is in the
-global scope, and so is consider as public function.
-
-These sharp function is not method of class, and so user class cannot inherit
-from the base class. Each sharp function following should be defined in the
-user class file if that one is required. However, some function in the top base
-class may have more functionality, can accept a more argument as it's first
-argument, represent the class name to be performed, and so that user class may
-obsent the sharp function.
-
-#class			class#class(...)
-	In user class, "#class()" has no argument, return the definition of
-	current class, that is "s:class" dictionary variable.
-	In base class, "class#class(name)" can accept class {name} as
-	argument. The {name} argument must be full pathed, but can be
-	separated by "#" or "." or "/". If the class in under "autoload/class"
-	sub-directory, the leading "class#" part can also ommited.
-	For example, if "autoload/class/foo/bar.vim" define a class, all the
-	following command can obtain the definition of that class: >
-		let c = class#foo#bar#class()
-		let c = class#class('class#foo#bar')
-		let c = class#class('foo#bar')
-		let c = class#class('foo.bar')
-		let c = class#class('class/foo.bar')
-<
-	Though mixed use of "[#./]" separator is acceptable, don't use that
-	yet.
-	Note: the "class#foo#bar#class()" function must defined in the file
-	"autoload/class/foo/bar.vim", otherwise the later "class#class(...)"
-	version cannot work either.
-	This "#class()" function is the only sharp function that must define
-	in the user class file.
-
-#new			class#new(...)
-	Create a object instance. The user class, for example "tempclass", 
-	simply make a copy of the class definition, then call _new_ method:
-	>
-		function! tempclass#new(...) abort
-			let l:obj = copy(s:class)
-			call l:obj._new_(a:000)
-			return l:obj
-		endfunction
-<
-	In most case, when define a user class, the "#new()" function can follow
-	this example.
-	In the top base class, "class#new()" function treat the first argument as
-	class name from which to create object, and then the rest arugments is 
-	passed to "_new_()" method.
-	For example, to create object of "class#foo#bar" class, the following two
-	manners are OK: >
-		let obj = class#foo#bar#new(...)
-		let obj = class#new('class#foo#bar', ...)
-		let obj = class#new('foo.bar', ...)
-<
-	The "..." is variable number of arguments, see |a:000|.
-
-#ctor			class#ctor(this, argv)
-#ctor			class#ctor(this, ...)
-	This is the constructor function of user class. "#ctor()" is called 
-	indirectlly, through "_new_()" method, by "#new()" function.
-	When "#ctor()" is called, the object is already created or copied.
-	The first argument {a:this} is refer to the just object.
-	The second argument {a:argv} is a list of arguments, passed from 
-	"#new()" function, which is |a:000| in essence.
-	In complex class, the {a:argv} may arbitrary, need carefully deal every
-	cases to construct new object.
-	In derived class, the "#ctor()" of base class may need to be called in
-	some way, it is determined by the implement of derived class.
-	The "#ctor()" definition form is determined by how to call "_new_()"
-	from "#new(...)", see |class-mothod|. 
-	If [persist] is omitted, "#ctor()" accept a single list argument 
-	{a:argv}, as the first form.
-	If [persist] is non-empty, "#ctor()" accept a arugment list of
-	variable number, as the second form.
-	In the second form "#ctor(this, ...)", persist the meanig of {a:000}
-	as "#new(..)", and so is recommanded.
-
-#dector			class#dector()
-#delete			class#delete(this)
-	The deconstructor function "#dector()" seldom need. But if really neede,
-	it will be called by "class#delete()" function. Usually the user class
-	donot need it's own "#delete()", only use "class#delete()" is enough.
-
-#old			class#old(...)
-	While "#new()" create object, "#old()" create derived class. When you
-	want to derive from some class, call the "#old()" function of that 
-	class. If a class will never be used as parent class, then there is no
-	need to define "#old()" function.
-	In normal user class, the "#old()" function is like: >
-		function! tempclass#old() abort
-			let l:class = copy(s:class)
-			call l:class._old_()
-			return l:class
-		endfunction
-<
-	In the top base class, "class#old()" can receive arbitrary number of 
-	arguments, the first is treated as "_super_" calss, the other are
-	treated as "_interface_" classes. The orders of multiply interfaces
-	matters if key conflict existed, the one come first take precedence.
-
-#copy			tempclass#copy(that, ...)
-	"#copy()" plays the role of copy constructor function.
-	If {a:that} is object of the same class, use the builtin |copy()| or
-	|deepcopy()| is ok.
-	The main usage of "#copy()" is when {a:that} is object of some base
-	class, containing only part of member data. Calling "#copy()" to 
-	construct new object based on {a:that}, adding more extra arugments
-	if needed.
-	{a:that} argument can be plain dictionary, not necessary object.
-	The top base class donot define "#copy()" function, since it is mainly
-	designed for sub-class, but providing "_copy_()" method to do the hard
-	work.
-
-#merge			tempclass#merge(that)
-	While "#old()" function is derived as "_super_" class, "#merge()" is
-	derived as "_interface_" class, serving for any sub-class.
-	Only user class need to define "#merge()" fucntion, like: >
-		function! tempclass#merge(that) abort
-			call a:that._merge_(s:class)
-		endfunction
-<
-	{a:that} is the sub-class, copy some of self keys to that sub-class.
-	For example, to create a sub-class having multiply interfaces: >
-		let s:class = sample#base#old()
-		call sample#inter1#merge(s:class)
-		call sample#inter2#merge(s:class)
-<
-	Or, use "class#old()" function in one line: >
-		 let s:class = class#old('sample#base', 
-			 \ 'sample#inter1', 'sample#inter2')
-<
-	The user class designed to as interface, provide it's own "#merge()"
-	function to make more control when some sub-class use it.
-
-#isobject		class#isobject(...)
-#isa			class#isa(...)
-	The tow functions check if a vairable if belong to self calss, while
-	"#isa()" is boarder then "#isobject()".
-	When defined in user class, it accept only one arugment: >
-		let l:bool = tempclass#isobject(that)
-		let l:bool = tempclass#isa(that)
-<
-	When use the top base class version, the first arugment is class name,
-	the second argument is the variable to be check: >
-		let l:bool = class#isobject('tempclass', that)
-		let l:bool = class#isa('tempclass', that)
-<
-
-#instance		class#instance()
-	If a class is designed as a singleton class, can define "#instance()"
-	function as following: >
-		let s:instance = {}
-		function! tempclass#instance() abort
-		    if empty(s:instance)
-			let s:instance = class#new('tempclass')
-		    endif
-		    return s:instance
-		endfunction
-<
-
-#import			tempclass#import()
-	If a class also want to be used as a module, can define it's own
-	"#import()" function, to control the import behaviors. For example: >
-		function! tempclass#import() abort
-			let l:class = {}
-			let l:class.class = s:class
-			let l:class.new = function('tempclass#new')
-			return l:class
-		endfunction
-<
-	When called this "#import()" function, the client script will get a 
-	dictionary with a "class" key save the definition of the class, and a
-	"new" key to save the FuncRef of the "#new()" funtion, from which can
-	create a new object of that class.
-	When the class name become very long, "#import()" may be helpful.
-	See the next section for more detail of module.
-
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
 
@@ -505,7 +435,7 @@ index the function from the module.
 	provides a common way to import medules located in autoload script.
 	Return a dictionary represent the module, or an empty dictionary if
 	fail to import the module.
-	The argument {a:name} is the full path name, relative the "autoload"
+	The argument {name} is the full path name, relative the "autoload"
 	int 'runtimepath', or relative the current directory is also allowed.
 	The module name can be separated by "#", "." or "/", and if the module
 	file is under "autoload/module" sub-directory, the leading "module#"
@@ -520,7 +450,7 @@ index the function from the module.
 
 #simport		module#simport(name, ...)
 	Read as script import. Much the same as the "#import()", but expects
-	the argument {a:name} as absolute path or relative path to current
+	the argument {name} as absolute path or relative path to current
 	directory.  In fact the "module#import()" function may also call this
 	"module#simport()" function if fail it's first attempt.
 
@@ -537,7 +467,7 @@ index the function from the module.
 
 #cimport		module#cimport(name, ...)
 	Read as class import, designed for a special case when you know the
-	target {a:name} is a class file. When fails to call it's "#import()"
+	target {name} is a class file. When fails to call it's "#import()"
 	function, get it's class definition by "#class()" function, and then
 	build a dictionary with "class" key save the class definition, and
 	"new" key save the "#new()" function of the class. That is also the
@@ -600,8 +530,8 @@ The script "vimloo/autoload/tempclass.vim" is a simplified version of base
 The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
 
 :ClassNew {name} [, {filter}]				*:ClassNew*
-	Create a new class with {a:name} in a new script file with that name.
-	{a:name} is append after the current directory, and then configure out
+	Create a new class with {name} in a new script file with that name.
+	{name} is append after the current directory, and then configure out
 	the full path class name with "#". If the current directory is not under
 	some "autoload/" sub-directory, this command will fail.
 
@@ -620,8 +550,8 @@ The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
 	Use ":ClassTemp -a" read the whole "tempclass.vim" into buffer.
 
 :ClassPart {filter}					*:ClassPart*
-	Some line |:ClassAdd|, but only add the parts specified in {a:filter}.
-	While |:ClassNew| and |:ClassAdd| whill copy some default parts 
+	Some line |:ClassAdd|, but only add the parts specified in {filter}.
+	While |:ClassNew| and |:ClassAdd| will copy some default parts 
 	determined by the "tempclass.vim". It is mainly used after the
 	|:ClassNew| or |:ClassAdd| has been executed, and then find neen more
 	parts.
@@ -631,7 +561,7 @@ The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
 	file. "tempmodule.vim" is much simple, and so only provide command
 	"ModuleNew".
 
-The argument {a:filter} in the commands above, is in the form "-xyz" as one
+The argument {filter} in the commands above, is in the form "-xyz" as one
 string, each letter control whether a template parts is output, in which 
 lowercase indicates output, while uppercase indicates not output.
 
@@ -639,12 +569,12 @@ A part is a paragraph in "tempclass.vim" (or "tempmodule.vim") separated by
 blank line. Each part has a head commet line, and at the end of commet line
 is the option in the form "-x", where lowercase indicates that this part will
 be output by default when |:ClassNew| command etc executed. The arugment
-{a:filter} to the command can overide the default option labeled in the 
+{filter} to the command can overide the default option labeled in the 
 template file.
 
 Support at most 25 options, except "-a" reserved means "all". However, more
 than one paragraphs are allowed to share a same option letter. A paragraph
-without option letter indicates must output, since on {a:filter} can disable
+without option letter indicates must output, since no {filter} can disable
 it.
 
 Now the valid and default option in "tempclass.vim" is list bellow:
@@ -691,7 +621,7 @@ already use the word "macro".
 :ClassLoad [-r] [-d|D] [filename]			*:ClassLoad*
 	Reload a class or script, after make some modification on developing.
 	Normally, the reload control code from "tempclass.vim" will protect a
-	script from loading the second, for some reason. However we need
+	script from loading the second time, for some reason. However we need
 	frequently reload the script when developing and debugging. Then this
 	command maybe handful.
 	When without argument, default reload the script in current buffer.
@@ -740,7 +670,7 @@ already use the word "macro".
 
 :PLUGINLOCAL [{file}]					*:PLUGINLOCAL*
 :PLUGINAFTER [{file}]					*:PLUGINAFTER*
-	These two special commands can only be used in script file, can be 
+	These two special commands can only be used in script file, cannot be 
 	used in ex command line.
 	":PLUGINLOCAL" means "plugin local", it will search the same file
 	but with ".local" extention, in the same directory of the script.

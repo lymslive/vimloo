@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a point(x, y) object
 " Create: 2017-06-30
-" Modify: 2017-08-04
+" Modify: 2017-08-08
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -119,6 +119,12 @@ function! s:class.IsBound(...) dict abort "{{{
                 \ && (self.y >= l:y1 && self.y <= l:y2 || self.y <= l:y1 && self.y >= l:y2)
 endfunction "}}}
 
+" abs: 
+function! s:abs() dict abort "{{{
+    return sqrt(self.x*self.x + self.y*self.y)
+endfunction "}}}
+let s:class.abs = function('s:abs')
+
 " LOAD:
 let s:load = 1
 :DLOG '-1 class#math#point is loading ...'
@@ -132,5 +138,10 @@ endfunction "}}}
 
 " TEST:
 function! class#math#point#test(...) abort "{{{
+    let l:pt = class#math#point#new(3, 4)
+    echo l:pt.abs()
+    for l:sKey in keys(s:)
+        echo l:sKey
+    endfor
     return 0
 endfunction "}}}
