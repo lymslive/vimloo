@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-08-07
+" Modify: 2017-08-10
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -27,7 +27,7 @@ endfunction "}}}
 " CTOR: -c
 function! tempclass#ctor(this, ...) abort "{{{
     let l:Suctor = class#Suctor(s:class)
-    call l:Suctor(a:this)
+    call call(l:Suctor, extend([a:this], a:000))
 endfunction "}}}
 
 " DECTOR: -D
@@ -42,7 +42,7 @@ endfunction "}}}
 
 " MASTER: -M
 function! tempclass#master(that, ...) abort "{{{
-    if get(a:000, 0, {})
+    if a:0 > 0 && !empty(a:1)
         call class#AsMaster(a:that, s:class, a:1)
     else
         call class#AddMaster(a:that, s:class)
@@ -51,7 +51,7 @@ endfunction "}}}
 
 " FATHER: -F
 function! tempclass#father(that, ...) abort "{{{
-    if get(a:000, 0, {})
+    if a:0 > 0 && !empty(a:1)
         call class#AsFather(a:that, s:class, a:1)
     else
         call class#AddFather(a:that, s:class)
@@ -71,7 +71,7 @@ endfunction "}}}
 " INSTANCE: -I
 " let s:instance = {}
 function! tempclass#instance() abort "{{{
-    if !exists(s:instance)
+    if !exists('s:instance')
         let s:instance = class#new(s:class)
     endif
     return s:instance

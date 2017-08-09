@@ -1,6 +1,6 @@
-*vimloo.txt*		OOP in VimL Script		Last change:2017-03-08
+*vimloo.txt*		OOP in VimL Script		Last change:2017-08-10
 
-version 0.51
+version 0.61
 Author: lymslive <403708621@qq.com>
 License: MIT license
 
@@ -14,16 +14,17 @@ CONTENTS						*vimloo*
   1.4 copy class as derived class			|vimloo-1.4|
   1.5 copy more class as interface			|vimloo-1.5|
   1.6 isolate class as module				|vimloo-1.6|
-2. Base Class Component					|class.vim|
-  2.1 member key					|class-member|
-  2.2 method key					|class-method|
-  2.3 global sharp function				|class-function|
+2. Vimloo Class Component				|vimloo-class|
+  2.1 Specail Class Properties				|class-property|
+  2.2 Base Class Function				|class-function|
+  2.3 User Custom Class					|class-custom|
 3. Module Management Scheme				|module.vim|
   3.1 import module					|module#import|
   3.2 module less package				|module#less|
   3.3 module unite package				|module#unite|
 4. Build Class From Template				|class-builder|
 5. Script Micro Command					|script-micro|
+6. Multiple Inherit Class				|class-multiple|
 
 ========================================================+=====================
 1. Concept Introduction					*vimloo-concept*
@@ -265,7 +266,7 @@ We call those function that has one or more "#" characters in it's name as
 sharp funtion. Sharp function is autoload function in the global scope. Below
 list most(but not all) function in "class.vim".
 
-class#class([{name}])					*class#class*
+class#class([{name}])					*class#class()*
 	Return a dictionary denoted as a class definition.
 	With no argument, return the definition of the universal but dummy
 	class which is defind as "s:class" dictionary variable in "class.vim".
@@ -289,7 +290,7 @@ class#class([{name}])					*class#class*
 	The "#class()" function is the only sharp function that must define
 	in the user class file.
 
-class#new({class}, [{arguments}])			*class#new*
+class#new({class}, [{arguments}])			*class#new()*
 	Create and return a object instance. 
 	{class} can be already a dict, or a string, and when it is a string,
 	class#new() will first call "class#class()" above to get the dict that
@@ -304,7 +305,7 @@ class#new({class}, [{arguments}])			*class#new*
 	the hidden "class._object_" has not set "_class_" key, because it is
 	not for direct use, and avoid complex cycle reference.
 
-class#old({class}, [{master}, {father}])		*class#old*
+class#old({class}, [{master}, {father}])		*class#old()*
 	While "class#new()" create object, "class#old()" create derived class. 
 	Because in the low level, both are something like copying a dict.
 	{class} can be a class dict or class name as "class#new()".
@@ -312,9 +313,11 @@ class#old({class}, [{master}, {father}])		*class#old*
 	which will be discussed later, and both are list of class dict or name.
 	This fucntion return a dictionary that represent a child derived
 	class, and the "_mother_" key of child class is set right to this class.
+	Note: when {class} argument is empty or no argument to "class#new()", 
+	or "class#old()", it return a empty diction "{}" quickly.
 
-class#delete({object})					*class#delete*
-class#free({object})					*class#free*
+class#delete({object})					*class#delete()*
+class#free({object})					*class#free()*
 	VimL can automatically collect garbage, when local vairable go out of
 	scope. But when complex object with circular references, this behave
 	will be dalay, see |garbagecollect()|. If you care about this case,
@@ -323,15 +326,15 @@ class#free({object})					*class#free*
 	reference cycle in that function. Of course you should only call this
 	function just before you decide not use that object any more.
 
-class#isobject({class}, {object})			*class#isobject*
-class#isa({class}, {object})				*class#isa*
+class#isobject({class}, {object})			*class#isobject()*
+class#isa({class}, {object})				*class#isa()*
 	class#isobject() check if {object} is created by {class}, return true
 	if "{object}._class_" is {class}.
 	class#isa() also check the mother and grandmother uptoward the class
 	hierarchy, and also check multiply "_master_" and "_father_" case.
 	{class} can be a class dictionary or class name, as a common rule.
 
-class#use({class}, [{func-name-list}])			*class#use*
+class#use({class}, [{func-name-list}])			*class#use()*
 	All function above can be and some encourag to be customized in user
 	class file, say define a specific "path#to#class#new()" fucntion.
 	When the class name is long, it may become inconvenient. So
@@ -342,8 +345,10 @@ class#use({class}, [{func-name-list}])			*class#use*
 		'new'  : FuncRef to "path#to#class#new()"
 		'isobject': FuncRef to "path#to#class#isobject()"
 	So {func-name-list} is default to ['new', 'isobject'].
+	Note: the used class package is cached, for effective and memory
+	reasons.
 
-class#extend({CTarget}, {CSource}, [{option}])		*class#extend*
+class#extend({CTarget}, {CSource}, [{option}])		*class#extend()*
 	As the instance and child class are both special copy of mother class.
 	This funtion give more control on how to copy {CSource} to {CTarget},
 	which both are class or dictionary vairable. {option} is another
@@ -374,6 +379,9 @@ Actually, there is a "autoload/tempclass.vim" in vimloo, as the template
 class, see also |class-builder| section. In this section, will discuss some
 most valuable functions.
 
+Note: only |self| is keyword in VimL, but "class" or "this" is not, they are
+just arbitrary variable name selected by vimloo.
+
 tempclass#class()
 	It is vital, and has been mentioned many times: >
 		let s:class = {}
@@ -394,7 +402,94 @@ tempclass#new(...)
 	"a:000".
 	It is worthy to check the input arguments count(|a:0|), and each
 	argument(|a:1|, |a:2|, ...) before call "class#new()", may return an
-	empty object "{}" or some error.
+	empty object "{}" or something else on error.
+
+tempclass#ctor({this}, ...)				*class#ctor()*
+	It meams constructor of class. It is not used for manually called, but
+	called by "class#new()" function, or indirectlly by "tempclass#new()".
+	The argument notation(|a:0|, |a:1|, |a:2|, ...) are exactly the same
+	as from "tempclass#new()".
+	Or use named argument of "#ctor()" is also allowed, that will be more
+	meaningful but less flexiable.
+	The first argument {this} is the newly created instance object.
+	If the class is derived from another class, it may need call the
+	"#ctor" function of mother class. The following is sample when
+	transfer all arugment to mother class: >
+		function! tempclass#ctor(this, ...)
+			let l:Suctor = class#Suctor(s:class)
+			call call(l:Suctor, extend([a:this], a:000))
+		endfunction
+<	
+	This seems a bit tedious. In more common case, the child class deal
+	with parts of arugment, and transfer other to mother class. e.g. >
+		function! tempclass#ctor(this, ...)
+			let l:Suctor = class#Suctor(s:class)
+			call a:this.Deal(a:1)
+			call l:Suctor(a:this, a:2, a:3)
+			or
+			call path#to#baseclass#ctor(a:2, a:3)
+		endfunction
+<
+	Whether the order matters is determined by designs.
+	The "#ctor" function can be ommited in some simple class, or directly
+	called by it's own "#new" function, without refer to "class#new()". 
+	Consider a simple class, require exactly two arguments to create
+	instance object: >
+		function! tempclass#new(x, y)
+			let l:obj = deepcopy(s:class)
+			call tempclass#ctor(l:obj, x, y)
+			return l:obj
+		endfunction
+<
+tempclass#dector({this})				*class#dector()*
+	It is called by "class#delete()" when needed, in complex object.
+
+tempclass#isobject({object})
+tempclass#isa({object})
+	They can simply call "class#isa()" function, by passing "s:class" as
+	the first argument: >
+		function! tempclass#isobject(that)
+			return class#isobject(s:class, a:that)
+		endfunction
+		function! tempclass#isa(that)
+			return class#isa(s:class, a:that)
+		endfunction
+<
+	In fact, most custom function in "tempclass" is implemented by calling
+	the related function in "class.vim" to do the main and hard stuff.
+
+tempclass#old()
+	If a class is designed as super class, it is suggested to add it's own
+	"#old()" function, making such purpose more clear. Also so simple: >
+		function! tempclass#old()
+			let l:class = class#old(s:class)
+			return l:class
+		endfunction
+<
+	Or you can do some extra work if needed.
+
+tempclass#instance()					*class#instance()*
+	If a class is designed as a singleton, you can add such a function: >
+	function! tempclass#instance() abort "{{{
+		if !exists('s:instance')
+			let s:instance = class#new(s:class)
+		endif
+		return s:instance
+	endfunction "}}}
+<
+tempclass#static()					*class#static()*
+	You can freely add more sharp function, no matter whether the base
+	"class.vim" has been implemented or not. Since these function is
+	called by class name, not by instance object, they may sound like
+	"static" methods!
+
+tempclass#use()
+	That is simple as usual. >
+		function! tempclass#use(...)
+			return class#use(s:class, a:000)
+		endfunction
+<
+	But you can provide another default list passed to |class#use()|.
 
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
@@ -453,6 +548,8 @@ index the function from the module.
 	suggested stuff to do in the explicitly defined "#import()" function,
 	however, you can custom to suit for any need in the explicitly defined 
 	"#import()" function.
+	Note: from the "_verion_=2" of "class.vim", |class#use()| do much the
+	same thing as "module#cimport()".
 	
 Although these "module#import()" function are powerful, it is suggested to
 provide it's own "#import()" function in each module file. It may simple enough
@@ -501,11 +598,15 @@ module file:
 
 But I havenot do so, make little modification to the origin version.
 
+Note: from the "_verion_=2" of "class.vim", "module/less" is transfer to
+"class/less". The "module" sub-directory is mainly for sample how to manage
+old non-class style code utility.
+
 ========================================================+=====================
 4. Build Class From Template				*class-builder*
 
-The script "vimloo/autoload/tempclass.vim" is a simplified version of base
-"class.vim", it can be served as the template file when create new user class.
+The script "vimloo/autoload/tempclass.vim" is a simplified version class
+definition , it can be served as the template file when create new user class.
 The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
 
 :ClassNew {name} [, {filter}]				*:ClassNew*
@@ -534,6 +635,18 @@ The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
 	determined by the "tempclass.vim". It is mainly used after the
 	|:ClassNew| or |:ClassAdd| has been executed, and then find neen more
 	parts.
+
+:ClassRename						*:ClassRename*
+:ClassRename {newfile}
+:ClassRename {oldfile} {newfile}
+	The sharp function name must be consistent with the script file name.
+	If the file is moved or renamed, problem comes out. So this command is
+	used to repair the sharp function name, and the "s:class._name_" key.
+	":ClassRename" with no argument, suppose the current file has been 
+	moved, then fix the name problem.
+	":ClassRename newfile" with one arg, move current file to {newfile}.
+	":ClassRename oldfile newfile" with two args, it not operate on
+	current file but move {oldfile} to {newfile}.
 
 :ModuleNew {name} [, {filter}]				*:ModuleNew*
 	Same as |ClassNew|, but use "tempmodule.vim" to create a new module
@@ -662,6 +775,79 @@ already use the word "macro".
 	scipt can be customized by a ".local" script, and put ":PLUGINAFTER"
 	in the footer of script, then that script can be extended by a 
 	".after" script. See |vnote-remap| for a example.
+
+========================================================+=====================
+6. Multiple Inherit Class				*class-multiple*
+
+In almost each OOP language, multiple inheritance is easy to write by hard to
+read and maintain. Usually single inheritance can do most work well, but if
+you really need multiple inheritance in some case, vimloo also provide a model
+for it.
+
+For any class, there is at most one supper class in vimloo, we call it as
+"mother" class. As soon as a class is borned, it inherit both data and method
+from it's mother. Later it can learn more skill from many other teachers,
+which we called "master" class. A class only inherit method from master. In
+the opposite, the class from which can only inherit data is called "father".
+
+	mother: single, inherit both data and method;
+	master: multiple, only inherit method;
+	father: multiple, only inherit data.
+
+Yes, a class can have multiple father but only one mother, class is special
+species. However, in the good environment, class should only need mother but
+on father any more.
+
+The order is import. When inherit from more master or father, the already
+existed key will not overide. See |class#extend()|, masther and father are
+just two specail copy option:
+	mother: {'ignorex': '^_.*_$', 'ignores': s:class._static_}
+	master: {'ignorex': '.*_$', 'data': v:false, 'old': v:false}
+	father: {'ignorex': '.*_$', 'func': v:false, 'old': v:false}
+
+If a class is designed as master class, it usually only contain method keys,
+and will not use alone. But there is no way to prevent user from creating
+instance object from master class. So, we add another rule: when inherit from
+master, the keys with only "_" postfix is also ignored, image that they maybe
+only used by the instance of it own.
+
+In the "class/more/" directory, are some sample classes that may be suitable
+for master(and/or father).
+
+It is pointed out that "s:class._master_" is just a property of "s:class". The
+mothed keys from any master are not copied to s:class, only when create
+instance, they are copied into child object. (A mother employ family teacher
+to teach her children, but she donnot care.)
+
+Since the "s:class._object_" is cached, the "_master_" (and/or "_father_")
+property must be set before the first instance is created. And by the time,
+the string item(class name) in "s:class._master_" is converted to dictionary,
+to keep the list uniform.
+
+There are tow ways to set "_master_" property: >
+	let s:class._master_ = ['class#matser1', 'class#master2']
+	or
+	call class#AddMaster(s:class, 'class#matser1')
+	call class#AddMaster(s:class, 'class#matser2')
+<
+You can also define a sharp function like "tempclass#old()" to control more
+detail: >
+	function! tempclass#master(that, ...)
+		if a:0 > 0 && !empty(a:1)
+			call class#AsMaster(a:that, s:class, a:1)
+		else
+			call class#AddMaster(a:that, s:class)
+		endif
+	endfunction
+<
+In this example, "class#AsMaster()" is directlly copy method keys into
+"s:class", not just set the "_master_" property. Then in the client class
+file, inherit from master as following: >
+	let s:class._master_ = ['class#matser1', 'class#master2']
+	or
+	call class#matser1#master(s:class)
+	call class#matser2#master(s:class)
+<
 
 ========================================================+=====================
 vim:tw=78:ts=8:ft=help:norl:
