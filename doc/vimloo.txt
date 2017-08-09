@@ -182,23 +182,88 @@ With these concepts in mind, it is easy to write some simple class and object
 directly and immediately. But you can do much more with |vimloo|.
 
 ========================================================+=====================
-2. Base Class Component					*class.vim*
+2. Vimloo Class Component				*vimloo-class*
 
-In the last section, the example code is kept simple, only to describe the 
-idea of OOP in VimL Script. This section will document a pratical class, 
-provided by |vimloo| in "autoload/class.vim", serving as the common base class
-of other custom class.
+In vimloo, we distinguish class objcet and instance object, although both are
+no more than dictionary. The class object is class definition dict, a guide to
+construct new instance object, which is doing the actual business. Instance is
+not necessary the same as class, nor directly copied from class.
 
-You can image the class defined in the "class.vim" (named "s:class") as the 
-universal super class of all other user customized class. However, since this
-class dictionary has no interesting keys, actually the main purpose is 
-providing utility functions to build custome class hierarchy.
+Typically, a class file "{rpt}/autoload/foo/bar.vim" defines a class named
+"foo#bar" as following: >
+	let s:class = {}
+	function! foo#bar#class()
+		return s:class
+	endfunction
+<
+The class definition is the script scoped dictionary "s:class", and a global
+sharp function is provided to access to it.
+
+The keys of "s:class" is properties of the class. Beside the normal data key
+and FuncRef key, vimloo also support many special keys, as reserved in the
+form "_key_". Those special keys are belong noly to class, not copied to
+instance object or child derived class object.
 
 --------------------------------------------------------+---------------------
-2.1 global sharp class#function				*class-function*
+2.1 Specail Class Properties				*class-property*
+
+s:class._name_
+	The name of class, must be consistent with the class file path from
+	"autoload", separated by "#". This is a way to get the class file
+	script when first only get the class definition dictionary.
+
+s:class._version_
+	A optional simple number to denote the version of design of this
+	class, maybe helpful in some way.
+
+s:class._mother_
+	It is the so called base class or super class in other OOP language.
+	It is reference to mother class dictionary, not class name sting.
+	It is set automatically when derive from super class, should not
+	assign to it manually with ":let" command. See |class#old|.
+
+s:class._object_
+	The first created instance object, dictionary reference. Since the
+	struct of instance objcet may differ from class, it need to copy each
+	individual key in loop, that is ineffective. So we create a hidden
+	instance object stored in the key "_object_", and later directly copy
+	from it as a whole, when create new instance is required.
+
+s:class._master_
+s:class._father_
+	These two keys are relative to multiply inherent, and will describe
+	more detail in next section. They are list type, witch item is class
+	dictionary or class name, and mixed list is also acceptable.
+
+s:class._static_
+	A extra list of key, which wont copy to instance object, either.
+
+s:class._protect_
+	A extra list of key, which wnot copy to derived class, either.
+
+s:class._custom_
+	This means any key that begin and end with "_", can be add freely to
+	class, if it is needed and meaningful, but may no effect on instance
+	object created by this class.
+
+l:object._class_
+	This is not a key in class dictionary, but a special key of instance
+	object created by some class, the value of this key is just the
+	reference to the class. This is the only special key added by vimloo
+	to normal instance object, providing a way to access the origin class
+	from instance.
+
+--------------------------------------------------------+---------------------
+2.2 Base Class Function					*class-function*
+
+The class defined in the "class.vim" (named "s:class") can be imaged as the 
+universal super class of all other user customized class. However, since this
+class dictionary has no interesting keys, the main purpose is actually 
+providing utility functions to build custome class hierarchy.
 
 We call those function that has one or more "#" characters in it's name as
-sharp funtion. Sharp function is autoload function in the global scope.
+sharp funtion. Sharp function is autoload function in the global scope. Below
+list most(but not all) function in "class.vim".
 
 class#class([{name}])					*class#class*
 	Return a dictionary denoted as a class definition.
@@ -230,192 +295,106 @@ class#new({class}, [{arguments}])			*class#new*
 	class#new() will first call "class#class()" above to get the dict that
 	represent a class. Then an object dict is built base on this class dict,
 	and initialized with {arguments}.
-	{arguments} is a list packed with all arguments.
+	{arguments} is a list packed with all arguments. If the specific calss 
+	file defines "{class._name_}#ctor()", it is called by this list of
+	arguments. See also |calss#ctor|.
+	At the first time creating an instance from a class, "class._object_" 
+	is also created. Then make a |deepycopy| of "class._object_" as new
+	instance, and the "_class_" key is set reference to this class. But
+	the hidden "class._object_" has not set "_class_" key, because it is
+	not for direct use, and avoid complex cycle reference.
 
 class#old({class}, [{master}, {father}])		*class#old*
 	While "class#new()" create object, "class#old()" create derived class. 
 	Because in the low level, both are something like copying a dict.
 	{class} can be a class dict or class name as "class#new()".
+	{master} and {father} are extra arguments for multiply inherent class,
+	which will be discussed later, and both are list of class dict or name.
+	This fucntion return a dictionary that represent a child derived
+	class, and the "_mother_" key of child class is set right to this class.
 
-#ctor			class#ctor(this, argv)
-#ctor			class#ctor(this, ...)
-    This is the constructor function of user class. "#ctor()" is called 
-    indirectlly, through "_new_()" method, by "#new()" function.
-    When "#ctor()" is called, the object is already created or copied.
-    The first argument {a:this} is refer to the just object.
-    The second argument {a:argv} is a list of arguments, passed from 
-    "#new()" function, which is |a:000| in essence.
-    In complex class, the {a:argv} may arbitrary, need carefully deal every
-    cases to construct new object.
-    In derived class, the "#ctor()" of base class may need to be called in
-    some way, it is determined by the implement of derived class.
-    The "#ctor()" definition form is determined by how to call "_new_()"
-    from "#new(...)", see |class-mothod|. 
-    If [persist] is omitted, "#ctor()" accept a single list argument 
-{a:argv}, as the first form.
-If [persist] is non-empty, "#ctor()" accept a arugment list of
-variable number, as the second form.
-In the second form "#ctor(this, ...)", persist the meanig of {a:000}
-as "#new(..)", and so is recommanded.
+class#delete({object})					*class#delete*
+class#free({object})					*class#free*
+	VimL can automatically collect garbage, when local vairable go out of
+	scope. But when complex object with circular references, this behave
+	will be dalay, see |garbagecollect()|. If you care about this case,
+	class#delete() or class#free() maybe helpful.
+	They only try to call "{class._name_}#decotr()", you can break out the
+	reference cycle in that function. Of course you should only call this
+	function just before you decide not use that object any more.
 
-#dector			class#dector()
-#delete			class#delete(this)
-The deconstructor function "#dector()" seldom need. But if really neede,
-    it will be called by "class#delete()" function. Usually the user class
-    donot need it's own "#delete()", only use "class#delete()" is enough.
+class#isobject({class}, {object})			*class#isobject*
+class#isa({class}, {object})				*class#isa*
+	class#isobject() check if {object} is created by {class}, return true
+	if "{object}._class_" is {class}.
+	class#isa() also check the mother and grandmother uptoward the class
+	hierarchy, and also check multiply "_master_" and "_father_" case.
+	{class} can be a class dictionary or class name, as a common rule.
 
+class#use({class}, [{func-name-list}])			*class#use*
+	All function above can be and some encourag to be customized in user
+	class file, say define a specific "path#to#class#new()" fucntion.
+	When the class name is long, it may become inconvenient. So
+	class#use() return a wrapper dictionary or so called package, convert
+	the sharp function to a shorter key in this package dictionary. The
+	default key are:
+		'class': reference to the class dictionary defind in {class}
+		'new'  : FuncRef to "path#to#class#new()"
+		'isobject': FuncRef to "path#to#class#isobject()"
+	So {func-name-list} is default to ['new', 'isobject'].
 
-#isobject		class#isobject(...)
-#isa			class#isa(...)
-	   The tow functions check if a vairable if belong to self calss, while
-	   "#isa()" is boarder then "#isobject()".
-	   When defined in user class, it accept only one arugment: >
-	   let l:bool = tempclass#isobject(that)
-	   let l:bool = tempclass#isa(that)
-	   <
-	   When use the top base class version, the first arugment is class name,
-	   the second argument is the variable to be check: >
-	   let l:bool = class#isobject('tempclass', that)
-	   let l:bool = class#isa('tempclass', that)
-	   <
-
-#instance		class#instance()
-	   If a class is designed as a singleton class, can define "#instance()"
-	   function as following: >
-	   let s:instance = {}
-    function! tempclass#instance() abort
-if empty(s:instance)
-    let s:instance = class#new('tempclass')
-    endif
-    return s:instance
-    endfunction
-    <
-
-#import			tempclass#import()
-    If a class also want to be used as a module, can define it's own
-    "#import()" function, to control the import behaviors. For example: >
-    function! tempclass#import() abort
-    let l:class = {}
-    let l:class.class = s:class
-    let l:class.new = function('tempclass#new')
-		return l:class
-		    endfunction
-		    <
-		    When called this "#import()" function, the client script will get a 
-		    dictionary with a "class" key save the definition of the class, and a
-		    "new" key to save the FuncRef of the "#new()" funtion, from which can
-		    create a new object of that class.
-		    When the class name become very long, "#import()" may be helpful.
-		    See the next section for more detail of module.
+class#extend({CTarget}, {CSource}, [{option}])		*class#extend*
+	As the instance and child class are both special copy of mother class.
+	This funtion give more control on how to copy {CSource} to {CTarget},
+	which both are class or dictionary vairable. {option} is another
+	dictionary accept keys(with default value below):
+		'data': v:true, data keys in {CSource} should be copied.
+		'func': v:true, copy function keys from {CSource}.
+		'new' : v:ture, add new key which non-exisited in {CTarget}.
+		'old' : v:ture, overide key that already existed in {CTarget}.
+		'ignores': [], not copy these keys in the list.
+		'ignorex': '', not copy those keys that match pattern.
+		'copy': 1, how to deal with list and dict items in {CSource}:
+			0: not copy, share reference, as use = assignment;
+			1: use shallow |copy()| builtin function;
+			2: use complete |deepcopy()| builtin function.
+	For example, when create instance object, the copy option is something
+	like: {'ignorex': '^_.*_$', 'ignores': s:class._static_}.
 
 --------------------------------------------------------+---------------------
-2.1 member key						*class-member*
+2.3 User Custom Class					*class-custom*
 
-_name_			string
-	The name of class. It must match the full path name, relative to 
-	"autoload/", separated by "#". It is critical to find the sharp 
-	functions in the class script file.
-	The user derived class should set it's name explicitly.
+For an user defind class, say "path#to#class", the only required global
+function is "path#to#class#class()" that just return "s:class". But you can
+define a serial similar fucntions as "class#func" above, to fit your specail
+class design.
 
-_version_		number
-	The version of class, maybe useful in some case.
+To simplify the documentation, we use "tempclass" to denote any "path#to#class".
+Actually, there is a "autoload/tempclass.vim" in vimloo, as the template
+class, see also |class-builder| section. In this section, will discuss some
+most valuable functions.
 
-_super_			string
-	The name of the base class. The most base class "class.vim" itself has
-	no parent, then the "_super_" key to "class" itself.
-
-_interface_		list of string
-	The name of the interfaces current class derived. It is list, since
-	multiply interfaces are supported. Even if only a interface, it is a
-	list of one item. If there no interface, this key may not set.
-
---------------------------------------------------------+---------------------
-2.2 method key						*class-method*
-
-_new_			s:class._new_({argv}, [persist])
-	Called by "#new()" sharp function, when creat new object instance, to
-	do the common things for any class. It will try to find the "#ctor()"
-	function of the class from which create it. If the usr class donot
-	provide "#ctor()" function, "_new_()" method call the dummy function
-	"class#ctor()" from the top base class.
-	The argument {a:argv} is a list, containing all arugments passed to
-	"#new()", usually is {a:000} to handle any number of argument when
-	create new instance. This argument is then passed to contruct function
-	"#ctor()".
-	If [perisist] is provided and non-empty, the {a:argv} is passed as the
-	argument list from "#new(...)", otherwise, the {a:argv} is passed as a
-	single list argument to "#cotr()".
-
-_old_			s:class._old_()
-	While "new" create object instance, "old" create derived class, as
-	they are both calling the builtin |copy()| funtion.
-	"_old_()" method is called when a class neen to derive from self.
-	It will set the sub-class's "_super_" member to self's name, and reset
-	the sub-class's "_name_" member, requring the sub-class set it's name
-	explicitly.
-
-_del_			s:class._del_()
-	Called by "class#delete()" function when a object is need destroy.
-	In VimL Script, the variable (and object too) is deleted and freed
-	automatically. So there is very few case need to call "class#delete()"
-	to delete a object.
-	When in case delete object is called, "_del_()" method will call the
-	deconstructor function "#dector()" of it's own, and then it's parent
-	class upwise, to make any clean work of the class tree.
-
-_ctor_			s:class._ctor_()
-	Find the sharp function "#ctor()", so called constructor funtion of 
-	self class. Return the FuncRef of that function if existed, otherwise
-	the FuncRef refer to "class#ctor()", which is dummy.
-
-_suctor_		s:class._suctor_()
-	Return a FuncRef of the constructor "#ctor()" of it's directlly base
-	class, or a dummy function if the base has no "#ctor()". In many
-	cases, the "#ctor()" of sub-class should call the one of base class,
-	with some subset of input arguments, to construct the base part of
-	class member.
-
-_dector_		s:class._dector_()
-	Find the deconstructor function "#dector()" and return the FuncRef,
-	or to a dummy function.
-
-_sudector_		s:class_sudector_()
-	Find the deconsturctor function "#dector()" of directlly base class.
-
-_supers_		s:class_supers_()
-	Find all base classes, directlly and indirectlly, uptoward the inherit
-	tree. Return a list of class name.
-
-_copy_			s:class._copy_(that)
-	Called by the copy constructor, a sharp function "#copy()".
-	"#ctor()" is used to create object from a dictionary, maybe some base
-	class of itself, containing a subset of member data.
-	"_copy_()" only copy normal data member key, exclude method key, and
-	reserved key in the form "_xxx_".
-	The argument "a:that" is the source dictionary or object.
-
-_merger_		s:class._merge_(that)
-	Derived interface of class {that}, copy all the keys in {that}, but
-	don't overide the already existed keys.
-	Add the class name of {that} to the self's "_interface_" list.
-	The argument "a:that" must be a class, plain dictionary is not enough.
-
-_isobject_		s:class._isobject_(that)
-	Check if the variable {that} is an instance object of self.
-	Return boolean |v:ture| or |v:false|.
-
-_isa_			s:class._isa_(that)
-	Check if the vairable {that} is an object of class derived from self,
-	or if self in an interface of that class.
-	Return boolean |v:ture| or |v:false|.
-
-string			s:class.string()
-	Convert the object to a string. In the base class, only return "_name_"
-	key. User class may overide it to build a more meaning string.
-
-number			s:class.number()
-	Convert the object to a number. In the base class, only return the
-	"_version_" key. User class may overide to ruturn a more useful value.
+tempclass#class()
+	It is vital, and has been mentioned many times: >
+		let s:class = {}
+		function! tempclass()
+			return s:class
+		endfunction
+<
+tempclass#new(...)
+	To create an instance of my class, can simply call "class#new()" with
+	"s:class" as the first argument: >
+		function! tempclass#new(...)
+			let l:obj = class#new(s:class, a:000)
+			return l:obj
+		endfunction
+<
+	It is flexible and convenient to define "tempclass#new()" accept
+	arbitrary arguments with "...", and passed to "class#new()" as
+	"a:000".
+	It is worthy to check the input arguments count(|a:0|), and each
+	argument(|a:1|, |a:2|, ...) before call "class#new()", may return an
+	empty object "{}" or some error.
 
 ========================================================+=====================
 3. Module Management Scheme				*module.vim*
