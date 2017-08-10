@@ -470,12 +470,12 @@ tempclass#old()
 
 tempclass#instance()					*class#instance()*
 	If a class is designed as a singleton, you can add such a function: >
-	function! tempclass#instance() abort "{{{
+	function! tempclass#instance()
 		if !exists('s:instance')
 			let s:instance = class#new(s:class)
 		endif
 		return s:instance
-	endfunction "}}}
+	endfunction
 <
 tempclass#static()					*class#static()*
 	You can freely add more sharp function, no matter whether the base
@@ -607,7 +607,17 @@ old non-class style code utility.
 
 The script "vimloo/autoload/tempclass.vim" is a simplified version class
 definition , it can be served as the template file when create new user class.
-The "tempmodule.vim" is a still more simplified version of "tempclass.vim"
+The "tempmodule.vim" is a still more simplified version of "tempclass.vim".
+
+This section and next is some command that help to write and debug VimL
+script, especially for class file script. But they are not loaded by default,
+you should define two global variables in "vimrc": >
+	let g:vimloo_plugin_enable = 1
+	let g:vimloo_ftplugin_enable = 1
+<
+Or manually call this function: >
+	call vimloo#plugin#load()
+<
 
 :ClassNew {name} [, {filter}]				*:ClassNew*
 	Create a new class with {name} in a new script file with that name.

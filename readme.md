@@ -1,13 +1,12 @@
-# Basic of Object Orient Programming in Viml Script
+# A Solution of Object Orient Programming in Viml Script
 `vimloo` `git/readme`
 
 ## Introduction
 
 * `class` is a dict variable defined in a script which under the autoload
-  subdirecotry, class name is the relative path to autoload. Each class file
-  only has a class, with reserved `_name_` key to store the '#-path name'.
+  subdirecotry, class name is the relative path to autoload. 
 * `object` instance is a sub-copy of class, may with modified data keys.
-* `derive` class is also a sub-copy of base class, may add data or/and function
+* `derived` class is also a sub-copy of base class, may add data or/and method
   keys.
 
 ## Functionality
