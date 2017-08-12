@@ -3,7 +3,7 @@
 " Description: maze generation by Randomized Kruskal's algorithm
 "   refer to: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 " Create: 2017-07-06
-" Modify: 2017-07-28
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -31,19 +31,18 @@ function! class#fantasy#maze#kruskal#new(...) abort "{{{
         return 0
     endif
 
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#fantasy#maze#kruskal#ctor(this, height, width) abort "{{{
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:height, a:width)
 endfunction "}}}
 
 " ISOBJECT:
 function! class#fantasy#maze#kruskal#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Reset: 

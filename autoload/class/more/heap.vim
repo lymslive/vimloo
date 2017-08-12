@@ -1,9 +1,9 @@
-" Class: interface#heap
+" Class: class#more#heap
 " Author: lymslive
 " Description: implement the min binary heap 
 "   refer to: https://en.wikipedia.org/wiki/Heap_(data_structure)
 " Create: 2017-07-27
-" Modify: 2017-07-27
+" Modify: 2017-08-04
 
 " zero-based list
 " full binary tree, children of n is 2n+1 and 2n+2
@@ -15,36 +15,30 @@ if exists('s:load') && !exists('g:DEBUG')
 endif
 
 " CLASS:
-let s:class = interface#list#old()
-let s:class._name_ = 'interface#heap'
+let s:class = class#more#list#old()
+let s:class._name_ = 'class#more#heap'
 let s:class._version_ = 1
 
-function! interface#heap#class() abort "{{{
+function! class#more#heap#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! interface#heap#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+function! class#more#heap#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
-function! interface#heap#ctor(this, ...) abort "{{{
+function! class#more#heap#ctor(this, ...) abort "{{{
     if a:0 == 0
         let a:this.heap_ = []
     elseif type(a:1) == v:t_list
         let a:this.heap_ = a:1
     else
-        : ELOG '[interface#heap#ctor] expect a list variable'
+        : ELOG '[class#more#heap#ctor] expect a list variable'
     endif
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this, a:this.heap_)
-endfunction "}}}
-
-" MERGE:
-function! interface#heap#merge(that) abort "{{{
-    call a:that._merge_(s:class)
 endfunction "}}}
 
 " heap: 
@@ -164,8 +158,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG '-1 interface#heap is loading ...'
-function! interface#heap#load(...) abort "{{{
+:DLOG '-1 class#more#heap is loading ...'
+function! class#more#heap#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -174,9 +168,9 @@ function! interface#heap#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! interface#heap#test(...) abort "{{{
+function! class#more#heap#test(...) abort "{{{
     let l:obj = class#new()
-    call interface#heap#merge(l:obj)
+    call class#more#heap#merge(l:obj)
     let l:obj.heap_ = []
     let l:iMax = get(a:000, 0, 10) + 0
 

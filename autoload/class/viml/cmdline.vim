@@ -1,17 +1,22 @@
-" Class: class#cmdline
+" Class: class#viml#cmdline
 " Author: lymslive
 " Description: command line option parser for custom command 
 " Create: 2017-02-11
-" Modify: 2017-03-27
+" Modify: 2017-08-06
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
 
+" let s:lsMethod = ['new', 'isobject']
+let s:OSingle = class#use('class#viml#option#single')
+let s:OPairs = class#use('class#viml#option#pairs')
+let s:OMultiple = class#use('class#viml#option#multiple')
+
 " BASIC:
 let s:class = class#old()
-let s:class._name_ = 'class#cmdline'
+let s:class._name_ = 'class#viml#cmdline'
 let s:class._version_ = 1
 
 " command name
@@ -33,33 +38,24 @@ let s:class.Grouped = {}
 let s:class.LastParsed = ''
 let s:class.LastError = ''
 
-function! class#cmdline#class() abort "{{{
+function! class#viml#cmdline#class() abort "{{{
     return s:class
 endfunction "}}}
 
-" CTOR:
-function! class#cmdline#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0
-        let a:this.Command = a:argv[0]
-    endif
+" NEW:
+function! class#viml#cmdline#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
+    return l:obj
+endfunction "}}}
 
-    " list or dict member must be re-init
-    let a:this.Option = {}
-    let a:this.PostArgv = []
-    let a:this.CharName = {}
-    let a:this.Group = {}
-    let a:this.Grouped = {}
+" CTOR:
+function! class#viml#cmdline#ctor(this, ...) abort "{{{
+    if a:0 > 0
+        let a:this.Command = a:1
+    endif
 
     call a:this.AddSingle('?', 'help', 'display this usage')
     call a:this.AddSingle('', '--', 'stop parse left options')
-    let s:class.LastParsed = ''
-endfunction "}}}
-
-" NEW:
-function! class#cmdline#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
-    return l:obj
 endfunction "}}}
 
 " AddSingle: 
@@ -69,7 +65,7 @@ function! s:class.AddSingle(sChar, sName, sDesc) dict abort "{{{
         rturn -1
     endif
 
-    let l:jOption = class#option#single#new(a:sChar, a:sName, a:sDesc)
+    let l:jOption = s:OSingle.new(a:sChar, a:sName, a:sDesc)
     let self.Option[a:sName] = l:jOption
 
     return self.MapName(a:sChar, a:sName)
@@ -78,9 +74,9 @@ endfunction "}}}
 " AddPairs: 
 function! s:class.AddPairs(sChar, sName, sDesc, ...) dict abort "{{{
     if a:0 == 0
-        let l:jOption = class#option#pairs#new(a:sChar, a:sName, a:sDesc)
+        let l:jOption = s:OPairs.new(a:sChar, a:sName, a:sDesc)
     else
-        let l:jOption = class#option#pairs#new(a:sChar, a:sName, a:sDesc, a:1)
+        let l:jOption = s:OPairs.new(a:sChar, a:sName, a:sDesc, a:1)
     endif
 
     let self.Option[a:sName] = l:jOption
@@ -90,9 +86,9 @@ endfunction "}}}
 " AddMore: 
 function! s:class.AddMore(sChar, sName, sDesc, ...) dict abort "{{{
     if a:0 == 0
-        let l:jOption = class#option#multiple#new(a:sChar, a:sName, a:sDesc)
+        let l:jOption = s:OMultiple.new(a:sChar, a:sName, a:sDesc)
     else
-        let l:jOption = class#option#multiple#new(a:sChar, a:sName, a:sDesc, a:1)
+        let l:jOption = s:OMultiple.new(a:sChar, a:sName, a:sDesc, a:1)
     endif
 
     let self.Option[a:sName] = l:jOption
@@ -215,7 +211,7 @@ function! s:class.ParseCheck(argv, ...) dict abort "{{{
         if l:sDash ==# '-'
             while len(l:sWord) > 1
                 let l:sWord = l:sWord[1:]
-                if !class#option#single#isobject(l:jOption)
+                if !s:OSingle.isobject(l:jOption)
                     call self.DealArgument(l:sWord)
                     break
                 endif
@@ -247,7 +243,7 @@ endfunction "}}}
 
 " DealOption: 
 function! s:class.DealOption(jOption) dict abort "{{{
-    if class#option#single#isobject(a:jOption)
+    if s:OSingle.isobject(a:jOption)
         call a:jOption.SetValue()
         call self.OnGroupSet(a:jOption)
         let self.LastParsed = ''
@@ -265,11 +261,11 @@ function! s:class.DealArgument(sArg) dict abort "{{{
             call add(self.PostArgv, a:sArg)
         endif
         let l:jOption = self.Option[self.LastParsed]
-        if class#option#pairs#isobject(l:jOption)
+        if s:OPairs.isobject(l:jOption)
             call l:jOption.SetValue(a:sArg)
             call self.OnGroupSet(l:jOption)
             let self.LastParsed = ''
-        elseif class#option#multiple#isobject(l:jOption)
+        elseif s:OMultiple.isobject(l:jOption)
             call l:jOption.SetValue(a:sArg)
             call self.OnGroupSet(l:jOption)
         else
@@ -283,7 +279,7 @@ endfunction "}}}
 function! s:class.DealDash() dict abort "{{{
     if has_key(self.Option, '-')
         let l:jOption = self.Option['-']
-        if class#option#single#isobject(l:jOption)
+        if s:OSingle.isobject(l:jOption)
             call l:jOption.SetValue()
             call self.OnGroupSet(l:jOption)
             let self.LastParsed= ''
@@ -372,7 +368,7 @@ endfunction "}}}
 function! s:class.GetLackNum() dict abort "{{{
     let l:iCount = 0
     for [l:sName, l:jOption] in items(self.Option)
-        if class#option#pairs#isobject(l:jOption)
+        if s:OPairs.isobject(l:jOption)
                     \ && l:jOption.Must() && !l:jOption.Has()
             let l:iCount = l:iCount + 1
             echom 'option requires argument: --' . l:sName
@@ -415,17 +411,17 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-function! class#cmdline#load(...) abort "{{{
+function! class#viml#cmdline#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
     endif
     return s:load
 endfunction "}}}
-:DLOG 'class#cmdline loading ...'
+:DLOG 'class#viml#cmdline loading ...'
 
 " TEST:
-function! class#cmdline#test(...) abort "{{{
+function! class#viml#cmdline#test(...) abort "{{{
     " :ClassTest -- -ac xyz -d efg
     echo a:0
     for l:i in range(1, a:0)
@@ -434,7 +430,7 @@ function! class#cmdline#test(...) abort "{{{
         echo a:{l:i}
     endfor
 
-    let l:jCmdLine = class#cmdline#new('CmdLineTest')
+    let l:jCmdLine = class#viml#cmdline#new('CmdLineTest')
     call l:jCmdLine.AddSingle('a', 'aaa', 'some thing a')
     call l:jCmdLine.AddSingle('b', 'bbb', 'some thing b')
     call l:jCmdLine.AddPairs('c', 'ccc', 'some thing c')

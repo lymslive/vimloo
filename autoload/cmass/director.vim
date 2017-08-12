@@ -2,19 +2,20 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-14
-" Modify: 2017-07-24
+" Modify: 2017-08-06
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
 
-let s:rtp = module#less#rtp#import()
+let s:rtp = class#less#rtp#export()
+let s:cmdline = class#use('class#viml#cmdline')
 
 " ClassLoad: 
 " :ClassLoad [-r] [-d|D] [filename]
 function! cmass#director#hClassLoad(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassLoad')
+    let l:jOption = s:cmdline.new('ClassLoad')
     call l:jOption.AddSingle('r', 'reload', 'force reload script')
     call l:jOption.AddSingle('d', 'debug', 'set g:DEBUG to allow directlly reload')
     call l:jOption.AddSingle('D', 'nodebug', 'unset g:DEBUG variable')
@@ -59,10 +60,28 @@ function! cmass#director#hClassLoad(...) abort "{{{
     return 0
 endfunction "}}}
 
+" ClassView: 
+" :ClassView [filename]
+function! cmass#director#hClassView(...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        let l:pFileName = s:rtp.Absolute(a:1)
+    else
+        let l:pFileName = expand('%:p:r')
+    endif
+
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
+        echom ':ClassView only execute under autoload director'
+        return 0
+    endif
+
+    call call('class#echo', [l:sAutoName, '-am'])
+endfunction "}}}
+
 " ClassTest: 
 " :ClassTest [-f filename] -- [argument-list-pass-to-#test]
 function! cmass#director#hClassTest(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassTest')
+    let l:jOption = s:cmdline.new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
     let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0
@@ -91,7 +110,7 @@ endfunction "}}}
 " problem: error abort may confuse the redir
 let s:output = ''
 function! cmass#director#hClassDebug(...) abort "{{{
-    let l:jOption = class#cmdline#new('ClassTest')
+    let l:jOption = s:cmdline.new('ClassTest')
     call l:jOption.AddPairs('f', 'file', 'the filename witch #test called', '.')
     let l:iRet = l:jOption.ParseCheck(a:000)
     if l:iRet != 0
@@ -181,6 +200,77 @@ function! cmass#director#MessageRefix(count, type) abort "{{{
         endif
     endif
 
+endfunction "}}}
+
+" ClassRename: 
+" ClassRename(), rename class by file name, maybe moved outside
+" ClassRename(newname), rename currnet file to newname
+" ClassRename(oldfile, newfile), rename old file to new
+" in all cases, correct the #function name
+function! cmass#director#hClassRename(...) abort "{{{
+    " save current buffer file
+    : update
+
+    if a:0 == 0
+        return s:FixClassName()
+    end
+
+    if a:0 == 1
+        let l:pOldFile = expand('%:p')
+        let l:pNewFile = a:1
+    elseif a:0 == 2
+        let l:pOldFile = a:1
+        let l:pNewFile = a:2
+    endif
+
+    if filereadable(l:pNewFile)
+        echoerr 'cannot renmae, target already exists: ' . l:pNewFile
+        return -1
+    endif
+    if !filereadable(l:pOldFile)
+        echoerr 'cannot renmae, source not exists: ' . l:pOldFile
+        return -1
+    endif
+    if rename(l:pOldFile, l:pNewFile) == 0
+        execute 'edit ' . l:pNewFile
+        call s:FixClassName()
+    else
+        echoerr 'cannot rename to file: ' . l:pNewFile
+        return -1
+    endif
+endfunction "}}}
+
+" FixClassName: fix class name in current buffer
+function! s:FixClassName() abort "{{{
+    let l:pFileName = expand('%:p:r')
+    let l:sAutoName = s:rtp.GetAutoName(l:pFileName)
+    if empty(l:sAutoName)
+        echom ':ClassTest only execute under autoload director'
+        return -1
+    endif
+
+    let l:sPattern = 'let\s\+s:class\._name_\s\+=\s\+'
+    let l:iLine = search(l:sPattern, 'wn')
+    if l:iLine > 0
+        let l:sLine = getline(l:iLine)
+        let l:sName = matchstr(l:sLine, l:sPattern . '\zs\S\+\ze')
+        let l:sName = substitute(l:sName, '[''"]', '', 'g')
+    else
+        let l:sName = ''
+    endif
+
+    if !empty(l:sName)
+        " in class file case
+        let l:cmd = printf('%%s/%s/%s/g', l:sName, l:sAutoName)
+        execute l:cmd
+    else
+        " non-class file
+        let l:cmd = printf('g/^\s*function/s/\zs\w\+\ze#\w\+/%s/', l:sAutoName)
+        execute l:cmd
+        let l:cmd = printf('g/^\s*let/s/\zs\w\+\ze#\w\+/%s/', l:sAutoName)
+        execute l:cmd
+    endif
+    return 0
 endfunction "}}}
 
 " PluginLocal: redirect to another script

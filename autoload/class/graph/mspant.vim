@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: min span tree
 " Create: 2017-07-31
-" Modify: 2017-08-02
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -29,13 +29,12 @@ function! class#graph#mspant#new(...) abort "{{{
         : ELOG '[#graph#mspant] expect a graph object'
         return v:none
     endif
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#graph#mspant#ctor(this, graph) abort "{{{
-    " let l:Suctor = s:class._suctor_()
+    " let l:Suctor = class#Suctor(s:class)
     " call l:Suctor(a:this)
     let a:this.graph = a:graph
     let a:this.tree = []
@@ -43,7 +42,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#graph#mspant#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " GetTree: 

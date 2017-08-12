@@ -3,7 +3,7 @@
 " Description: Disjoint-set data structure
 " Refer: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
 " Create: 2017-07-31
-" Modify: 2017-08-01
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -31,21 +31,20 @@ endfunction "}}}
 
 " NEW:
 function! class#set#disjoint#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#set#disjoint#ctor(this, ...) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this)
+    " let l:Suctor = class#Suctor(s:class)
+    " call l:Suctor(a:this)
 
-    let a:this.hashid = {}
+    " let a:this.hashid = {}
 endfunction "}}}
 
 " ISOBJECT:
 function! class#set#disjoint#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " MakeSet: 

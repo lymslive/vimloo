@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: random number generator, by simple LCG
 " Create: 2017-06-29
-" Modify: 2017-06-30
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -29,13 +29,12 @@ endfunction "}}}
 
 " NEW:
 function! class#math#random#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#math#random#ctor(this, ...) abort "{{{
-    let l:Suctor = s:class._suctor_()
+    let l:Suctor = class#Suctor(s:class)
     call l:Suctor(a:this)
     if a:0 > 0
         call a:this.First(a:1)
@@ -71,7 +70,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#math#random#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " TODO: optimize the default seed, other by simple localtime()

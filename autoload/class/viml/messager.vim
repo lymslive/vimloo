@@ -1,8 +1,8 @@
-" Class: class#messager
+" Class: class#viml#messager
 " Author: lymslive
 " Description: capture the vim command message output
 " Create: 2017-02-28
-" Modify: 2017-02-28
+" Modify: 2017-08-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -11,31 +11,30 @@ endif
 
 " CLASS:
 let s:class = class#old()
-let s:class._name_ = 'class#messager'
+let s:class._name_ = 'class#viml#messager'
 let s:class._version_ = 1
 let s:class.command = ''
 
-function! class#messager#class() abort "{{{
+function! class#viml#messager#class() abort "{{{
     return s:class
 endfunction "}}}
 
 " NEW:
-function! class#messager#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+function! class#viml#messager#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR:
-function! class#messager#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0
-        let a:this.command = a:argv[0]
+function! class#viml#messager#ctor(this, ...) abort "{{{
+    if a:0 > 0
+        let a:this.command = a:1
     endif
 endfunction "}}}
 
 " ISOBJECT:
-function! class#messager#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+function! class#viml#messager#isobject(that) abort "{{{
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Capture: 
@@ -72,8 +71,8 @@ endfunction "}}}
 
 " LOAD:
 let s:load = 1
-:DLOG 'class#messager is loading ...'
-function! class#messager#load(...) abort "{{{
+:DLOG 'class#viml#messager is loading ...'
+function! class#viml#messager#load(...) abort "{{{
     if a:0 > 0 && !empty(a:1) && exists('s:load')
         unlet s:load
         return 0
@@ -82,13 +81,13 @@ function! class#messager#load(...) abort "{{{
 endfunction "}}}
 
 " TEST:
-function! class#messager#test(...) abort "{{{
+function! class#viml#messager#test(...) abort "{{{
     if a:0 == 0
-        :ELOG 'class#messager#test need command argument'
+        :ELOG 'class#viml#messager#test need command argument'
         return
     endif
     let l:command = join(a:000)
-    let l:obj = class#messager#new(l:command)
+    let l:obj = class#viml#messager#new(l:command)
     :LOG 'capture ' . l:command
     echo l:obj.Capture()
 

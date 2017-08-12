@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: the basic data structure of maze
 " Create: 2017-06-29
-" Modify: 2017-07-28
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -49,13 +49,12 @@ endfunction "}}}
 
 " NEW:
 function! class#fantasy#maze#base#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
 function! class#fantasy#maze#base#ctor(this, ...) abort "{{{
-    " let l:Suctor = s:class._suctor_()
+    " let l:Suctor = class#Suctor(s:class)
     " call l:Suctor(a:this)
     let a:this.room = []
     let a:this.hwall = []
@@ -73,8 +72,7 @@ endfunction "}}}
 
 " OLD:
 function! class#fantasy#maze#base#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
@@ -105,7 +103,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#fantasy#maze#base#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " DrawMap: 

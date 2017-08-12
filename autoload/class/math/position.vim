@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: like point(x, y) but used as (row, col), more like point(y, x)
 " Create: 2017-07-06
-" Modify: 2017-07-06
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -28,8 +28,7 @@ function! class#math#position#new(...) abort "{{{
         return v:none
     endif
 
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -40,7 +39,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#math#position#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " LOAD:

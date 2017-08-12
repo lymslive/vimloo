@@ -2,33 +2,32 @@
 " Author: lymslive
 " Description: create VimL class file by template
 " Create: 2017-02-11
-" Modify: 2017-02-11
+" Modify: 2017-08-06
 
 " Class Definiation: {{{1
 let s:class = class#old()
-let s:class._name_ = 'class#builder'
+let s:class._name_ = 'class#viml#builder'
 let s:class._version_ = 1
 let s:class.ClassName = ''
 let s:class.TempName = ''
 
-echom 'class#builder load ...'
+echom 'class#viml#builder load ...'
 
-function! class#builder#class() abort "{{{
+function! class#viml#builder#class() abort "{{{
     return s:class
 endfunction "}}}
 
-function! class#builder#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+function! class#viml#builder#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
-function! class#builder#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0
-        let a:this.ClassName = a:argv[0]
+function! class#viml#builder#ctor(this, ...) abort "{{{
+    if a:0 > 0
+        let a:this.ClassName = a:1
     endif
-    if len(a:argv) > 1
-        let a:this.TempName = a:argv[1]
+    if a:0 > 1
+        let a:this.TempName = a:2
     else
         let a:this.TempName = s:tempclass
     endif
@@ -178,7 +177,7 @@ endfunction "}}}
 
 " FullTempFile: 
 function! s:class.FullTempFile() dict abort "{{{
-    return s:pScript . '/../' . self.TempName . '.vim'
+    return s:pScript . '/../../' . self.TempName . '.vim'
 endfunction "}}}
 
 " Script Local Variable: {{{1
@@ -191,7 +190,7 @@ else
 endif
 
 " TEST: 
-function! class#builder#test() abort "{{{
+function! class#viml#builder#test() abort "{{{
     echo s:FullTempFile()
     return 1
 endfunction "}}}

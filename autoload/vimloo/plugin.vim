@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: global command defined for vimloo
 " Create: 2017-02-11
-" Modify: 2017-08-01
+" Modify: 2017-08-04
 
 " Generate class frame code from template class file.
 " :ClassNew will create a new file;
@@ -37,7 +37,9 @@ command! -nargs=* -complete=file ClassTest call cmass#director#hClassTest(<f-arg
 command! -nargs=* -complete=file ClassDebug call cmass#director#hClassDebug(<f-args>)
 
 " display an overview of a class, use full class name with #
-command! -nargs=1 ClassView execute 'call ' . <q-args> . '#class().echo()'
+command! -nargs=* -complete=file ClassView call cmass#director#hClassView(<f-args>)
+" rename class file, fix calss#function
+command! -nargs=* -complete=file ClassRename call cmass#director#hClassRename(<f-args>)
 
 " display the last message in qf or local window
 command! -nargs=0 -count=5 MessageQ call cmass#director#MessageRefix(<count>, 'qf')

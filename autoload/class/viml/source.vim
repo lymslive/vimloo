@@ -2,12 +2,14 @@
 " Author: lymslive
 " Description: a viml script objcet
 " Create: 2017-02-28
-" Modify: 2017-02-28
+" Modify: 2017-08-05
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
+
+let s:CMessager = class#use('class#viml#messager')
 
 " CLASS:
 let s:class = class#old()
@@ -23,15 +25,14 @@ endfunction "}}}
 
 " NEW:
 function! class#viml#source#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
 " CTOR:
-function! class#viml#source#ctor(this, argv) abort "{{{
-    if len(a:argv) > 0 && filereadable(a:argv[0])
-        let a:this.path = resolve(a:argv[0])
+function! class#viml#source#ctor(this, ...) abort "{{{
+    if a:0 > 0 && filereadable(a:1)
+        let a:this.path = resolve(a:1)
     else
         :ELOG 'class#viml#source need a full path'
     endif
@@ -40,7 +41,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#viml#source#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " SID: 
@@ -50,7 +51,7 @@ function! s:class.SID() dict abort "{{{
     endif
 
     " :LOG 'self.path = ' . self.path
-    let l:jMsg = class#messager#new('scriptnames')
+    let l:jMsg = s:CMessager.new('scriptnames')
     let l:lsOutPut = l:jMsg.CaptureList()
     let l:filename = fnamemodify(self.path, ':t')
     call filter(l:lsOutPut, 'v:val =~# l:filename')
@@ -119,7 +120,7 @@ function! s:class.ExportFunction() dict abort "{{{
         if l:sFunction =~ '#'
             let l:lsPath = split(l:sFunction, '#')
             let l:sKey = remove(l:lsPath, -1)
-            let l:sFullName = l:lsPath
+            let l:sFullName = l:sFunction
             let l:dFunc = {'type': '#', 'name': l:sKey, 'func': function(l:sFullName)}
             let l:dExport[l:sFunction] = l:dFunc 
             continue

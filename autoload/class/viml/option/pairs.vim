@@ -1,12 +1,12 @@
-" Class: class#option#pairs
+" Class: class#viml#option#pairs
 " Author: lymslive
 " Description: option with argument
 " Create: 2017-02-13
-" Modify: 2017-04-08
+" Modify: 2017-08-05
 
 " BASIC:
-let s:class = class#option#single#old()
-let s:class._name_ = 'class#option#pairs'
+let s:class = class#viml#option#single#old()
+let s:class._name_ = 'class#viml#option#pairs'
 let s:class._version_ = 1
 
 " the argument for this option
@@ -16,37 +16,39 @@ let s:class.HasDefault = g:class#FALSE
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
-function! class#option#pairs#class() abort "{{{
+function! class#viml#option#pairs#class() abort "{{{
     return s:class
 endfunction "}}}
 
-" CTOR: 4 arguments
-function! class#option#pairs#ctor(this, argv) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this, a:argv[0:2])
-    if len(a:argv) > 3
-        let a:this.HasDefault = v:true
-        let a:this.Default = a:argv[3]
-    endif
-endfunction "}}}
-
 " NEW:
-function! class#option#pairs#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000)
+function! class#viml#option#pairs#new(...) abort "{{{
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 
+" CTOR: 4 arguments
+function! class#viml#option#pairs#ctor(this, ...) abort "{{{
+    if a:0 < 3
+        echoerr '[class#viml#option#pairs] expcet at least 3 arguments: (Char, Name, Desc)'
+        return
+    endif
+    let l:Suctor = class#Suctor(s:class)
+    call l:Suctor(a:this, a:1, a:2, a:3)
+    if a:0 > 3
+        let a:this.HasDefault = v:true
+        let a:this.Default = a:4
+    endif
+endfunction "}}}
+
 " OLD:
-function! class#option#pairs#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+function! class#viml#option#pairs#old() abort "{{{
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " ISOBJECT:
-function! class#option#pairs#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+function! class#viml#option#pairs#isobject(that) abort "{{{
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " Must: 
@@ -94,11 +96,11 @@ function! s:class.string(...) dict abort "{{{
 endfunction "}}}
 
 " LOAD:
-function! class#option#pairs#load() abort "{{{
+function! class#viml#option#pairs#load() abort "{{{
     return 1
 endfunction "}}}
 
 " TEST:
-function! class#option#pairs#test() abort "{{{
+function! class#viml#option#pairs#test() abort "{{{
     return 1
 endfunction "}}}

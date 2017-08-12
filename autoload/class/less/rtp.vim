@@ -2,10 +2,13 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-08-04
+" Modify: 2017-08-05
 
-" MODULE:
 let s:class = {}
+function! class#less#rtp#export() abort "{{{
+    return s:class
+endfunction "}}}
+
 let s:class.separator = fnamemodify('.', ':p')[-1:]
 
 if has('win32') || has('win64') || has('win16') || has('win95')
@@ -180,8 +183,4 @@ function! s:class.FixrtpDir(pDirectory) dict abort "{{{
     endif
 endfunction "}}}
 
-" IMPORT:
-function! module#less#rtp#import() abort "{{{
-    return s:class
-endfunction "}}}
 

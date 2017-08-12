@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: deal with a text file
 " Create: 2017-03-22
-" Modify: 2017-07-20
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -24,8 +24,7 @@ endfunction "}}}
 
 " NEW: new(path)
 function! class#textfile#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -40,14 +39,13 @@ endfunction "}}}
 
 " OLD:
 function! class#textfile#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
 " ISOBJECT:
 function! class#textfile#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " string: represent file path

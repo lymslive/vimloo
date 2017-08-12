@@ -3,7 +3,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-07-28
+" Modify: 2017-08-10
 
 "LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
@@ -21,86 +21,90 @@ endfunction "}}}
 
 " NEW: -n
 function! tempclass#new(...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR: -c
 function! tempclass#ctor(this, ...) abort "{{{
-    let l:Suctor = s:class._suctor_()
-    call l:Suctor(a:this)
+    let l:Suctor = class#Suctor(s:class)
+    call call(l:Suctor, extend([a:this], a:000))
 endfunction "}}}
 
 " DECTOR: -D
 function! tempclass#dector(this) abort "{{{
 endfunction "}}}
 
-" COPY: -P
-function! tempclass#copy(that, ...) abort "{{{
-    let l:obj = copy(s:class)
-    call l:obj._copy_(a:that)
-    return l:obj
-endfunction "}}}
-
 " OLD: -O
 function! tempclass#old() abort "{{{
-    let l:class = copy(s:class)
-    call l:class._old_()
+    let l:class = class#old(s:class)
     return l:class
 endfunction "}}}
 
-" MERGE: -M
-function! tempclass#merge(that) abort "{{{
-    call a:that._merge_(s:class)
+" MASTER: -M
+function! tempclass#master(that, ...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        call class#AsMaster(a:that, s:class, a:1)
+    else
+        call class#AddMaster(a:that, s:class)
+    endif
+endfunction "}}}
+
+" FATHER: -F
+function! tempclass#father(that, ...) abort "{{{
+    if a:0 > 0 && !empty(a:1)
+        call class#AsFather(a:that, s:class, a:1)
+    else
+        call class#AddFather(a:that, s:class)
+    endif
 endfunction "}}}
 
 " ISOBJECT: -s
 function! tempclass#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " ISA: -S
 function! tempclass#isa(that) abort "{{{
-    return s:class._isa_(a:that)
+    return class#isa(s:class, a:that)
 endfunction "}}}
 
 " INSTANCE: -I
-let s:instance = {}
+" let s:instance = {}
 function! tempclass#instance() abort "{{{
-    if empty(s:instance)
-        let s:instance = class#new('tempclass')
+    if !exists('s:instance')
+        let s:instance = class#new(s:class)
     endif
     return s:instance
 endfunction "}}}
 
 " CONVERSION: -X
 function! s:class.string() dict abort "{{{
-    return self._name_
+    return self._class_._name_
 endfunction "}}}
 function! s:class.number() dict abort "{{{
-    return self._version_
+    return self._class_._version_
 endfunction "}}}
 
-" IMPORT: -Z
-function! tempclass#import() abort "{{{
-    let l:class = {}
-    let l:class.class = s:class
-    let l:class.new = function('tempclass#new')
-    return l:class
+" VIEW: -V
+function! s:class.disp() dict abort "{{{
+    echo self.string() . ':' . self.number()
+endfunction "}}}
+
+" USE: -U
+function! tempclass#use(...) abort "{{{
+    return class#use(s:class, a:000)
 endfunction "}}}
 
 " LOAD: -l
 let s:load = 1
-:DLOG '-1 tempclass is loading ...'
 function! tempclass#load(...) abort "{{{
-    if a:0 > 0 && !empty(a:1) && exists('s:load')
-        unlet s:load
-        return 0
+    if a:0 > 0 && !empty(a:1)
+        unlet! s:load
     endif
-    return s:load
 endfunction "}}}
 
 " TEST: -t
 function! tempclass#test(...) abort "{{{
-    return 0
+    let l:obj = tempclass#new()
+    call class#echo(l:obj)
 endfunction "}}}

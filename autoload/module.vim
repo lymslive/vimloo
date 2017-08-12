@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module manager
 " Create: 2017-02-27
-" Modify: 2017-02-27
+" Modify: 2017-08-05
 
 let s:class = {}
 let s:class.basedir = 'module'
@@ -86,7 +86,7 @@ function! s:ParseImport(pScriptFile, lsOption) abort "{{{
     let l:list = module#less#list#import()
     let l:lsOption = l:list.Flat(a:lsOption, -1)
 
-    let l:jOption = class#cmdline#new('Module module-name ...')
+    let l:jOption = class#viml#cmdline#new('Module module-name ...')
     call l:jOption.AddSingle('S', 'nolocal', 'donot import script localed function')
     call l:jOption.AddSingle('g', 'global', 'also import global function')
     call l:jOption.AddSingle('n', 'pattern', 'only load these matched name')

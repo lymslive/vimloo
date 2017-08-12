@@ -3,7 +3,7 @@
 " Description: travel problem in full complete graph
 " Refer: https://en.wikipedia.org/wiki/Travelling_salesman_problem
 " Create: 2017-08-02
-" Modify: 2017-08-02
+" Modify: 2017-08-04
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -27,8 +27,7 @@ function! class#graph#travel#new(...) abort "{{{
         : ELOG '[#graph#travel] expect a graph object'
         return v:none
     endif
-    let l:obj = copy(s:class)
-    call l:obj._new_(a:000, 1)
+    let l:obj = class#new(s:class, a:000)
     return l:obj
 endfunction "}}}
 " CTOR:
@@ -38,7 +37,7 @@ endfunction "}}}
 
 " ISOBJECT:
 function! class#graph#travel#isobject(that) abort "{{{
-    return s:class._isobject_(a:that)
+    return class#isobject(s:class, a:that)
 endfunction "}}}
 
 " LowBound: 
