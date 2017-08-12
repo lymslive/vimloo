@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-06
-" Modify: 2017-08-07
+" Modify: 2017-08-12
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -22,6 +22,7 @@ let s:class.header = []
 let s:class.cell = []
 
 let s:class._master_ = ['class#more#matrix']
+let s:class._static_ = ['Column2Letter', 'Letter2Column']
 
 function! class#textfile#csv#class() abort "{{{
     return s:class
@@ -44,6 +45,12 @@ function! class#textfile#csv#ctor(this, path, ...) abort "{{{
         let a:this.headNum = a:1 + 0
     endif
     call a:this.ParseFile()
+endfunction "}}}
+
+" OLD:
+function! class#textfile#csv#old() abort "{{{
+    let l:class = class#old(s:class)
+    return l:class
 endfunction "}}}
 
 " ISOBJECT:
@@ -91,6 +98,23 @@ function! s:class.ParseFile(...) dict abort "{{{
         call self.HashTitle()
     endif
 
+    return self
+endfunction "}}}
+
+" HeadLine: 
+" set head lines of csv, or split if already parsed
+function! s:class.HeadLine(number) dict abort "{{{
+    if empty(self.cell)
+        let self.headNum = a:number
+        return self.ParseFile()
+    else
+        if a:number < len(self.cell)
+            let self.header = remove(self.cell, 0, a:number-1)
+            let self.headNum = a:number
+        else
+            : ELOG '[class#textfile#csv.HeadLine] two many head line?'
+        endif
+    endif
     return self
 endfunction "}}}
 
