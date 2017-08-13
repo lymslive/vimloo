@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-08-05
+" Modify: 2017-08-13
 
 let s:class = {}
 function! class#less#rtp#export() abort "{{{
@@ -10,6 +10,7 @@ function! class#less#rtp#export() abort "{{{
 endfunction "}}}
 
 let s:class.separator = fnamemodify('.', ':p')[-1:]
+let s:class.slash = s:class.separator
 
 if has('win32') || has('win64') || has('win16') || has('win95')
     let s:class.os =  'win'

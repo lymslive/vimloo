@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: a tree with many children
 " Create: 2017-08-02
-" Modify: 2017-08-03
+" Modify: 2017-08-13
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -37,6 +37,26 @@ endfunction "}}}
 " ISOBJECT:
 function! class#tree#branch#isobject(that) abort "{{{
     return s:class._isobject_(a:that)
+endfunction "}}}
+
+" IsRoot: 
+function! s:class.IsRoot() dict abort "{{{
+    return !has_key(self, 'parent') || empty(self.parent)
+endfunction "}}}
+
+" IsLeaf: 
+function! s:class.IsLeaf() dict abort "{{{
+    return !has_key(self, 'children') || empty(self.children)
+endfunction "}}}
+
+" PathUpward: 
+function! s:class.PathUpward() dict abort "{{{
+    let l:node = self
+    let l:lsPath = [l:node]
+    while has_key(l:node, 'parent') && !empty(l:node.parent)
+        call add(l:lsPath, l:node.parent)
+        let l:node = l:node.parent
+    endwhile
 endfunction "}}}
 
 " LOAD:
