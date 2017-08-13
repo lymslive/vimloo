@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-06
-" Modify: 2017-08-07
+" Modify: 2017-08-13
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -43,7 +43,7 @@ function! class#textfile#csv#ctor(this, path, ...) abort "{{{
     if a:0 > 0 && !empty(a:1)
         let a:this.headNum = a:1 + 0
     endif
-    call a:this.ParseFile()
+    " call a:this.ParseFile()
 endfunction "}}}
 
 " ISOBJECT:
@@ -53,6 +53,14 @@ endfunction "}}}
 
 " matrix: 
 function! s:class.matrix() dict abort "{{{
+    return self.GetCell()
+endfunction "}}}
+
+" GetCell: 
+function! s:class.GetCell() dict abort "{{{
+    if empty(self.cell)
+        call self.ParseFile()
+    endif
     return self.cell
 endfunction "}}}
 
