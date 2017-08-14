@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: funtions deal with current cursor
 " Create: 2017-03-09
-" Modify: 2017-08-05
+" Modify: 2017-08-12
 
 let s:class = {}
 function! class#less#cursor#export() abort "{{{
@@ -29,6 +29,13 @@ function! s:class.GetWord(...) dict abort "{{{
     let l:word = expand('<cword>')
     let &l:iskeyword = l:opSave
     return l:word
+endfunction "}}}
+
+" GetChar: get the single char under cursor
+function! s:class.GetChar() dict abort "{{{
+    let l:sLine = getline('.')
+    let l:iColumn = col('.')
+    return l:sLine(l:iColumn - 1)
 endfunction "}}}
 
 " SplitLine: split line into three parts by cursor

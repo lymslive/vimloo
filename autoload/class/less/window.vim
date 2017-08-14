@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-27
-" Modify: 2017-08-05
+" Modify: 2017-08-13
 
 let s:class = {}
 function! class#less#window#export() abort "{{{
@@ -73,4 +73,41 @@ function! s:class.FindTabpage(varname, value) dict abort "{{{
         endif
     endfor
     return 0
+endfunction "}}}
+
+" FindWindow: find a window by bufnr name or bufnr
+" > a:1, bOtherTab, also find in other tab
+" < return winnr
+" < return [tabnr, winnr] if bOtherTab
+" < return empty if not found
+" when this function finish, will back to origin tab&win
+function! s:class.FindBufwinnr(buffer, ...) dict abort "{{{
+    let l:iWindow = bufwinnr(a:buffer)
+    if l:iWindow != -1
+        return l:iWindow
+    endif
+
+    let l:bOtherTab = get(a:000, 0, v:false)
+    if !l:bOtherTab
+        return 0
+    endif
+
+    let l:iTabOld = tabpagenr()
+    let l:Ret = []
+    for l:tab in range(1, tabpagenr('$'))
+        if l:tab == l:iTabOld
+            continue
+        endif 
+
+        : execute l:tab . 'tabnext'
+
+        let l:win = bufwinnr(a:buffer)
+        if l:iWindow != -1
+            let l:Ret = [l:tab, l:win]
+            break
+        endif
+    endfor
+
+    : execute l:iTabOld . 'tabnext'
+    return l:Ret
 endfunction "}}}
