@@ -119,6 +119,7 @@ function! s:class.HeadLine(number) dict abort "{{{
         if a:number < len(self.cell)
             let self.header = remove(self.cell, 0, a:number-1)
             let self.headNum = a:number
+            call self.HashTitle()
         else
             : ELOG '[class#textfile#csv.HeadLine] two many head line?'
         endif
