@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-12
-" Modify: 2017-08-12
+" Modify: 2017-08-14
 
 " LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -210,7 +210,7 @@ function! s:class.Fillout(content, ...) dict abort "{{{
         endfor
 
         " update the row line in l:mtChar
-        let l:sRowStr = s:BORDER.VSIDE . join(l:lsSapce, s:BORDER.VSIDE) . s:BORDER.VSIDE
+        let l:sRowStr = s:BORDER.VSIDE . join(l:lsSpace, s:BORDER.VSIDE) . s:BORDER.VSIDE
         let l:mtChar[l:iLineIndex] = l:sRowStr
 
         " move to next space line
@@ -261,7 +261,8 @@ function! s:FillValue(value, length) abort "{{{
         let l:str = strpart(l:str, 0, a:length - 3)
         let l:str = ' ' . l:str . '..'
     else
-        let l:str = ' ' . l:str . ' '
+        let l:iSpacePost = a:length - len(l:str) - 1
+        let l:str = ' ' . l:str . repeat(' ', l:iSpacePost)
     endif
 
     return l:str

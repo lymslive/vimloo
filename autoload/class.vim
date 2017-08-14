@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-06
+" Modify: 2017-08-14
 
 if exists('s:load') && !exists('g:DEBUG')
     finish
@@ -145,7 +145,7 @@ function! class#new(...) abort "{{{
         let l:Ctor = function(l:class._name_ . '#ctor')
         let l:argv = extend([l:obj], l:argv)
         call call(l:Ctor, l:argv)
-    catch 
+    catch /E117/
         " no #ctor is allowed
     endtry
 

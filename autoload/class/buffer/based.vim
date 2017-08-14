@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-13
-" Modify: 2017-08-13
+" Modify: 2017-08-14
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -63,6 +63,21 @@ function! s:class.RegTabvar(tabvar) dict abort "{{{
     let t:[a:tabvar] = self
 endfunction "}}}
 
+" list: return the buffer content as list of lines string
+" NOTE: getbufline() only valid for loaded buffer
+function! s:class.list() dict abort "{{{
+    if bufloaded(self.bufnr)
+        return getbufline(self.bufnr, 1, '$')
+    else
+        let l:bufnr = bufnr('%')
+        : update
+        : execute 'buffer ' . self.bufnr
+        let l:lsContent = getbufline(self.bufnr, 1, '$')
+        : execute 'buffer ' . l:bufnr
+        return l:lsContent
+    endif
+endfunction "}}}
+
 " Focus: 
 function! s:class.Focus(...) dict abort "{{{
     if bufnr('%') == self.bufnr
@@ -71,7 +86,7 @@ function! s:class.Focus(...) dict abort "{{{
 
     " load buffer in current window
     if a:0 == 0 || empty(a:1)
-        : execute 'buffer .' self.bufnr
+        : execute 'buffer ' self.bufnr
         return self
     endif
 

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-06
-" Modify: 2017-08-13
+" Modify: 2017-08-14
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -71,18 +71,36 @@ function! s:class.GetCell() dict abort "{{{
     return self.cell
 endfunction "}}}
 
+" GetSize: return [rows, cols] as size
+function! s:class.GetSize() dict abort "{{{
+    let l:cell = self.GetCell()
+    if empty(l:cell)
+        return [0, 0]
+    endif
+
+    let l:rows = len(l:cell)
+    if empty(l:cell[0])
+        let l:cols = 0
+    else
+        let l:cols = len(l:cell[0])
+    endif
+
+    return [l:rows, l:cols]
+endfunction "}}}
+
 " ParseFile: 
 " a:1, force re-parse
 function! s:class.ParseFile(...) dict abort "{{{
     if !empty(self.cell)
         if a:0 < 1 || empty(a:1)
-            :WLOG '[class#textfile#csv.ParseFile] already parsed'
+            : WLOG '[class#textfile#csv.ParseFile] already parsed'
             return self
         endif
     endif
 
     let l:lsContent = self.list()
     if empty(l:lsContent)
+        : ELOG 'csv.ParseFile: empty input content?'
         return self
     endif
 
@@ -95,11 +113,12 @@ function! s:class.ParseFile(...) dict abort "{{{
     while l:idx < l:iEnd
         let l:sLine = l:lsContent[l:idx]
         let l:row = split(l:sLine, ',')
-        if l:idex < self.headNum
+        if l:idx < self.headNum
             call add(self.header, l:row)
         else
             call add(self.cell, l:row)
         endif
+        let l:idx += 1
     endwhile
 
     if self.headNum > 0
@@ -149,6 +168,11 @@ endfunction "}}}
 
 " Letter2Column: 
 function! s:class.Letter2Column(letter) dict abort "{{{
+    if a:letter !~? '^[A-Z]$'
+        : ELOG '[csv.Letter2Column] only accept letter string'
+        return -1
+    endif
+
     let l:idx = 0
     let l:col = 0
     let l:letter = toupper(a:letter)
