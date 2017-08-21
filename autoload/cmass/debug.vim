@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-08-14
-" Modify: 2017-08-14
+" Modify: 2017-08-15
 
 let g:DEBUG = 1
 
@@ -15,7 +15,7 @@ let s:pattern.function_local = '^s:\zs\h\w\+\ze$'
 let s:pattern.function_dict = '^\(.\+\)\.\(\h\w\+\)$'
 
 " ClassBreak: add break in current function or script line
-function! cmass#debug#hClassBreak() abort "{{{
+function! cmass#debug#hClassBreak(...) abort "{{{
     let l:sLine = getline('.')
 
     let l:sFunction = matchstr(l:sLine, s:pattern.function_name)

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: global command defined for vimloo
 " Create: 2017-02-11
-" Modify: 2017-08-14
+" Modify: 2017-08-15
 
 " Generate class frame code from template class file.
 " :ClassNew will create a new file;
@@ -36,11 +36,6 @@ command! -nargs=* -complete=file ClassLoad call cmass#director#hClassLoad(<f-arg
 command! -nargs=* -complete=file ClassTest call cmass#director#hClassTest(<f-args>)
 command! -nargs=* -complete=file ClassDebug call cmass#director#hClassDebug(<f-args>)
 
-" :B
-" :ClassBreak break at current line, parsing function context
-command! -nargs=0 ClassBreak call cmass#debug#hClassBreak()
-command! -nargs=0 B call cmass#debug#hClassBreak()
-
 " display an overview of a class, use full class name with #
 command! -nargs=* -complete=file ClassView call cmass#director#hClassView(<f-args>)
 " rename class file, fix calss#function
@@ -68,4 +63,9 @@ function! vimloo#plugin#ftvim() abort "{{{
     augroup END
 
     nnoremap <buffer> g<C-]> :call edit#vim#GotoDefineFunc()<CR>
+
+    " :B
+    " :ClassBreak break at current line, parsing function context
+    command! -nargs=* -buffer ClassBreak call cmass#debug#hClassBreak(<f-args>)
+    command! -nargs=* -buffer B call cmass#debug#hClassBreak(<f-args>)
 endfunction "}}}

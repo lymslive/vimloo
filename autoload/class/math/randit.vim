@@ -4,7 +4,7 @@
 "   each time call Next(), generate a rand number with no repeat and
 "   after maxint times, output 0 marked as the end
 " Create: 2017-07-06
-" Modify: 2017-08-04
+" Modify: 2017-08-21
 
 "LOAD:
 if exists('s:load') && !exists('g:DEBUG')
@@ -17,6 +17,7 @@ let s:class._name_ = 'class#math#randit'
 let s:class._version_ = 1
 
 let s:class.maxint = 10
+let s:class.yield = 0
 
 function! class#math#randit#class() abort "{{{
     return s:class
@@ -51,6 +52,7 @@ function! s:class.Reset(maxint) dict abort "{{{
 
     let self._range = range(1, self.maxint)
     let self._random = class#math#random#new()
+    let self.yield = 0
     return self
 endfunction "}}}
 
@@ -60,13 +62,29 @@ function! s:class.Next() dict abort "{{{
         return 0
     endif
 
-    let l:idx = self._random.Rand(len(self._range))
-    return remove(self._range, l:idx)
+    let l:length = len(self._range)
+    let l:idx = self._random.Rand(l:length - self.yield)
+    let l:val = self._range[l:idx]
+    let self.yield += 1
+
+    " keep self._range array, just swap value
+    let l:FList = class#less#list#export()
+    call l:FList.Swap(self._range, l:idx, l:length - self.yield)
+
+    return l:val
 endfunction "}}}
 
 " Empty: 
 function! s:class.Empty() dict abort "{{{
-    return empty(self._range)
+    return len(self._range) - self.yield <= 0
+endfunction "}}}
+
+" list: return the whole randed list
+function! s:class.list() dict abort "{{{
+    while !self.Empty()
+        call self.Next()
+    endwhile
+    return self._range
 endfunction "}}}
 
 " LOAD:
@@ -86,6 +104,9 @@ function! class#math#randit#test(...) abort "{{{
     for _ in range(10)
         echo l:it.Next()
     endfor
+    echo l:it.list()
+    let l:it = class#math#randit#new(10)
+    echo l:it.list()
 
     echo '---'
     let l:it = class#math#randit#new(16)
@@ -94,6 +115,9 @@ function! class#math#randit#test(...) abort "{{{
         echo l:rand
         let l:rand = l:it.Next()
     endwhile
+    echo l:it.list()
+    let l:it = class#math#randit#new(16)
+    echo l:it.list()
 
     return 0
 endfunction "}}}
