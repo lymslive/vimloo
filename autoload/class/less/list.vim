@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame, list util
 " Create: 2017-02-25
-" Modify: 2017-08-05
+" Modify: 2018-05-01
 
 let s:class = {}
 function! class#less#list#export() abort "{{{
@@ -66,7 +66,31 @@ function! s:class.Flat(lsArgv, ...) dict abort "{{{
     return l:lsRet
 endfunction "}}}
 
+" Prompt: return a string than can be used in prompt, as:
+" 0 \t item[0]
+" 1 \t item[1]
+function! s:class.PromptString(list) dict abort "{{{
+    let l:lsOutput = []
+    let l:iPrefix = 0
+    for l:item in a:list
+        call add(l:lsOutput, printf("%d\t%s", l:iPrefix, l:item))
+        let l:iPrefix += 1
+    endfor
+    return join(l:lsOutput, "\n")
+endfunction "}}}
+
 " TEST:
-function! module#less#list#test(...) abort "{{{
+function! class#less#list#test(...) abort "{{{
+    call s:testPromptList()
     return 0
+endfunction "}}}
+
+" testPrompt: 
+function! s:testPromptList() abort "{{{
+    let l:list = ['aaaaa', 'bbbbb', 'ccccc']
+    let l:display = s:class.PromptString(l:list)
+    echo l:display
+    let l:reply = input('Select: ', 0)
+    let l:result = l:list[0+l:reply]
+    echo 'you have select:' l:result
 endfunction "}}}

@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame
 " Create: 2017-02-28
-" Modify: 2017-08-13
+" Modify: 2018-05-02
 
 let s:class = {}
 function! class#less#rtp#export() abort "{{{
@@ -11,6 +11,9 @@ endfunction "}}}
 
 let s:class.separator = fnamemodify('.', ':p')[-1:]
 let s:class.slash = s:class.separator
+
+" indicator of a prjoect dir, which should has any of subdir in the list
+let s:class.prjdir = ['.git', '.svn', '.vim']
 
 if has('win32') || has('win64') || has('win16') || has('win95')
     let s:class.os =  'win'
@@ -184,4 +187,90 @@ function! s:class.FixrtpDir(pDirectory) dict abort "{{{
     endif
 endfunction "}}}
 
+" FindAoptScript: find {path#to#script} in 
+" ~/.vim/pack/*user/opt that not in &rtp
+" a:1, indicate how action when find more than one
+" 0=return the first one, 1=ask user select with one, 2=return all as list
+function! s:class.FindAoptScript(name, ...) dict abort "{{{
+    let l:name = substitute(a:name, '#', self.separator, 'g')
+    let l:name .= '.vim'
+    if l:name !~# '^autoload'
+        let l:name = self.PutPath(l:name, 'autoload')
+    endif
 
+    let l:sPattern = self.MakePath('pack', '*', 'opt', '*', l:name)
+    let l:lsGlob = globpath(&packpath, l:name, 0, 1)
+
+    if empty(l:lsGlob)
+        return ''
+    elseif len(l:lsGlob) == 1
+        return l:lsGlob[0]
+    else
+        if a:0 < 1 || empty(a:1)
+            return l:lsGlob[0]
+        elseif a:1 == 1
+            let l:exlist = class#less#list#export()
+            let l:display = l:exlist.PromptString(l:lsGlob)
+            echo l:display
+            let l:reply = input('Select: ', 0)
+            return l:lsGlob[0+l:reply]
+        elseif a:1 == 2
+            return l:lsGlob
+        endif
+    endif
+
+    return ''
+endfunction "}}}
+
+" SetProjectFlag: 
+function! s:class.SetProjectFlag(...) dict abort "{{{
+    if a:0 == 0 || empty(a:1)
+        return self.prjdir
+    elseif a:0 == 1
+        if type(a:1) == type('')
+            let self.prjdir = [a:1]
+        elseif type(a:1) == type([])
+            let self.prjdir = a:1
+        else
+            echoerr 'invalid argument type for project dir'
+        endif
+    else
+        let self.prjdir = a:000
+    endif
+endfunction "}}}
+
+" FindPrject: look upwords for project dir, with special flag dir in it
+" a:1 = empty, from current directory
+" a:1 = '.', from the directory of current file editing
+" a:1 = other, use this argument as start directory
+function! s:class.FindPrject(...) dict abort "{{{
+    if a:0 == 0 || empty(a:1)
+        let l:startDir = getcwd()
+    elseif a:1 == '.'
+        let l:startDir = expand('%:p:h')
+    else
+        let l:startDir = a:1
+    endif
+
+    let l:currDir = l:startDir
+    let l:lastDir = ''
+    while len(l:currDir) > 0 && l:currDir != l:lastDir
+        for l:flagDir in self.prjdir
+            if isdirectory(self.AddPath(l:currDir, l:flagDir))
+                return l:currDir
+            endif
+        endfor
+
+        let l:lastDir = l:currDir
+        let l:currDir = fnamemodify(l:currDir, ':h')
+    endwhile
+
+    return ''
+endfunction "}}}
+
+" TEST:
+function! class#less#rtp#test(...) abort "{{{
+    echo s:class.prjdir
+    echo s:class.FindPrject()
+    echo s:class.FindPrject('.')
+endfunction "}}}

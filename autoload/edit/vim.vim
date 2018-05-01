@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: implement for ftplugin/vim.vim
 " Create: 2017-03-08
-" Modify: 2017-03-13
+" Modify: 2018-05-02
 
 " UpdateModity: 
 " automatically update the Modify time in the commet header
@@ -29,21 +29,42 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
         let l:name = a:1
     endif
 
+    " the #function is in current file?
+    let l:sPattern = '^\s*fu[nction]*!\?\s\+%s'
+    let l:sPattern = printf(l:sPattern, l:name)
+    if search(l:sPattern, 'cew') > 0
+        return line('.')
+    endif
+
     let l:lsPart = split(l:name, '#')
     let l:sFuncName = remove(l:lsPart, -1)
     let l:sAutoName = join(l:lsPart, '#')
 
-    let l:rtp = module#less#rtp#import()
+    " find in &rtp
+    let l:rtp = class#less#rtp#export()
     let l:pScriptFile = l:rtp.FindAutoScript(l:sAutoName)
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
-        let l:cmd = 'edit +/%s %s'
-        let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
-        execute l:cmd
+        # let l:cmd = 'edit +/%s %s'
+        # let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
+        execute 'eidt' l:pScriptFile
+        if search(l:sPattern, 'cew') <= 0
+            :ELOG 'cannot find function: ' . l:name
+        endif
         return line('.')
-    else
-        :ELOG 'cannot find function: ' . l:name
-        return 0
     endif
+
+    " find in &packpath/opt
+    let l:pScriptFile = l:rtp.FindAoptScript(l:sAutoName, 1)
+    if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
+        execute 'eidt' l:pScriptFile
+        if search(l:sPattern, 'cew') <= 0
+            :ELOG 'cannot find function: ' . l:name
+        endif
+        return line('.')
+    endif
+
+    :ELOG 'cannot find function: ' . l:name
+    return 0
 endfunction "}}}
 
 " GotoLocalFunc: s:Func
@@ -64,7 +85,7 @@ function! edit#vim#GotoLocalFunc(...) abort "{{{
 endfunction "}}}
 
 " GotoClassFunc: s:class.Func
-function! edit#vim#GotoClassFunc(...) dict abort "{{{
+function! edit#vim#GotoClassFunc(...) abort "{{{
     if a:0 == 0 || empty(a:1)
         let l:name = expand('<cword>')
     else
