@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: base class for vimL
 " Create: 2017-02-07
-" Modify: 2017-08-14
+" Modify: 2017-11-27
 
 if exists('s:load') && !exists('g:DEBUG')
     finish
@@ -184,7 +184,7 @@ function! class#old(...) abort "{{{
         let l:class._master_ = a:2
     endif
     if a:0 >= 3 && type(a:3) == type([])
-        let l:class._master_ = a:3
+        let l:class._father_ = a:3
     endif
 
     return l:class

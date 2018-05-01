@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: VimL module frame, list util
 " Create: 2017-02-25
-" Modify: 2018-05-01
+" Modify: 2017-08-21
 
 let s:class = {}
 function! class#less#list#export() abort "{{{
@@ -64,6 +64,17 @@ function! s:class.Flat(lsArgv, ...) dict abort "{{{
     endfor
 
     return l:lsRet
+endfunction "}}}
+
+" Swap: swap two items in list
+" not check index beyond range, let it go die in that case
+function! s:class.Swap(list, idx, jdx) dict abort "{{{
+    if a:idx == a:jdx
+        return
+    endif
+    let l:tmp = a:list[a:idx]
+    let a:list[a:idx] = a:list[a:jdx]
+    let a:list[a:jdx] = l:tmp
 endfunction "}}}
 
 " Prompt: return a string than can be used in prompt, as:
