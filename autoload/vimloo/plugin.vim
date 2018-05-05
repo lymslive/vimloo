@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: global command defined for vimloo
 " Create: 2017-02-11
-" Modify: 2017-08-15
+" Modify: 2018-05-02
 
 " Generate class frame code from template class file.
 " :ClassNew will create a new file;
@@ -57,10 +57,12 @@ function! vimloo#plugin#ftvim() abort "{{{
     setlocal iskeyword+=#
     setlocal iskeyword+=:
 
-    augroup EDIT_VIM
-        autocmd! * <buffer>
-        autocmd BufWritePre <buffer> call edit#vim#UpdateModity()
-    augroup END
+    if exists('g:vimloo_ftplugin_autocmd')
+        augroup EDIT_VIM
+            autocmd! * <buffer>
+            autocmd BufWritePre <buffer> call edit#vim#UpdateModity()
+        augroup END
+    endif
 
     nnoremap <buffer> g<C-]> :call edit#vim#GotoDefineFunc()<CR>
 

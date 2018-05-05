@@ -6,6 +6,7 @@
 
 " UpdateModity: 
 " automatically update the Modify time in the commet header
+" Note: easy to occur merge conflict since change the same line
 function! edit#vim#UpdateModity() abort "{{{
     let l:sDate = strftime('%Y-%m-%d')
     let l:iEnd = line('$')
@@ -44,9 +45,9 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     let l:rtp = class#less#rtp#export()
     let l:pScriptFile = l:rtp.FindAutoScript(l:sAutoName)
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
-        # let l:cmd = 'edit +/%s %s'
-        # let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
-        execute 'eidt' l:pScriptFile
+        " let l:cmd = 'edit +/%s %s'
+        " let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
+        execute 'edit' l:pScriptFile
         if search(l:sPattern, 'cew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
