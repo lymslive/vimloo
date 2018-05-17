@@ -49,7 +49,7 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue(arg) dict abort "{{{
-    let self.Set = g:class#TRUE
+    let self.Set = v:true
     call add(self.Argument, a:arg)
 endfunction "}}}
 

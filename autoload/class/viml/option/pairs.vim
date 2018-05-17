@@ -12,7 +12,7 @@ let s:class._version_ = 1
 " the argument for this option
 let s:class.Argument = ''
 " user must provide argument for this option?
-let s:class.HasDefault = g:class#FALSE
+let s:class.HasDefault = v:false
 " default value, if not provided, it's argument is must required
 let s:class.Default = ''
 
@@ -68,7 +68,7 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue(arg) dict abort "{{{
-    let self.Set = g:class#TRUE
+    let self.Set = v:true
     let self.Argument = a:arg
 endfunction "}}}
 

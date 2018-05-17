@@ -236,6 +236,27 @@ function! s:class.FromList(lsArgv) dict abort "{{{
     return l:dict
 endfunction "}}}
 
+" ToList: 
+function! s:class.ToList(dArg) dict abort "{{{
+    let l:list = []
+    for [l:key, l:val] in items(a:dArg)
+        call extend(l:list, [l:key, l:val])
+        unlet l:key 
+    endfor
+
+    return l:list
+endfunction "}}}
+
+" Absorb: 
+function! s:class.Absorb(dOrigin, dForeign) dict abort "{{{
+    for [l:key, l:val] in items(a:dForeign)
+        if has_key(a:dOrigin, l:key)
+            let a:dOrigin[l:key] = l:val
+        endif
+        unlet l:key 
+    endfor
+endfunction "}}}
+
 " TEST:
 function! module#less#dict#test(...) abort "{{{
     return 0

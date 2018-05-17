@@ -75,7 +75,7 @@ function! s:class.FindTabpage(varname, value) dict abort "{{{
     return 0
 endfunction "}}}
 
-" FindWindow: find a window by bufnr name or bufnr
+" FindBufwinnr: find a window by bufnr name or bufnr
 " > a:1, bOtherTab, also find in other tab
 " < return winnr
 " < return [tabnr, winnr] if bOtherTab

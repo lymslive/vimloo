@@ -10,7 +10,7 @@ let s:class._name_ = 'class#viml#option#single'
 let s:class._version_ = 1
 
 " dose this option is set? // v:false
-let s:class.Set = g:class#FALSE
+let s:class.Set = v:false
 
 function! class#viml#option#single#class() abort "{{{
     return s:class
@@ -59,12 +59,12 @@ endfunction "}}}
 
 " SetValue: 
 function! s:class.SetValue() dict abort "{{{
-    let self.Set = g:class#TRUE
+    let self.Set = v:true
 endfunction "}}}
 
 " UnSet: 
 function! s:class.UnSet() dict abort "{{{
-    let self.Set = g:class#FALSE
+    let self.Set = v:false
 endfunction "}}}
 
 " STRING: -c, --Name    [0]Desc
