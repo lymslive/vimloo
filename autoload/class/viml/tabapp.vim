@@ -1,10 +1,10 @@
 " Class: class#viml#tabapp
 " Author: lymslive
-" Description: VimL class frame
+" Description: an application frame for multiply windows in its own tabpage
 " Create: 2018-05-18
-" Modify: 2018-05-18
+" Modify: 2018-05-21
 
-"LOAD:
+" LOAD:
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
@@ -79,15 +79,19 @@ function! s:class.Layout(...) dict abort "{{{
     if a:0 > 0 && !empty(a:1)
         :tabnew
     endif
+
+    " start from only one window
     if winnr('$') > 1
         :wincmd o
     endif
+    setlocal nowinfixwidth
+    setlocal nowinfixheight
 
     " get the full size when only one window
     let s:fullheight = winheight(0)
     let s:fullwidth = winwidth(0)
 
-    let l:patcmd = '^\([abt]\)\(\+\?\)\(\d\+%\?\)\([-:|]\)$'
+    let l:patcmd = '^\([abt]\)\?\(+\)\?\(\d\+%\?\)\?\([-:|]\)$'
     let l:wincmd = ''
     let l:sptype = ''
     let l:spdir = ''
@@ -103,7 +107,7 @@ function! s:class.Layout(...) dict abort "{{{
 
         let l:subcmd = self.laycmd[l:pos : l:posnext]
         let l:lsMatch = matchlist(l:subcmd, l:patcmd)
-        if emplty(l:lsMatch)
+        if empty(l:lsMatch)
             :ELOG 'invalid laycmd format'
             break
         endif
@@ -128,9 +132,9 @@ function! s:class.Layout(...) dict abort "{{{
 
         if l:size =~ '%$'
             if l:sptype == '|'
-                let l:size = (0+l:size) * l:fullwidth / 100
+                let l:size = (0+l:size) * s:fullwidth / 100
             else
-                let l:size = (0+l:size) * l:fullheight / 100
+                let l:size = (0+l:size) * s:fullheight / 100
             endif
         endif
 
@@ -152,11 +156,11 @@ function! s:class.Layout(...) dict abort "{{{
         endif
 
         " jump to previous window
-        :wincmd W
-        l:pos = l:posnext + 1
+        :wincmd p
+        let l:pos = l:posnext + 1
     endwhile
 
-    self.CheckWinnr()
+    call self.CheckWinnr()
     return winnr('$')
 endfunction "}}}
 
@@ -180,5 +184,7 @@ endfunction "}}}
 " TEST:
 function! class#viml#tabapp#test(...) abort "{{{
     let l:obj = class#viml#tabapp#new()
-    call class#echo(l:obj)
+    let l:obj.winnum = 3
+    let l:obj.laycmd = 'b+10%||t10:'
+    call l:obj.Layout(1)
 endfunction "}}}
