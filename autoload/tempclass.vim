@@ -3,9 +3,9 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-10
-" Modify: 2017-08-10
+" Modify: 2018-05-21
 
-"LOAD: -l
+" LOAD: -l
 if exists('s:load') && !exists('g:DEBUG')
     finish
 endif
