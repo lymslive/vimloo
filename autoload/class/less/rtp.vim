@@ -22,8 +22,12 @@ else
 endif
 
 " AddPath: 
-function! s:class.AddPath(base, sub) dict abort "{{{
-    return a:base . self.separator . a:sub
+function! s:class.AddPath(base, sub, ...) dict abort "{{{
+    let l:path = a:base . self.separator . a:sub
+    for l:sub in a:000
+        let l:path = l:path . self.separator . l:sub
+    endfor
+    return l:path
 endfunction "}}}
 
 " PutPath: 
