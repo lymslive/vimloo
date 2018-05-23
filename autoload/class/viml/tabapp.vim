@@ -32,6 +32,12 @@ endfunction "}}}
 function! class#viml#tabapp#ctor(this, ...) abort "{{{
 endfunction "}}}
 
+" OLD:
+function! class#viml#tabapp#old() abort "{{{
+    let l:class = class#old(s:class)
+    return l:class
+endfunction "}}}
+
 " ISOBJECT:
 function! class#viml#tabapp#isobject(that) abort "{{{
     return class#isobject(s:class, a:that)
