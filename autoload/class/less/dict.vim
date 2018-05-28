@@ -258,6 +258,6 @@ function! s:class.Absorb(dOrigin, dForeign) dict abort "{{{
 endfunction "}}}
 
 " TEST:
-function! module#less#dict#test(...) abort "{{{
+function! class#less#dict#test(...) abort "{{{
     return 0
 endfunction "}}}
