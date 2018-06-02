@@ -203,7 +203,7 @@ function! s:class.FindAoptScript(name, ...) dict abort "{{{
     endif
 
     let l:sPattern = self.MakePath('pack', '*', 'opt', '*', l:name)
-    let l:lsGlob = globpath(&packpath, l:name, 0, 1)
+    let l:lsGlob = globpath(&packpath, l:sPattern, 0, 1)
 
     if empty(l:lsGlob)
         return ''

@@ -57,7 +57,7 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     " find in &packpath/opt
     let l:pScriptFile = l:rtp.FindAoptScript(l:sAutoName, 1)
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
-        execute 'eidt' l:pScriptFile
+        execute 'edit' l:pScriptFile
         if search(l:sPattern, 'cew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
