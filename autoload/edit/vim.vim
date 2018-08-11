@@ -31,9 +31,9 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     endif
 
     " the #function is in current file?
-    let l:sPattern = '^\s*fu[nction]*!\?\s\+%s'
+    let l:sPattern = '^\s*fu[nction]*!\?\s\+%s\>'
     let l:sPattern = printf(l:sPattern, l:name)
-    if search(l:sPattern, 'cew') > 0
+    if search(l:sPattern, 'scew') > 0
         return line('.')
     endif
 
@@ -48,7 +48,7 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
         " let l:cmd = 'edit +/%s %s'
         " let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
         execute 'edit' l:pScriptFile
-        if search(l:sPattern, 'cew') <= 0
+        if search(l:sPattern, 'scew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
         return line('.')
@@ -58,7 +58,7 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     let l:pScriptFile = l:rtp.FindAoptScript(l:sAutoName, 1)
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
         execute 'edit' l:pScriptFile
-        if search(l:sPattern, 'cew') <= 0
+        if search(l:sPattern, 'scew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
         return line('.')
@@ -80,9 +80,9 @@ function! edit#vim#GotoLocalFunc(...) abort "{{{
         let l:name = 's:' . l:name
     endif
 
-    let l:sPattern = '^\s*function!\?\s\+%s'
+    let l:sPattern = '^\s*function!\?\s\+%s\>'
     let l:sPattern = printf(l:sPattern, l:name)
-    return search(l:sPattern, 'cew')
+    return search(l:sPattern, 'scew')
 endfunction "}}}
 
 " GotoClassFunc: s:class.Func
@@ -101,7 +101,7 @@ function! edit#vim#GotoClassFunc(...) abort "{{{
         let l:name = 's:class.' . l:name
     endif
 
-    return search(l:name, 'cew')
+    return search(l:name . '\>', 'scew')
 endfunction "}}}
 
 " GotoDefineFunc: 
