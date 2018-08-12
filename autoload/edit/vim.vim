@@ -47,8 +47,9 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
         " let l:cmd = 'edit +/%s %s'
         " let l:cmd = printf(l:cmd, l:name, l:pScriptFile)
+        normal! m'
         execute 'edit' l:pScriptFile
-        if search(l:sPattern, 'scew') <= 0
+        if search(l:sPattern, 'cew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
         return line('.')
@@ -57,8 +58,9 @@ function! edit#vim#GotoSharpFunc(...) abort "{{{
     " find in &packpath/opt
     let l:pScriptFile = l:rtp.FindAoptScript(l:sAutoName, 1)
     if !empty(l:pScriptFile) && filereadable(l:pScriptFile)
+        normal! m'
         execute 'edit' l:pScriptFile
-        if search(l:sPattern, 'scew') <= 0
+        if search(l:sPattern, 'cew') <= 0
             :ELOG 'cannot find function: ' . l:name
         endif
         return line('.')
@@ -105,9 +107,12 @@ function! edit#vim#GotoClassFunc(...) abort "{{{
 endfunction "}}}
 
 " GotoDefineFunc: 
+" try to jump to a vim function definition by search source files
+" add current to jumplist if can jump
+" at last also try :tag 
 function! edit#vim#GotoDefineFunc(...) abort "{{{
     if a:0 == 0 || empty(a:1)
-        let l:cursor = module#less#cursor#import() 
+        let l:cursor = class#less#cursor#export()
         let l:name = l:cursor.GetWord('.', '#', ':')
         " let l:name = expand('<cword>')
     else
