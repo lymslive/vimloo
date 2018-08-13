@@ -2,7 +2,7 @@
 " Author: lymslive
 " Description: implement for ftplugin/vim.vim
 " Create: 2017-03-08
-" Modify: 2018-05-02
+" Modify: 2018-08-13
 
 " UpdateModity: 
 " automatically update the Modify time in the commet header
