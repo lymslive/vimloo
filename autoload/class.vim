@@ -492,9 +492,6 @@ let g:class#EMPTY = ''
 let g:class#OK = 0
 let g:class#ERROR = -1
 
-" load micros command
-call vimloo#micros#load()
-
 " Load And Test: {{{1
 
 " triggle to load this vimL file

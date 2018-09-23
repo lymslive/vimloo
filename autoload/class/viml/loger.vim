@@ -2,25 +2,26 @@
 " Author: lymslive
 " Description: VimL class frame
 " Create: 2017-02-15
-" Modify: 2017-08-05
-
-"LOAD:
-if exists('s:load') && !exists('g:DEBUG')
-    finish
-endif
+" Modify: 2018-09-22
 
 " BASIC:
 let s:class = class#old()
 let s:class._name_ = 'class#viml#loger'
-let s:class._version_ = 1
+let s:class._version_ = 2
 
 " the log file :redir to
-" special arg: '-buffer' as current buffer
+" Special '%' to current buffer, '%n' to buffer n
 let s:class.LogFile = ''
 " the min level of message that will loged by Echo method
 let s:class.LogLevel = 0
 " the default highlight
 let s:class.Highlight = 'Comment'
+
+let s:LOGLEVEL = {}
+let s:LOGLEVEL.ERROR = 0
+let s:LOGLEVEL.DEBUG = 1
+let s:LOGLEVEL.WARN = 2
+let s:LOGLEVEL.INFO = 3
 
 function! class#viml#loger#class() abort "{{{
     return s:class
@@ -39,37 +40,139 @@ function! class#viml#loger#new(...) abort "{{{
     return l:obj
 endfunction "}}}
 
-" INSTANCE:
-let s:instance = {}
-function! class#viml#loger#instance() abort "{{{
-    if empty(s:instance)
-        let s:instance = class#new('class#viml#loger')
+" log
+function! s:class.log(sMessage, iLevel, sHighlight) dict abort "{{{
+    " only set log level
+    if empty(a:sMessage) && a:iLevel != self.LogLevel
+        return self.log_level(a:iLevel)
     endif
-    return s:instance
+
+    if empty(a:sMessage) && a:sHighlight != self.Highlight
+        return self.log_style(a:sHighlight)
+    endif
+
+    if empty(a:sMessage) || a:iLevel > self.LogLevel
+        return
+    endif
+
+    if empty(self.LogFile)
+        try
+            if !empty(a:sHighlight)
+                let l:sHighlight = a:sHighlight
+            else
+                let l:sHighlight = self.Highlight
+            endif
+            :execute 'echohl ' . l:sHighlight
+            echomsg string(a:sMessage)
+        catch 
+        finally 
+            echohl None
+        endtry
+        return
+    endif
+
+    if self.LogFile[0] != '%'
+        try
+            :execute 'redir >> ' . self.LogFile
+            echomsg string(a:sMessage)
+            :redir END
+        catch 
+        finally 
+            :redir END
+        endtry
+    elseif self.LogFile == '%'
+        call append('$', a:sMessage)
+        " $print
+    else
+        let l:bufnr = matchstr(self.LogFile, '^%\zs\d\+\ze')
+        if !empty(l:bufnr)
+            call appendbufline(0+l:bufnr, '$', a:sMessage)
+        else
+            echoerr 'log buffer not exists: ' . self.LogFile
+        endif
+    endif
 endfunction "}}}
 
-" SetLogFile: 
-function! class#viml#loger#SetLogFile(pFileName) abort "{{{
-    let l:instance = class#viml#loger#instance()
-    let l:sOldFile = l:instance.LogFile
-    let l:instance.LogFile = a:pFileName
-    if !empty(a:pFileName)
-        if a:pFileName !=? '-buffer'
-            :execute 'redir >> ' . a:pFileName
-        else
-            :redir END
-        endif
-    else
-        :redir END
+" log_file: 
+function! s:class.log_file(...) dict abort "{{{
+    if a:0 == 0
+        return self.LogFile
     endif
 
-    if !empty(l:sOldFile) && !empty(a:pFileName)
-        echo 'change log file: ' . s:Absolute(l:sOldFile) . ' --> ' . s:Absolute(a:pFileName)
-    elseif !empty(l:sOldFile) && empty(a:pFileName)
-        echo 'stop log file: ' . s:Absolute(l:sOldFile)
-    elseif empty(l:sOldFile) && !empty(a:pFileName)
-        echo 'start log file: ' . s:Absolute(a:pFileName)
+    if type(a:1) != type('') && type(a:1) != type(0)
+        echoerr 'Invalid log file argument'
+        return
     endif
+
+    let l:sNewFile = a:1
+    let l:sOldFile = self.LogFile
+    let self.LogFile = l:sNewFile
+    if !empty(l:sOldFile) && !empty(l:sNewFile)
+        echo 'change log file: ' . s:Absolute(l:sOldFile) . ' --> ' . s:Absolute(l:sNewFile)
+    elseif !empty(l:sOldFile) && empty(l:sNewFile)
+        echo 'stop log file: ' . s:Absolute(l:sOldFile)
+    elseif empty(l:sOldFile) && !empty(l:sNewFile)
+        echo 'start log file: ' . s:Absolute(l:sNewFile)
+    endif
+
+    return l:sOldFile
+endfunction "}}}
+
+" log_level: 
+function! s:class.log_level(...) dict abort "{{{
+    if a:0 == 0
+        return self.LogLevel
+    endif
+
+    if type(a:1) != type(0)
+        echoerr 'Invalid log level argument'
+        return
+    endif
+
+    let l:iLevel = self.LogLevel
+    let self.LogLevel = a:1
+    return l:iLevel
+endfunction "}}}
+
+" log_style: 
+function! s:class.log_style(...) dict abort "{{{
+    if a:0 == 0
+        return self.Highlight
+    endif
+
+    if type(a:1) != type('')
+        echoerr 'Invalid log style(highlight) argument'
+        return
+    endif
+
+    let l:sHighlight = self.Highlight
+    let self.Highlight = a:1
+    return l:sHighlight
+endfunction "}}}
+
+" INSTANCE:
+function! s:instance() abort "{{{
+    if !exists('s:instance_') || empty(s:instance_)
+        let s:instance_ = class#new('class#viml#loger')
+    endif
+    return s:instance_
+endfunction "}}}
+
+function! s:log(...) abort "{{{
+    let l:instance = s:instance()
+    return a:0 == 0 ? l:instance.log() : l:instance.log(a:1)
+endfunction "}}}
+function! s:log_file(...) abort "{{{
+    let l:instance = s:instance()
+    return a:0 == 0 ? l:instance.log_file() : l:instance.log_file(a:1)
+endfunction "}}}
+function! s:log_level(...) abort "{{{
+    let l:instance = s:instance()
+    return a:0 == 0 ? l:instance.log_level() : l:instance.log_level(a:1)
+endfunction "}}}
+function! s:log_style(...) abort "{{{
+    let l:instance = s:instance()
+    return a:0 == 0 ? l:instance.log_style() : l:instance.log_style(a:1)
 endfunction "}}}
 
 " Absolute: 
@@ -81,134 +184,22 @@ function! s:Absolute(sPath) abort "{{{
     endif
 endfunction "}}}
 
-" SetLogLevel: 
-function! class#viml#loger#SetLogLevel(iLevel) abort "{{{
-    let l:instance = class#viml#loger#instance()
-    let l:instance.LogLevel = 0 + a:iLevel
-endfunction "}}}
-
-" Echo: 
-function! s:class.Echo(sMessage, iLevel, sHighlight) dict abort "{{{
-    " only set log level
-    if empty(a:sMessage) && a:iLevel != self.LogLevel
-        let self.LogLevel = a:iLevel
+" export: 
+function! class#viml#loger#export() abort "{{{
+    if !exists('s:EXPORT') || empty(s:EXPORT)
+        let s:EXPORT = {}
+        let s:EXPORT.new = function('class#viml#loger#new')
+        let s:EXPORT.instance = function('s:instance')
     endif
-
-    " only log when DEBUG set
-    if a:sHighlight ==# 'DEBUG'
-        if !exists('g:DEBUG') || empty(g:DEBUG)
-            return 0
-        endif
-    endif
-
-    if !empty(a:sHighlight)
-        " only set log highligh
-        if empty(a:sMessage)
-            let self.Highlight = a:sMessage
-        endif
-        :execute 'echohl ' . a:sHighlight
-    elseif !empty(self.Highlight)
-        :execute 'echohl ' . self.Highlight
-    endif
-
-    if empty(a:sMessage) || a:iLevel > self.LogLevel
-        echohl None
-        return 0
-    endif
-
-    try
-        if self.LogFile ==? '-buffer'
-            call append('$', a:sMessage)
-            $print
-        else
-            echomsg a:sMessage
-        endif
-    finally
-        echohl None
-    endtry
-endfunction "}}}
-
-" Log: 
-" may have two option in the leading string: -n -HighName
-function! class#viml#loger#hLog(sMessage) abort "{{{
-    let l:instance = class#viml#loger#instance()
-
-    let l:iMsgLen = len(a:sMessage)
-    if l:iMsgLen <= 0
-        return 0
-    endif
-
-    if a:sMessage[0] != '-'
-        call l:instance.Echo(a:sMessage, 0, '')
-        return 0
-    endif
-
-    " parse leading option
-    let l:iLevel = 0
-    let l:sHighlight = ''
-    let l:lsMatch = matchlist(a:sMessage, '^\(-[0-9A-Za-z]\+\)\?\s*\(-[0-9A-Za-z]\+\)\?\s*\(.*\)')
-    if empty(l:lsMatch)
-        return 0
-    endif
-
-    " echo 'LOG with option: ' . l:lsMatch[1] . ' ' . l:lsMatch[2]
-
-    if !empty(l:lsMatch[1])
-        let l:sOption = strpart(l:lsMatch[1], 1)
-        if match(l:sOption, '^[0-9]\+') != -1
-            let l:iLevel = 0 + l:sOption
-        else
-            let l:sHighlight = l:sOption
-        endif
-    endif
-
-    if !empty(l:lsMatch[2])
-        let l:sOption = strpart(l:lsMatch[2], 1)
-        if match(l:sOption, '^[0-9]\+') != -1
-            let l:iLevel = 0 + l:sOption
-        else
-            let l:sHighlight = l:sOption
-        endif
-    endif
-
-    " echo 'l:iLevel = ' . l:iLevel . '; l:sHighlight = ' . l:sHighlight
-
-    let l:sMessage = l:lsMatch[3]
-    call l:instance.Echo(l:sMessage, l:iLevel, l:sHighlight)
-    return 0
+    return s:EXPORT
 endfunction "}}}
 
 " LOAD:
-let s:load = 1
 function! class#viml#loger#load(...) abort "{{{
-    if a:0 > 0 && !empty(a:1) && exists('s:load')
-        unlet s:load
-        return 0
-    endif
-    return s:load
+    return 1
 endfunction "}}}
 
 " TEST:
 function! class#viml#loger#test(...) abort "{{{
-    :LOGON test.log
-    :LOG 'literatur string'
-    let l:str = 'a string variable'
-    :LOG l:str
-    :LOG 'literatur string concatente with ' . l:str
-    :LOG '-WarningMsg ' . l:str
-    :SLOG -2
-    :LOG '-WarningMsg L0 ' . l:str
-    :LOG '-1 -WarningMsg L1 ' . l:str
-    :LOG '-WarningMsg -2 L2 ' . l:str
-    :LOG '-WarningMsg -3 L3 ' . l:str
-    :SLOG -0
-    :ELOG 'error'
-    :WLOG 'waring'
-    unlet! g:DEBUG
-    :DLOG 'log debug'
-    let g:DEBUG = 1
-    :DLOG 'log debug too'
-    :LOG printf('%s[%d]', 'strig', 100)
-    :LOGOFF
     return 0
 endfunction "}}}
