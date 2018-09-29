@@ -4,7 +4,7 @@
 " Create: 2018-09-23
 " Modify: 2018-09-23
 
-let s:execute = package#imports('ly#util', 'execute')
+let s:execute = package#imports('cn#util', 'execute')
 
 let s:AUX_OPTION = {'buftype': 'nofile', 'bufhidden':'hide'}
 lockvar s:AUX_OPTION

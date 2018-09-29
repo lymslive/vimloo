@@ -6,7 +6,7 @@
 
 " GetAutoName: 
 " my UltiSnips need this function
-function! ly#util#GetAutoName(pFileName) abort "{{{
+function! cn#util#GetAutoName(pFileName) abort "{{{
     let l:rtp = class#less#rtp#export()
     return l:rtp.GetAutoName(a:pFileName)
 endfunction "}}}
