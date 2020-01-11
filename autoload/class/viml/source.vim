@@ -65,7 +65,7 @@ function! s:class.SID() dict abort "{{{
 
         let l:sid = 0 + l:lsPart[0]
         let l:script = l:lsPart[1]
-        if expand(l:script) ==# expand(self.path)
+        if s:compare_path(l:script, self.path)
             let self.sid = l:sid
             break
         endif
@@ -77,6 +77,15 @@ function! s:class.SID() dict abort "{{{
 
     return self.sid
 endfunction "}}}
+
+" Func: s:compare_path 
+function! s:compare_path(left, right) abort
+    if has('win32') || has('win64')
+        return expand(a:left) ==? expand(a:right)
+    else
+        return expand(a:left) ==# expand(a:right)
+    endif
+endfunction
 
 " PrefixSID: 
 function! s:class.PrefixSID() dict abort "{{{
