@@ -85,7 +85,7 @@ function! s:class.GetAutoName(pFileName) dict abort "{{{
     endif
 
     " split path by / or #, last file extention is removed
-    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), self.separator . '\|#')
+    let l:lsPath = split(fnamemodify(a:pFileName, ':r'), '\\\|/\|#')
 
     let l:iEnd = len(l:lsPath) - 1 
     let l:idx = index(l:lsPath, 'autoload')
